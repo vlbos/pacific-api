@@ -1,0 +1,31 @@
+{
+  "repository": "https://github.com/polkadot-js/api",
+  "author": "",
+  "license": "",
+  "type": "commonjs",
+  "resolutions": {
+    "typescript": "^4.2.3"
+  },
+  "scripts": {
+    "typegen": "yarn generate:defs && yarn generate:meta",
+    "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package pacific-api/interfaces --input ./packages/interfaces",
+    "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package pacific-api/interfaces --endpoint ./pacific.json --output ./packages/interfaces --strict",
+    "test": "polkadot-dev-run-test --coverage ",
+    "test:one": "polkadot-dev-run-test",
+    "test:watch": "polkadot-dev-run-test --watch"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.13.10",
+    "@babel/register": "^7.13.8",
+    "@babel/runtime": "^7.13.10",
+    "@polkadot/dev": "^0.62.7",
+    "@polkadot/ts": "^0.3.62",
+    "@polkadot/typegen": "^4.3.1",
+    "@types/jest": "^26.0.21",
+    "copyfiles": "^2.4.1"
+  },
+  "version": "4.2.2-4",
+  "dependencies": {
+    "@polkadot/api": "^4.3.1"
+  }
+}
