@@ -1,61 +1,61 @@
 /* eslint-disable @typescript-eslint/camelcase */
 
 export default {
- rpc: {
-      getOrder: {
-        description: "Get an order from the orderbook, throwing if none is found.",
-        params: [
-          {
-            name: "order_query",
-            type: "Option<OrderQueryJSON<AccountId>>"
-          }
-        ],
-        type: "Option<OrderJSONType<AccountId, Moment>>"
-      },
-      getOrders: {
-        description: " Get a list of orders from the orderbook, returning the page of orders",
-        params: [
-          {
-            name: "order_query",
-            type: "Option<OrderQueryJSON<AccountId>>"
-          },
-          {
-            name: "page",
-            type: "Option<u64>"
-          }
-        ],
-        type: "Option<Vec<OrderJSONType<AccountId, Moment>>>"
-      },
-      getAsset: {
-        description: "Fetch an asset from the API, throwing if none is found",
-        params: [
-          {
-            name: "token_address",
-            type: "String"
-          },
-          {
-            name: "token_id",
-            type: "String"
-          }
-        ],
-        type: "Option<JSONType>"
-      },
-      getAssets: {
-        description: "Fetch list of assets from the API, returning the page of assets and the count of total assets",
-        params: [
-          {
-            name: "asset_query",
-            type: "Option<AssetQueryJSON<AccountId>>"
-          },
-          {
-            name: "page",
-            type: "Option<u64>"
-          }
-        ],
-        type: "Option<Vec<JSONType>>"
-      }
+    rpc: {
+        getOrder: {
+            description: "Get an order from the orderbook, throwing if none is found.",
+            params: [
+                {
+                    name: "order_query",
+                    type: "Option<OrderQueryJSON<AccountId>>"
+                }
+            ],
+            type: "Option<OrderJSONType<AccountId, Moment>>"
+        },
+        getOrders: {
+            description: " Get a list of orders from the orderbook, returning the page of orders",
+            params: [
+                {
+                    name: "order_query",
+                    type: "Option<OrderQueryJSON<AccountId>>"
+                },
+                {
+                    name: "page",
+                    type: "Option<u64>"
+                }
+            ],
+            type: "Option<Vec<OrderJSONType<AccountId, Moment>>>"
+        },
+        getAsset: {
+            description: "Fetch an asset from the API, throwing if none is found",
+            params: [
+                {
+                    name: "token_address",
+                    type: "String"
+                },
+                {
+                    name: "token_id",
+                    type: "String"
+                }
+            ],
+            type: "Option<JSONType>"
+        },
+        getAssets: {
+            description: "Fetch list of assets from the API, returning the page of assets and the count of total assets",
+            params: [
+                {
+                    name: "asset_query",
+                    type: "Option<AssetQueryJSON<AccountId>>"
+                },
+                {
+                    name: "page",
+                    type: "Option<u64>"
+                }
+            ],
+            type: "Option<Vec<JSONType>>"
+        }
     },
-     types: {
+    types: {
         OrderId: "Vec<u8>",
         TokenId: "Vec<u8>",
         FieldName: "Vec<u8>",

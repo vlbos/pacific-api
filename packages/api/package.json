@@ -1,6 +1,6 @@
 {
-  "name": "@polkadot/api",
-  "version": "4.2.2-4",
+  "name": "pacific-api",
+  "version": "0.0.1",
   "type": "module",
   "description": "Promise and RxJS wrappers around the Polkadot JS RPC",
   "main": "index.js",
@@ -8,11 +8,11 @@
     "./detectPackage.js",
     "./detectPackage.cjs"
   ],
-  "author": "Jaco Greeff <jacogr@gmail.com>",
+  "author": "",
   "maintainers": [],
   "contributors": [],
   "license": "Apache-2.0",
-  "repository": "github:polkadot-js/api",
+  "repository": "",
   "bugs": "https://github.com/polkadot-js/api/issues",
   "homepage": "https://github.com/polkadot-js/api/tree/master/packages/api#readme",
   "dependencies": {
