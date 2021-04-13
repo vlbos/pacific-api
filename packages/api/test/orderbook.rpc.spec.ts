@@ -8,11 +8,11 @@ import { stringToHex, stringToU8a, u8aToHex } from '@polkadot/util';
 import * as definitions from '../../interfaces/definitions';
 import '../../interfaces/augment-api';
 import '../../interfaces/augment-types';
-import { submit, testUsers } from '../../orders/src/lib/submit-signed-tx'
-import { makeOrderArrayEx, makeOrderArrayHexEx, makeOrderFromJSONHex, makeOrderEx, makeOrder, orderFromJSON } from '../../orders/order.js'
+import { submit, testUsers } from '../../orders/lib/submit-signed-tx'
+import { makeOrderArrayEx,unflattenObject, arr2obj,orderFieldsJSONToOrder, makeOrderArrayHexEx, makeOrderFromJSONHex, makeOrderEx, makeOrder, orderFromJSON } from '../../orders/order'
 import { v4 as uuidv4 } from 'uuid'
 // import rpcs from './config/rpcs.json';
-import rpcs from '../../orders/src/lib/rpcs.json'
+import rpcs from '../../orders/lib/rpcs.json'
 
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 import { TypeRegistry } from '@polkadot/types/create';
@@ -41,7 +41,7 @@ const salary = 100_000_000_000_000;
 //         }
 //     }).isReady;
 // }
-import { createApiAndTestAccounts, sleepMs } from './helpers/apiHelper'
+import { createApiAndTestAccounts, saveNonce, sleepMs } from './helpers/apiHelper'
 
 async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     jest.setTimeout(30000);
@@ -113,7 +113,11 @@ describe('orderbook rpc tests', (): void => {
         api = papi.api;
     });
 
-    it('getOrder', async (): Promise<void> => {
+    afterAll(() => {
+        //   return clearCityDatabase();
+        saveNonce(users)
+    });
+    it.only('getOrder', async (): Promise<void> => {
         // const papi = await init();
         // const api = papi.api;
 
@@ -128,6 +132,10 @@ describe('orderbook rpc tests', (): void => {
         let order = await api.rpc.orderbook.getOrder({
             params: orderArray[0]
         });
+        console.log(order.toHuman())
+        // console.log("=arr2obj=",unflattenObject(arr2obj(order.toHuman().fields)))
+        console.log("=orderFieldsJSONToOrder==",orderFieldsJSONToOrder(order.toHuman()))
+  
         console.log(`The value from the getOrder is ${order}\n`);
 
     });

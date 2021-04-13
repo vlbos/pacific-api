@@ -11,7 +11,10 @@
     "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package pacific-api/interfaces --input ./packages/interfaces",
     "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package pacific-api/interfaces --endpoint ./pacific.json --output ./packages/interfaces --strict",
     "test": "polkadot-dev-run-test --coverage ",
-    "test:one": "polkadot-dev-run-test",
+    "test:api": "polkadot-dev-run-test /Users/lisheng/mygit/vlbos/pacific-api/packages/test/api/api.test.ts",
+    "test:one": "polkadot-dev-run-test /Users/lisheng/mygit/vlbos/pacific-api/packages/test/seaport/orders.test.ts",
+    "test:o": "polkadot-dev-run-test packages/api/test/orderbook.rpc.spec.ts",
+    "test:t": "polkadot-dev-run-test packages/api/test/orderbook.tx.spec.ts",
     "test:watch": "polkadot-dev-run-test --watch"
   },
   "devDependencies": {
@@ -24,11 +27,13 @@
     "@types/jest": "^26.0.21",
     "copyfiles": "^2.4.1"
   },
-  "version": "4.2.2-4",
+  "version": "0.0.1",
   "dependencies": {
     "@polkadot/api": "^4.3.1",
     "@polkadot/metadata": "^4.4.1",
     "@polkadot/types": "^4.3.1",
+    "bignumber.js": "^9.0.1",
+    "isomorphic-unfetch": "^3.1.0",
     "uuid": "^8.3.2"
   }
 }

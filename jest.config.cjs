@@ -9,15 +9,7 @@ module.exports = {
     
   },
   modulePathIgnorePatterns: [
-    '<rootDir>/packages/api/build',
-    '<rootDir>/packages/api-contract/build',
-    '<rootDir>/packages/api-derive/build',
-    '<rootDir>/packages/metadata/build',
-    '<rootDir>/packages/rpc-core/build',
-    '<rootDir>/packages/rpc-provider/build',
-    '<rootDir>/packages/typegen/build',
-    '<rootDir>/packages/types/build',
-    '<rootDir>/packages/types-known/build'
+    
   ],
   transformIgnorePatterns: ['/node_modules/(?!@polkadot|@babel/runtime/helpers/esm/)']
 };

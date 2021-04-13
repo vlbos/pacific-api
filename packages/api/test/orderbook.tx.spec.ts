@@ -6,11 +6,11 @@ import { createType } from '@polkadot/types';
 import * as definitions from '../../interfaces/definitions';
 import '../../interfaces/augment-api';
 import '../../interfaces/augment-types';
-import { submit, testUsers } from '../../orders/src/lib/submit-signed-tx'
-import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../../orders/order.js'
+import { submit, testUsers } from '../../orders/lib/submit-signed-tx'
+import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../../orders/order'
 import { v4 as uuidv4 } from 'uuid'
 // import rpcs from './config/rpcs.json';
-import rpcs from '../../orders/src/lib/rpcs.json'
+import rpcs from '../../orders/lib/rpcs.json'
 
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 import { TypeRegistry } from '@polkadot/types/create';
@@ -39,7 +39,7 @@ const salary = 100_000_000_000_000;
 //         }
 //     }).isReady;
 // }
-import { createApiAndTestAccounts, sleepMs } from './helpers/apiHelper'
+import { createApiAndTestAccounts, saveNonce, sleepMs } from './helpers/apiHelper'
 
 async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     jest.setTimeout(30000);
@@ -47,7 +47,7 @@ async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     const papi = await createApiAndTestAccounts();
     const api = papi.api;
     const accounts = papi.accounts;
-  users = papi.users;
+    users = papi.users;
     // await provider.connect();
     // await sleepMs(100); // Hack to give the provider time to connect
 
@@ -109,8 +109,18 @@ describe('orderbook tx tests', (): void => {
     beforeAll(async () => {
         const papi = await init();
         api = papi.api;
+        submit(api, api.tx.orderbook.changeOwner(
+            users.betty.key.address), users.betty);
+        submit(api, api.tx.orderbook.setOrderLimits(
+            1000), users.betty);
+        submit(api, api.tx.orderbook.setAssetWhiteListLimits(
+            1000), users.betty);
     });
 
+    afterAll(() => {
+        saveNonce(users)
+        sleepMs(65000)
+    });
     it('postOrder', async (): Promise<void> => {
         // const papi = await init();
         // const api = papi.api;
@@ -127,6 +137,7 @@ describe('orderbook tx tests', (): void => {
             submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.betty);
         }
 
+        sleepMs(65000)
         // console.log("========postAssetWhiteList=======");
         // submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.betty);
 
@@ -150,6 +161,22 @@ describe('orderbook tx tests', (): void => {
 
         console.log("========postAssetWhiteList=======");
         submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.betty);
+
+    });
+
+    it('changeOwner', async (): Promise<void> => {
+        submit(api, api.tx.orderbook.changeOwner(
+            users.betty.key.address), users.betty);
+    });
+
+    it('setOrderLimits', async (): Promise<void> => {
+        submit(api, api.tx.orderbook.setOrderLimits(
+            1000), users.betty);
+    });
+
+    it('setAssetWhiteListLimits', async (): Promise<void> => {
+        submit(api, api.tx.orderbook.setAssetWhiteListLimits(
+            1000), users.betty);
 
     });
 
