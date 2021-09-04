@@ -17,7 +17,6 @@ import { v4 as uuidv4 } from 'uuid'
 // import rpcs from './config/rpcs.json';
 import rpcs from '../../../orders/lib/rpcs.json'
 
-const provider = new WsProvider('ws://127.0.0.1:9944/');
 import { TypeRegistry } from '@polkadot/types/create';
 const registry = new TypeRegistry();
 let users: any = null;
@@ -34,6 +33,7 @@ export function createApi(): Promise<ApiPromise> {
     // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
     const types = Object.values(definitions).reduce((res, { types }):
         object => ({ ...res, ...types }), {});
+const provider = new WsProvider('ws://127.0.0.1:9944/');
 
     return new ApiPromise({
         provider, rpc: rpcs, types: {

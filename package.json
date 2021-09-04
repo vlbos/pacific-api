@@ -11,8 +11,8 @@
     "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package pacific-api/interfaces --input ./packages/interfaces",
     "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package pacific-api/interfaces --endpoint ./pacific.json --output ./packages/interfaces --strict",
     "test": "polkadot-dev-run-test --coverage ",
-    "test:api": "polkadot-dev-run-test /Users/lisheng/mygit/vlbos/pacific-api/packages/test/api/api.test.ts",
-    "test:one": "polkadot-dev-run-test /Users/lisheng/mygit/vlbos/pacific-api/packages/test/seaport/orders.test.ts",
+    "test:api": "polkadot-dev-run-test packages/test/api/api.test.ts",
+    "test:one": "polkadot-dev-run-test packages/test/seaport/orders.test.ts",
     "test:o": "polkadot-dev-run-test packages/api/test/orderbook.rpc.spec.ts",
     "test:t": "polkadot-dev-run-test packages/api/test/orderbook.tx.spec.ts",
     "test:watch": "polkadot-dev-run-test --watch"

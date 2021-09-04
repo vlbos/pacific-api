@@ -53,7 +53,7 @@ import {
     requireOrderCalldataCanMatch,
 } from './debugging'
 import { BigNumber } from 'bignumber.js'
-import { EventEmitter  } from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 // import { isValidAddress } from 'ethereumjs-util'
 function isValidAddress(address: any) { return true }
 import {
@@ -122,7 +122,7 @@ export class OpenSeaPort {
      * @param logger logger, optional, a function that will be called with debugging
      *  information
      */
-    constructor(provider: WsProvider, apiConfig: OpenSeaAPIConfig = {}, logger?: (arg: string) => void) {
+    constructor(provider: any, apiConfig: OpenSeaAPIConfig = {}, logger?: (arg: string) => void) {
 
         // API config
         apiConfig.networkName = apiConfig.networkName || Network.Main
@@ -134,8 +134,8 @@ export class OpenSeaPort {
         //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
         // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
         //   const provider = new WsProvider('ws://127.0.0.1:9944/');
-//   (async function () { this.apip = await this.apipro()
-//  })
+        //   (async function () { this.apip = await this.apipro()
+        //  })
         // const readonlyProvider = provider// this._networkName == Network.Main ? MAINNET_PROVIDER_URL : RINKEBY_PROVIDER_URL)
         // ApiPromise Config
 
@@ -161,9 +161,9 @@ export class OpenSeaPort {
 
 
 
-// (async function () { 
-// await this.apipro()
-//  })
+        // (async function () { 
+        // await this.apipro()
+        //  })
 
     }
     public async apipro() {
@@ -206,7 +206,7 @@ export class OpenSeaPort {
      * @param listener A callback that will accept an object with event data
      * @param once Whether the listener should only be called once
      */
-    public addListener(event: EventType, listener: (data: EventData) => void, once = false){//}: EventSubscription {
+    public addListener(event: EventType, listener: (data: EventData) => void, once = false) {//}: EventSubscription {
         // const subscription = once
         //     ? //this._emitter.once(event, listener)
         //     : //this._emitter.addListener(event, listener)
@@ -1352,72 +1352,72 @@ export class OpenSeaPort {
         return gas != null && gas > 0
     }
 
-    // /**
-    //  * Returns whether an asset is transferrable.
-    //  * An asset may not be transferrable if its transfer function
-    //  * is locked for some reason, e.g. an item is being rented within a game
-    //  * or trading has been locked for an item type.
-    //  * @param param0 __namedParamters Object
-    //  * @param tokenId DEPRECATED: Token ID. Use `asset` instead.
-    //  * @param tokenAddress DEPRECATED: Address of the token's contract. Use `asset` instead.
-    //  * @param asset The asset to trade
-    //  * @param fromAddress The account address that currently owns the asset
-    //  * @param toAddress The account address that will be acquiring the asset
-    //  * @param quantity The amount of the asset to transfer, if it's fungible (optional). In units (not base units), e.g. not wei.
-    //  * @param useProxy Use the `fromAddress`'s proxy contract only if the `fromAddress` has already approved the asset for sale. Required if checking an ERC-721 v1 asset (like CryptoKitties) that doesn't check if the transferFrom caller is the owner of the asset (only allowing it if it's an approved address).
-    //  * @param retries How many times to retry if false
-    //  */
-    // public async isAssetTransferrable(
-    //     { asset, fromAddress, toAddress,
-    //         quantity, useProxy = false }:
-    //         {
-    //             asset: Asset;
-    //             fromAddress: string;
-    //             toAddress: string;
-    //             quantity?: number | BigNumber;
-    //             useProxy?: boolean;
-    //         },
-    //     retries = 1
-    // ): Promise<boolean> {
+    /**
+     * Returns whether an asset is transferrable.
+     * An asset may not be transferrable if its transfer function
+     * is locked for some reason, e.g. an item is being rented within a game
+     * or trading has been locked for an item type.
+     * @param param0 __namedParamters Object
+     * @param tokenId DEPRECATED: Token ID. Use `asset` instead.
+     * @param tokenAddress DEPRECATED: Address of the token's contract. Use `asset` instead.
+     * @param asset The asset to trade
+     * @param fromAddress The account address that currently owns the asset
+     * @param toAddress The account address that will be acquiring the asset
+     * @param quantity The amount of the asset to transfer, if it's fungible (optional). In units (not base units), e.g. not wei.
+     * @param useProxy Use the `fromAddress`'s proxy contract only if the `fromAddress` has already approved the asset for sale. Required if checking an ERC-721 v1 asset (like CryptoKitties) that doesn't check if the transferFrom caller is the owner of the asset (only allowing it if it's an approved address).
+     * @param retries How many times to retry if false
+     */
+    public async isAssetTransferrable(
+        { asset, fromAddress, toAddress,
+            quantity, useProxy = false }:
+            {
+                asset: Asset;
+                fromAddress: string;
+                toAddress: string;
+                quantity?: number | BigNumber;
+                useProxy?: boolean;
+            },
+        retries = 1
+    ): Promise<boolean> {
 
-    //     const schema = this._getSchema(asset.schemaName)
-    //     const quantityBN = quantity
-    //         ? new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
-    //         : makeBigNumber(1)
-    //     const wyAsset = getWyvernAsset(schema, asset, quantityBN)
-    //     const abi = schema.functions.transfer(wyAsset)
+        // const schema = this._getSchema(asset.schemaName)
+        // const quantityBN = quantity
+        //     ? new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
+        //     : makeBigNumber(1)
+        // const wyAsset = getWyvernAsset(schema, asset, quantityBN)
+        // const abi = schema.functions.transfer(wyAsset)
 
-    //     let from = fromAddress
-    //     if (useProxy) {
-    //         const proxyAddress = await this._getProxy(fromAddress)
-    //         if (!proxyAddress) {
-    //             console.error(`This asset's owner (${fromAddress}) does not have a proxy!`)
-    //             return false
-    //         }
-    //         from = proxyAddress
-    //     }
+        let from = fromAddress
+        if (useProxy) {
+            const proxyAddress = null;//await this._getProxy(fromAddress)
+            if (!proxyAddress) {
+                console.error(`This asset's owner (${fromAddress}) does not have a proxy!`)
+                return false
+            }
+            from = proxyAddress
+        }
 
-    //     const data = encodeTransferCall(abi, fromAddress, toAddress)
+        // const data = encodeTransferCall(abi, fromAddress, toAddress)
 
-    //     try {
-    //         const gas = await estimateGas(this._getClientsForRead(retries).apip, {
-    //             from,
-    //             to: abi.target,
-    //             data
-    //         })
-    //         return gas > 0
+        try {
+            const gas = 1;//await estimateGas(this._getClientsForRead(retries).apip, {
+            //     from,
+            //     to: abi.target,
+            //     data
+            // })
+            return gas > 0
 
-    //     } catch (error) {
+        } catch (error) {
 
-    //         if (retries <= 0) {
-    //             console.error(error)
-    //             console.error(from, abi.target, data)
-    //             return false
-    //         }
-    //         await delay(500)
-    //         return await this.isAssetTransferrable({ asset, fromAddress, toAddress, quantity, useProxy }, retries - 1)
-    //     }
-    // }
+            if (retries <= 0) {
+                console.error(error)
+                console.error(from, abi.target, data)
+                return false
+            }
+            await delay(500)
+            return await this.isAssetTransferrable({ asset, fromAddress, toAddress, quantity, useProxy }, retries - 1)
+        }
+    }
 
     /**
      * Transfer a fungible or non-fungible asset to another address
@@ -2453,18 +2453,18 @@ export class OpenSeaPort {
             } else if ('bundle' in order.metadata) {
                 // We're matching a bundle order
                 // const bundle = order.metadata.bundle
-//                 const orderedSchemas = bundle.schemas
-//                     ? bundle.schemas.map(schemaName => this._getSchema(schemaName))
-//                     // Backwards compat:
-//                     : bundle.assets.map(() => this._getSchema(
-//                         'schema' in order.metadata
-//                             ? order.metadata.schema
-//                             : undefined))
-//                 const atomicized = "order.side == OrderSide.Buy\
-//                     ? encodeAtomicizedSell(orderedSchemas, order.metadata.bundle.assets,\
-//  recipientAddress, this._wyvernProtocol, this._networkName)\
-//                     : encodeAtomicizedBuy(orderedSchemas, order.metadata.bundle.assets, \
-// recipientAddress, this._wyvernProtocol, this._networkName)"
+                //                 const orderedSchemas = bundle.schemas
+                //                     ? bundle.schemas.map(schemaName => this._getSchema(schemaName))
+                //                     // Backwards compat:
+                //                     : bundle.assets.map(() => this._getSchema(
+                //                         'schema' in order.metadata
+                //                             ? order.metadata.schema
+                //                             : undefined))
+                //                 const atomicized = "order.side == OrderSide.Buy\
+                //                     ? encodeAtomicizedSell(orderedSchemas, order.metadata.bundle.assets,\
+                //  recipientAddress, this._wyvernProtocol, this._networkName)\
+                //                     : encodeAtomicizedBuy(orderedSchemas, order.metadata.bundle.assets, \
+                // recipientAddress, this._wyvernProtocol, this._networkName)"
 
                 return {
                     target: AtomicizerContractAddress,

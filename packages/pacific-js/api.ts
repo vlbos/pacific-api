@@ -1,52 +1,51 @@
-import { ApiPromise } from '@polkadot/api'
-import { v4 as uuidv4 } from 'uuid'
-import { stringToHex, stringToU8a } from '@polkadot/util'
+// import { ApiPromise } from '@polkadot/api'
+// import { v4 as uuidv4 } from 'uuid'
+// import { stringToHex, stringToU8a } from '@polkadot/util'
 
-import { orderJSONToHexArray,orderFieldsJSONToOrder, makeOrderArrayEx, makeOrderEx, makeOrder } from '../orders/order'
-import { submit, users } from '../orders/lib/submit-signed-tx'//,initmetedata
+// import { orderJSONToHexArray, orderFieldsJSONToOrder, makeOrderArrayEx, makeOrderEx, makeOrder } from '../orders/order'
+// import { submit, users } from '../orders/lib/submit-signed-tx'//,initmetedata
 // import  {createType}  from '@polkadot/types';
 // import * as definitions from './typegen/src/interfaces/definitions';
 
 // import types from './config/types.json';
 // import rpcs from './config/rpcs.json';
 // const rpc = { ...rpcs };
-import type { OrderJSONType } from '../interfaces/augment-types';
+// import type { OrderJSONType } from '../interfaces/augment-types';
 
 import 'isomorphic-unfetch'
-// import * as QueryString from 'query-string'
+import * as QueryString from 'query-string'
 import {
     Network,
     OpenSeaAPIConfig,
     OpenSeaAsset,
-    // OpenSeaAssetBundle,
-    // OpenSeaAssetBundleQuery,
+    OpenSeaAssetBundle,
+    OpenSeaAssetBundleQuery,
     OpenSeaAssetQuery,
     OpenSeaFungibleToken,
     OpenSeaFungibleTokenQuery,
     Order,
-    // OrderbookResponse,
+    OrderbookResponse,
     OrderJSON,
     OrderQuery
 } from './types'
 import {
-    // assetBundleFromJSON,
+    assetBundleFromJSON,
     assetFromJSON,
     delay,
     orderFromJSON,
-orderQueryToJSON
-    // tokenFromJSON
+    tokenFromJSON
 } from './utils/utils'
 import {
     API_BASE_MAINNET,
     API_BASE_RINKEBY,
-    // API_PATH,
-    // ORDERBOOK_PATH,
+    API_PATH,
+    ORDERBOOK_PATH,
     ORDERBOOK_VERSION,
     SITE_HOST_MAINNET,
     SITE_HOST_RINKEBY
 } from './constants'
 
-import { createApi } from '../api/test/helpers/apiHelper'
+// import { createApi } from '../api/test/helpers/apiHelper'
 
 
 export class OpenSeaAPI {
@@ -68,8 +67,7 @@ export class OpenSeaAPI {
      */
     public logger: (arg: string) => void
 
-
-    // private apiKey: string | undefined
+    private apiKey: string | undefined
 
     /**
      * Create an instance of the OpenSea API
@@ -77,7 +75,7 @@ export class OpenSeaAPI {
      * @param logger Optional function for logging debug strings before and after requests are made
      */
     constructor(config: OpenSeaAPIConfig, logger?: (arg: string) => void) {
-        // this.apiKey = config.apiKey
+        this.apiKey = config.apiKey
         // const provider = new WsProvider('ws://127.0.0.1:9944/');
         // api =  new ApiPromise({ provider });
         //         (async function () { api = await this.apipro()
@@ -133,22 +131,15 @@ export class OpenSeaAPI {
      * @param order Order JSON to post to the orderbook
      * @param retries Number of times to retry if the service is unavailable for any reason
      */
-    public async postOrder(order: OrderJSON, sender: any, retries = 2): Promise<Order> {
-        const json = order
+    public async postOrder(order: OrderJSON, retries = 2): Promise<Order> {
+        let json
         try {
-            //   json = await this.post(`${ORDERBOOK_PATH}/orders/post/`, order) as OrderJSON
-            const order_id = uuidv4()
-            console.log("====order_id==============", order_id)
-            const api = await createApi()
-            submit(api, api.tx.orderbook.postOrder(order_id, order.maker, orderJSONToHexArray(order)), sender)
-
+            json = await this.post(`${ORDERBOOK_PATH}/orders/post/`, order) as OrderJSON
         } catch (error) {
             _throwOrContinue(error, retries)
             await delay(3000)
             return this.postOrder(order, retries - 1)
         }
-        console.log("====json==============", json)
-
         return orderFromJSON(json)
     }
 
@@ -164,18 +155,14 @@ export class OpenSeaAPI {
     public async postAssetWhitelist(
         tokenAddress: string,
         tokenId: string | number,
-        email: string,
-        sender: any
+        email: string
     ): Promise<boolean> {
 
-        // const json = await this.post(`${API_PATH}/asset/${tokenAddress}/${tokenId}/whitelist/`, {
-        //   email
-        // })
-        const api = await createApi()
+        const json = await this.post(`${API_PATH}/asset/${tokenAddress}/${tokenId}/whitelist/`, {
+            email
+        })
 
-        submit(api, api.tx.orderbook.postAssetWhiteList(tokenAddress, tokenId.toString(), email), sender)
-
-        return true
+        return !!json.success
     }
 
     /**
@@ -185,23 +172,24 @@ export class OpenSeaAPI {
      */
     public async getOrder(query: OrderQuery): Promise<Order> {
 
-        // const result = await this.get(
-        //   `${ORDERBOOK_PATH}/orders/`, {
-        //     limit: 1,
-        //     ...query
-        //   }
-        // )
-        const api = await createApi()
-       
-        const result = await api.rpc.orderbook.getOrder(orderQueryToJSON(query))
-        if (!result||result==null||result.toHuman()==null) {
+        const result = await this.get(
+            `${ORDERBOOK_PATH}/orders/`, {
+            limit: 1,
+            ...query
+        }
+        )
+
+        let orderJSON
+        if (ORDERBOOK_VERSION == 0) {
+            const json = result as OrderJSON[]
+            orderJSON = json[0]
+        } else {
+            const json = result as OrderbookResponse
+            orderJSON = json.orders[0]
+        }
+        if (!orderJSON) {
             throw new Error(`Not found: no matching order found`)
         }
-
-        console.log("result====", `${result}`)
-        let orderJSON = orderFieldsJSONToOrder(result.toHuman());//this.convertOrderJSONTypeToOrderJSON(result)
-        console.log("orderJSON====", orderJSON)
-
         return orderFromJSON(orderJSON)
     }
 
@@ -218,28 +206,27 @@ export class OpenSeaAPI {
         page = 1
     ): Promise<{ orders: Order[]; count: number }> {
 
-        // const result = await this.get(
-        //   `${ORDERBOOK_PATH}/orders/`,
-        //   {
-        //     limit: this.pageSize,
-        //     offset: (page - 1) * this.pageSize,
-        //     ...query,
-        //   }
-        // )
-        query.limit = this.pageSize
-        query.offset = (page - 1) * this.pageSize
-        const api = await createApi()
+        const result = await this.get(
+            `${ORDERBOOK_PATH}/orders/`,
+            {
+                limit: this.pageSize,
+                offset: (page - 1) * this.pageSize,
+                ...query,
+            }
+        )
 
-        const result = await api.rpc.orderbook.getOrders(orderQueryToJSON(query), page.toString())
-        if (!result||result==null||result.toHuman()==null) {
-            throw new Error(`Not found: no matching order found`)
-        }
-        let s = result.toHuman() as any[] ;
-        let orderJSON = s.map((o:any)=>orderFieldsJSONToOrder(o));
-
-        return {
-            orders: orderJSON.map(j => orderFromJSON(j)),
-            count: orderJSON.length
+        if (ORDERBOOK_VERSION == 0) {
+            const json = result as OrderJSON[]
+            return {
+                orders: json.map(j => orderFromJSON(j)),
+                count: json.length
+            }
+        } else {
+            const json = result as OrderbookResponse
+            return {
+                orders: json.orders.map(j => orderFromJSON(j)),
+                count: json.count
+            }
         }
     }
 
@@ -257,15 +244,10 @@ export class OpenSeaAPI {
     },
         retries = 1
     ): Promise<OpenSeaAsset> {
+
         let json
         try {
-            // json = await this.get(`${API_PATH}/asset/${tokenAddress}/${tokenId || 0}/`)
-            const api = await createApi()
-            if (null == tokenId) {
-                tokenId = ""
-            }
-            json = await api.rpc.orderbook.getAsset(stringToHex(tokenAddress), stringToHex(tokenId + ""))
-
+            json = await this.get(`${API_PATH}/asset/${tokenAddress}/${tokenId || 0}/`)
         } catch (error) {
             _throwOrContinue(error, retries)
             await delay(1000)
@@ -284,24 +266,18 @@ export class OpenSeaAPI {
     public async getAssets(
         query: OpenSeaAssetQuery = {},
         page = 1
-    ) {//: Promise<{ assets: OpenSeaAsset[]; estimatedCount: number }> {
+    ): Promise<{ assets: OpenSeaAsset[]; estimatedCount: number }> {
 
-        // const json = await this.get(`${API_PATH}/assets/`, {
-        //     limit: this.pageSize,
-        //     offset: (page - 1) * this.pageSize,
-        //     ...query
-        // })
-        //    const  query = {
-        //     token_ids: [stringToHex(orders[2]["metadata.asset.id"])],
-        //     asset_contract_address: stringToHex(orders[2]["metadata.asset.address"])
-        //     }
+        const json = await this.get(`${API_PATH}/assets/`, {
+            limit: this.pageSize,
+            offset: (page - 1) * this.pageSize,
+            ...query
+        })
 
-        const api = await createApi()
-        const json = await api.rpc.orderbook.getAssets(query, page.toString())
-        // return {
-        //     assets: json.assets.map((j: any) => assetFromJSON(j)),
-        //     estimatedCount: json.estimated_count
-        // }
+        return {
+            assets: json.assets.map((j: any) => assetFromJSON(j)),
+            estimatedCount: json.estimated_count
+        }
     }
 
     /**
@@ -317,13 +293,13 @@ export class OpenSeaAPI {
         retries = 1
     ): Promise<{ tokens: OpenSeaFungibleToken[] }> {
 
-        // let json
+        let json
         try {
-            // json = await this.get(`${API_PATH}/tokens/`, {
-            //     ...query,
-            //     limit: this.pageSize,
-            //     offset: (page - 1) * this.pageSize
-            // })
+            json = await this.get(`${API_PATH}/tokens/`, {
+                ...query,
+                limit: this.pageSize,
+                offset: (page - 1) * this.pageSize
+            })
         } catch (error) {
             _throwOrContinue(error, retries)
             await delay(1000)
@@ -331,175 +307,164 @@ export class OpenSeaAPI {
         }
 
         return {
-            tokens: [{
-                name: "token.name",
-                symbol: "token.symbol",
-                decimals: 1,
-                address: "token.address",
-                imageUrl: "token.image_url",
-                ethPrice: "1",
-                usdPrice: "1"
-            }]
+            tokens: json.map((t: any) => tokenFromJSON(t))
         }
-        // return {
-        //     tokens: json.map((t: any) => tokenFromJSON(t))
-        // }
     }
 
-    // /**
-    //  * Fetch an bundle from the API, return null if it isn't found
-    //  * @param slug The bundle's identifier
-    //  */
-    // public async getBundle({ slug }: {
-    //     slug: string
-    // }): Promise<OpenSeaAssetBundle | null> {
+    /**
+     * Fetch an bundle from the API, return null if it isn't found
+     * @param slug The bundle's identifier
+     */
+    public async getBundle({ slug }: {
+        slug: string
+    }): Promise<OpenSeaAssetBundle | null> {
 
-    //     const json = await this.get(`${API_PATH}/bundle/${slug}/`)
+        const json = await this.get(`${API_PATH}/bundle/${slug}/`)
 
-    //     return json ? assetBundleFromJSON(json) : null
-    // }
+        return json ? assetBundleFromJSON(json) : null
+    }
 
-    // /**
-    //  * Fetch list of bundles from the API, returning the page of bundles and the count of total bundles
-    //  * @param query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetBundleJSON` type is supported
-    //  * @param page Page number, defaults to 1. Can be overridden by
-    //  * `limit` and `offset` attributes from OpenSeaAssetBundleQuery
-    //  */
-    // public async getBundles(
-    //     query: OpenSeaAssetBundleQuery = {},
-    //     page = 1
-    // ): Promise<{ bundles: OpenSeaAssetBundle[]; estimatedCount: number }> {
+    /**
+     * Fetch list of bundles from the API, returning the page of bundles and the count of total bundles
+     * @param query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetBundleJSON` type is supported
+     * @param page Page number, defaults to 1. Can be overridden by
+     * `limit` and `offset` attributes from OpenSeaAssetBundleQuery
+     */
+    public async getBundles(
+        query: OpenSeaAssetBundleQuery = {},
+        page = 1
+    ): Promise<{ bundles: OpenSeaAssetBundle[]; estimatedCount: number }> {
 
-    //     const json = await this.get(`${API_PATH}/bundles/`, {
-    //         ...query,
-    //         limit: this.pageSize,
-    //         offset: (page - 1) * this.pageSize
-    //     })
+        const json = await this.get(`${API_PATH}/bundles/`, {
+            ...query,
+            limit: this.pageSize,
+            offset: (page - 1) * this.pageSize
+        })
 
-    //     return {
-    //         bundles: json.bundles.map((j: any) => assetBundleFromJSON(j)),
-    //         estimatedCount: json.estimated_count
-    //     }
-    // }
+        return {
+            bundles: json.bundles.map((j: any) => assetBundleFromJSON(j)),
+            estimatedCount: json.estimated_count
+        }
+    }
 
-    //     /**
-    //      * Get JSON data from API, sending auth token in headers
-    //      * @param apiPath Path to URL endpoint under API
-    //      * @param query Data to send. Will be stringified using QueryString
-    //      */
-    //     public async get(apiPath: string, query: object = {}): Promise<any> {
+    /**
+     * Get JSON data from API, sending auth token in headers
+     * @param apiPath Path to URL endpoint under API
+     * @param query Data to send. Will be stringified using QueryString
+     */
+    public async get(apiPath: string, query: object = {}): Promise<any> {
 
-    //         const qs = QueryString.stringify(query)
-    //         const url = `${apiPath}?${qs}`
+        const qs = QueryString.stringify(query)
+        const url = `${apiPath}?${qs}`
 
-    //         const response = await this._fetch(url)
-    //         return response.json()
-    //     }
+        const response = await this._fetch(url)
+        return response.json()
+    }
 
-    //     /**
-    //      * POST JSON data to API, sending auth token in headers
-    //      * @param apiPath Path to URL endpoint under API
-    //      * @param body Data to send. Will be JSON.stringified
-    //      * @param opts RequestInit opts, similar to Fetch API. If it contains
-    //      *  a body, it won't be stringified.
-    //      */
-    //     public async post(apiPath: string, body?: object, opts: RequestInit = {}): Promise<any> {
+    /**
+     * POST JSON data to API, sending auth token in headers
+     * @param apiPath Path to URL endpoint under API
+     * @param body Data to send. Will be JSON.stringified
+     * @param opts RequestInit opts, similar to Fetch API. If it contains
+     *  a body, it won't be stringified.
+     */
+    public async post(apiPath: string, body?: object, opts: RequestInit = {}): Promise<any> {
 
-    //         const fetchOpts = {
-    //             method: 'POST',
-    //             body: body ? JSON.stringify(body) : undefined,
-    //             headers: {
-    //                 Accept: 'application/json',
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             ...opts
-    //         }
+        const fetchOpts = {
+            method: 'POST',
+            body: body ? JSON.stringify(body) : undefined,
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            ...opts
+        }
 
-    //         const response = await this._fetch(apiPath, fetchOpts)
-    //         return response.json()
-    //     }
+        const response = await this._fetch(apiPath, fetchOpts)
+        return response.json()
+    }
 
-    //     /**
-    //      * PUT JSON data to API, sending auth token in headers
-    //      * @param apiPath Path to URL endpoint under API
-    //      * @param body Data to send
-    //      * @param opts RequestInit opts, similar to Fetch API. If it contains
-    //      *  a body, it won't be stringified.
-    //      */
-    //     public async put(apiPath: string, body: object, opts: RequestInit = {}) {
+    /**
+     * PUT JSON data to API, sending auth token in headers
+     * @param apiPath Path to URL endpoint under API
+     * @param body Data to send
+     * @param opts RequestInit opts, similar to Fetch API. If it contains
+     *  a body, it won't be stringified.
+     */
+    public async put(apiPath: string, body: object, opts: RequestInit = {}) {
 
-    //         return this.post(apiPath, body, {
-    //             method: 'PUT',
-    //             ...opts
-    //         })
-    //     }
+        return this.post(apiPath, body, {
+            method: 'PUT',
+            ...opts
+        })
+    }
 
-    //     /**
-    //      * Get from an API Endpoint, sending auth token in headers
-    //      * @param apiPath Path to URL endpoint under API
-    //      * @param opts RequestInit opts, similar to Fetch API
-    //      */
-    //     private async _fetch(apiPath: string, opts: RequestInit = {}) {
+    /**
+     * Get from an API Endpoint, sending auth token in headers
+     * @param apiPath Path to URL endpoint under API
+     * @param opts RequestInit opts, similar to Fetch API
+     */
+    private async _fetch(apiPath: string, opts: RequestInit = {}) {
 
-    //         const apiBase = this.apiBaseUrl
-    //         const apiKey = this.apiKey
-    //         const finalUrl = apiBase + apiPath
-    //         const finalOpts = {
-    //             ...opts,
-    //             headers: {
-    //                 ...(apiKey ? { 'X-API-KEY': apiKey } : {}),
-    //                 ...(opts.headers || {}),
-    //             }
-    //         }
+        const apiBase = this.apiBaseUrl
+        const apiKey = this.apiKey
+        const finalUrl = apiBase + apiPath
+        const finalOpts = {
+            ...opts,
+            headers: {
+                ...(apiKey ? { 'X-API-KEY': apiKey } : {}),
+                ...(opts.headers || {}),
+            }
+        }
 
-    //         // this.logger(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
+        //this.logger(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
+        console.log(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
+        return fetch(finalUrl, finalOpts).then(async res => this._handleApiResponse(res))
+    }
 
-    //         return fetch(finalUrl, finalOpts).then(async res => this._handleApiResponse(res))
-    //     }
+    private async _handleApiResponse(response: Response) {
+        if (response.ok) {
+            //this.logger(`Got success: ${response.status}`)
+            return response
+        }
 
-    //     private async _handleApiResponse(response: Response) {
-    //         if (response.ok) {
-    //             this.logger(`Got success: ${response.status}`)
-    //             return response
-    //         }
+        let result
+        let errorMessage
+        try {
+            result = await response.text()
+            result = JSON.parse(result)
+        } catch {
+            // Result will be undefined or text
+        }
 
-    //         let result
-    //         let errorMessage
-    //         try {
-    //             result = await response.text()
-    //             result = JSON.parse(result)
-    //         } catch {
-    //             // Result will be undefined or text
-    //         }
+        //this.logger(`Got error ${response.status}: ${JSON.stringify(result)}`)
 
-    //         this.logger(`Got error ${response.status}: ${JSON.stringify(result)}`)
+        switch (response.status) {
+            case 400:
+                errorMessage = result && result.errors
+                    ? result.errors.join(', ')
+                    : `Invalid request: ${JSON.stringify(result)}`
+                break
+            case 401:
+            case 403:
+                errorMessage = `Unauthorized. Full message was '${JSON.stringify(result)}'`
+                break
+            case 404:
+                errorMessage = `Not found. Full message was '${JSON.stringify(result)}'`
+                break
+            case 500:
+                errorMessage = `Internal server error. OpenSea has been alerted, but if the problem persists please contact us via Discord: https://discord.gg/ga8EJbv - full message was ${JSON.stringify(result)}`
+                break
+            case 503:
+                errorMessage = `Service unavailable. Please try again in a few minutes. If the problem persists please contact us via Discord: https://discord.gg/ga8EJbv - full message was ${JSON.stringify(result)}`
+                break
+            default:
+                errorMessage = `Message: ${JSON.stringify(result)}`
+                break
+        }
 
-    //         switch (response.status) {
-    //             case 400:
-    //                 errorMessage = result && result.errors
-    //                     ? result.errors.join(', ')
-    //                     : `Invalid request: ${JSON.stringify(result)}`
-    //                 break
-    //             case 401:
-    //             case 403:
-    //                 errorMessage = `Unauthorized. Full message was '${JSON.stringify(result)}'`
-    //                 break
-    //             case 404:
-    //                 errorMessage = `Not found. Full message was '${JSON.stringify(result)}'`
-    //                 break
-    //             case 500:
-    //                 errorMessage = `Internal server error. OpenSea has been alerted, but if the problem persists please contact us via Discord: https://discord.gg/ga8EJbv - full message was ${JSON.stringify(result)}`
-    //                 break
-    //             case 503:
-    //                 errorMessage = `Service unavailable. Please try again in a few minutes. If the problem persists please contact us via Discord: https://discord.gg/ga8EJbv - full message was ${JSON.stringify(result)}`
-    //                 break
-    //             default:
-    //                 errorMessage = `Message: ${JSON.stringify(result)}`
-    //                 break
-    //         }
-
-    //         throw new Error(`API Error ${response.status}: ${errorMessage}`)
-    //     }
+        throw new Error(`API Error ${response.status}: ${errorMessage}`)
+    }
 }
 
 function _throwOrContinue(error: Error, retries: number) {

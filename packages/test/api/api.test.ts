@@ -27,7 +27,7 @@ const ordersJSON = ordersJSONFixture as any
 const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 
 // const provider = new Web3.providers.HttpProvider(MAINNET_PROVIDER_URL)
-const provider = new WsProvider(LOCALNET_PROVIDER_URL);
+const provider = {};//new WsProvider();//LOCALNET_PROVIDER_URL);
 
 const client = new OpenSeaPort(provider, {
     networkName: Network.Main,
@@ -43,7 +43,7 @@ let accounts: any;
 const salary = 100_000_000_000_000;
 import { createApiAndTestAccounts, saveNonce, sleepMs } from '../../api/test/helpers/apiHelper'
 async function init(): Promise<{ api: ApiPromise; accounts: any }> {
-    jest.setTimeout(30000);
+    jest.setTimeout(90000);
     process.env.NODE_ENV = 'test';
     const papi = await createApiAndTestAccounts();
     api = papi.api;
@@ -68,47 +68,47 @@ describe('api tests', (): void => {
     let api: any;
     beforeAll(async () => {
         jest.setTimeout(90 * 1000)
-        const papi = await init();
-        api = papi.api;
+        // const papi = await init();
+        // api = papi.api;
     });
 
     afterAll(() => {
         //   return clearCityDatabase();
-        saveNonce(users)
+        // saveNonce(users)
     });
 
-    //   it('API fetches bundles and prefetches sell orders', async () => {
-    //     const { bundles } = await apiToTest.getBundles({asset_contract_address: CK_RINKEBY_ADDRESS, on_sale: true})
-    //     expect(bundles). toBeInstanceOf(Array)
+    it('API fetches bundles and prefetches sell orders', async () => {
+        const { bundles } = await apiToTest.getBundles({ asset_contract_address: CK_RINKEBY_ADDRESS, on_sale: true })
+        expect(bundles).toBeInstanceOf(Array)
 
-    //     const bundle = bundles[0]
-    //     expect(bundle).toBeNull()
-    //     if (!bundle) {
-    //       return
-    //     }
-    //     expect(bundle.assets.map(a => a.assetContract.name)). toContain( "CryptoKittiesRinkeby")
-    //     assert.isNotEmpty(bundle.sellOrders)
-    //   })
+        const bundle = bundles[0]
+        expect(bundle).not.toBeNull()
+        if (!bundle) {
+            return
+        }
+        expect(bundle.assets.map(a => a.assetContract.name)).toContain("CryptoKittiesRinkeby")
+        expect(bundle.sellOrders).not.toBeNull()
+    })
 
-    //   it('Includes API key in token request', async () => {
-    //     const oldLogger = rinkebyApi.logger
+    it('Includes API key in token request', async () => {
+        const oldLogger = rinkebyApi.logger
 
-    //     const logPromise = new Promise((resolve, reject) => {
-    //       rinkebyApi.logger = log => {
-    //         try {
-    //           expect(log). toContain( `"X-API-KEY":"${RINKEBY_API_KEY}"`)
-    //           resolve()
-    //         } catch (e) {
-    //           reject(e)
-    //         } finally {
-    //           rinkebyApi.logger = oldLogger
-    //         }
-    //       }
-    //       rinkebyApi.getPaymentTokens({ symbol: "WETH" })
-    //     })
+        const logPromise = new Promise((resolve, reject) => {
+            rinkebyApi.logger = log => {
+                try {
+                    expect(log).toContain(`"X-API-KEY":"${RINKEBY_API_KEY}"`)
+                    resolve(0)
+                } catch (e) {
+                    reject(e)
+                } finally {
+                    rinkebyApi.logger = oldLogger
+                }
+            }
+            rinkebyApi.getPaymentTokens({ symbol: "WETH" })
+        })
 
-    //     await logPromise
-    //   })
+        await logPromise
+    })
 
     it('An API asset\'s order has correct hash', async () => {
         console.log("==================")
@@ -118,12 +118,12 @@ describe('api tests', (): void => {
 
         console.log("==================")
         const asset = await client.api.getAsset({ tokenAddress: CK_ADDRESS, tokenId: 1 })
-        expect(asset.orders).toBeNull()
+        expect(asset.orders).not.toBeNull()
         if (!asset.orders) {
             return
         }
         const order = asset.orders[0]
-        expect(order).toBeNull()
+        expect(order).not.toBeNull()
         if (!order) {
             return
         }
@@ -170,64 +170,99 @@ describe('api tests', (): void => {
         // expect(orderData.englishAuctionReservePrice).toEqual( WyvernProtocol.toBaseUnitAmount(makeBigNumber(englishAuctionReservePrice), 18).toString())
     })
 
+    test('API fetches tokens', async () => {
+        const { tokens } = await apiToTest.getPaymentTokens({ symbol: "MANA" })
+        expect(Array.isArray(tokens)).toBe(true)
+        expect(tokens.length).toEqual(1)
+        expect(tokens[0].name).toEqual("Decentraland MANA")
+    })
 
-    //   it('API fetches orderbook', async () => {
-    //     const {orders, count} = await apiToTest.getOrders()
-    //     expect(orders). toBeInstanceOf(Array)
-    //     expect(count). toBeInstanceOf(Number)
-    //     expect(orders.length).toEqual( apiToTest.pageSize)
-    //     // assert.isAtLeast(count, orders.length)
-    //   })
+    test('Rinkeby API orders have correct OpenSea url', async () => {
+        const order = await rinkebyApi.getOrder({})
+        if (!order.asset) {
+            return
+        }
+        const url = `https://rinkeby.opensea.io/assets/${order.asset.assetContract.address}/${order.asset.tokenId}`
+        expect(order.asset.openseaLink).toEqual(url)
+    })
 
-    //   it('API can change page size', async () => {
-    //     const defaultPageSize = apiToTest.pageSize
-    //     apiToTest.pageSize = 7
-    //     const {orders} = await apiToTest.getOrders()
-    //     expect(orders.length).toEqual( 7)
-    //     apiToTest.pageSize = defaultPageSize
-    //   })
+    test('Mainnet API orders have correct OpenSea url', async () => {
+        const order = await mainApi.getOrder({})
+        if (!order.asset) {
+            return
+        }
+        const url = `https://opensea.io/assets/${order.asset.assetContract.address}/${order.asset.tokenId}`
+        expect(order.asset.openseaLink).toEqual(url)
+    })
+    it('API fetches orderbook', async () => {
+        const { orders, count } = await apiToTest.getOrders()
+        expect(orders).toBeInstanceOf(Array)
+        expect(count).toBeInstanceOf(Number)
+        expect(orders.length).toEqual(apiToTest.pageSize)
+        // expect(orders.length).toBeGreaterThanOrEqual(count)
+    })
 
-    //   if (ORDERBOOK_VERSION > 0) {
-    //     it('API orderbook paginates', async () => {
-    //       const {orders, count} = await apiToTest.getOrders()
-    //       const pagination = await apiToTest.getOrders({}, 2)
-    //       expect(pagination.orders.length).toEqual( apiToTest.pageSize)
-    //       expect(pagination.orders[0]).not.toStrictEqual(orders[0])
-    //       expect(pagination.count).toEqual( count)
-    //     })
-    //   }
+    it('API can change page size', async () => {
+        const defaultPageSize = apiToTest.pageSize
+        apiToTest.pageSize = 7
+        const { orders } = await apiToTest.getOrders()
+        expect(orders.length).toEqual(7)
+        apiToTest.pageSize = defaultPageSize
+    })
 
-    //   it('API fetches orders for asset contract and asset', async () => {
-    //     const forKitties = await apiToTest.getOrders({asset_contract_address: CK_RINKEBY_ADDRESS})
-    //     expect(forKitties.orders.length). toBeGreaterThan( 0)
-    //     expect(forKitties.count). toBeGreaterThan( 0)
+    if (ORDERBOOK_VERSION > 0) {
+        it('API orderbook paginates', async () => {
+            const { orders, count } = await apiToTest.getOrders()
+            const pagination = await apiToTest.getOrders({}, 2)
+            expect(pagination.orders.length).toEqual(apiToTest.pageSize)
+            expect(pagination.orders[0]).not.toStrictEqual(orders[0])
+            expect(pagination.count).toEqual(count)
+        })
+    }
 
-    //     const forKitty = await apiToTest.getOrders({asset_contract_address: CK_RINKEBY_ADDRESS, token_id: CK_RINKEBY_TOKEN_ID})
-    //     expect(forKitty.orders). toBeInstanceOf(Array)
-    //   })
+    it('API fetches orders for asset contract and asset', async () => {
+        const forKitties = await apiToTest.getOrders({ asset_contract_address: CK_RINKEBY_ADDRESS })
+        expect(forKitties.orders.length).toBeGreaterThan(0)
+        expect(forKitties.count).toBeGreaterThan(0)
 
-    //   it('API fetches orders for asset owner', async () => {
-    //     const forOwner = await apiToTest.getOrders({owner: ALEX_ADDRESS})
-    //     expect(forOwner.orders.length). toBeGreaterThan( 0)
-    //     expect(forOwner.count). toBeGreaterThan( 0)
-    //     const owners = forOwner.orders.map((o:any) => o.asset && o.asset.owner && o.asset.owner.address)
-    //     owners.forEach((owner:any) => {
-    //       expect([ALEX_ADDRESS, NULL_ADDRESS]). toContain( owner)
-    //     })
-    //   })
+        const forKitty = await apiToTest.getOrders({ asset_contract_address: CK_RINKEBY_ADDRESS, token_id: CK_RINKEBY_TOKEN_ID })
+        expect(forKitty.orders).toBeInstanceOf(Array)
+    })
 
-    //   it('API fetches buy orders for maker', async () => {
-    //     const forMaker = await apiToTest.getOrders({maker: ALEX_ADDRESS, side: OrderSide.Buy})
-    //     expect(forMaker.orders.length). toBeGreaterThan( 0)
-    //     expect(forMaker.count). toBeGreaterThan( 0)
-    //     forMaker.orders.forEach((order:any) => {
-    //       expect(ALEX_ADDRESS).toEqual( order.maker)
-    //       expect(OrderSide.Buy).toEqual( order.side)
-    //     })
-    //   })
+    it('API fetches orders for asset owner', async () => {
+        const forOwner = await apiToTest.getOrders({ owner: ALEX_ADDRESS })
+        expect(forOwner.orders.length).toBeGreaterThan(0)
+        expect(forOwner.count).toBeGreaterThan(0)
+        const owners = forOwner.orders.map((o: any) => o.asset && o.asset.owner && o.asset.owner.address)
+        owners.forEach((owner: any) => {
+            expect([ALEX_ADDRESS, NULL_ADDRESS]).toContain(owner)
+        })
+    })
+
+    it('API fetches buy orders for maker', async () => {
+        const forMaker = await apiToTest.getOrders({ maker: ALEX_ADDRESS, side: OrderSide.Buy })
+        expect(forMaker.orders.length).toBeGreaterThan(0)
+        expect(forMaker.count).toBeGreaterThan(0)
+        forMaker.orders.forEach((order: any) => {
+            expect(ALEX_ADDRESS).toEqual(order.maker)
+            expect(OrderSide.Buy).toEqual(order.side)
+        })
+    })
 
     it.only("API  fetch  orders", async () => {
         let s = await apiToTest.getOrder(englishSellOrderJSON)
+        console.log(s)
+    })
+
+    it("API  post  orders", async () => {
+        let s = await apiToTest.postOrder(englishSellOrderJSON)
+        console.log(s)
+    })
+
+    it("API  post  postAssetWhitelist", async () => {
+        let s = await apiToTest.postAssetWhitelist("tokenAddress: string",
+        "tokenId: string | number",
+        "email: string")
         console.log(s)
     })
 
@@ -239,43 +274,64 @@ describe('api tests', (): void => {
         }
     })
 
-    //   it('API excludes cancelledOrFinalized and markedInvalid orders', async () => {
-    //     const {orders} = await apiToTest.getOrders({limit: 100})
-    //     const finishedOrders = orders.filter((o:any) => o.cancelledOrFinalized)
-    //     expect(finishedOrders). toHaveLength(0)
-    //     const invalidOrders = orders.filter((o:any) => o.markedInvalid)
-    //     expect(invalidOrders). toHaveLength(0)
-    //   })
-
-    //   it('API fetches fees for an asset', async () => {
-    //     const asset = await apiToTest.getAsset({ tokenAddress: CK_RINKEBY_ADDRESS, tokenId: CK_RINKEBY_TOKEN_ID })
-    //     expect(asset.tokenId).toEqual( CK_RINKEBY_TOKEN_ID.toString())
-    //     expect(asset.assetContract.name).toEqual( "CryptoKittiesRinkeby")
-    //     expect(asset.assetContract.sellerFeeBasisPoints).toEqual( CK_RINKEBY_SELLER_FEE)
-    //   })
-
-    //   it('API fetches assets', async () => {
-    //     const { assets } = await apiToTest.getAssets({asset_contract_address: CK_RINKEBY_ADDRESS, order_by: "current_price"})
-    //     expect(assets). toBeInstanceOf(Array)
-    //     expect(assets.length).toEqual( apiToTest.pageSize)
-
-    //     const asset = assets[0]
-    //     expect(asset.assetContract.name).toEqual( "CryptoKittiesRinkeby")
-    //   })
-
-
-    it('postAssetWhitelist API handles ', async () => {
-
-        await apiToTest.postAssetWhitelist('hashedOrder', 'tokenIhhhhhhhhd', "test@test.mail", users.betty)
-
+    it('API excludes cancelledOrFinalized and markedInvalid orders', async () => {
+        const { orders } = await apiToTest.getOrders({ limit: 100 })
+        const finishedOrders = orders.filter((o: any) => o.cancelledOrFinalized)
+        expect(finishedOrders).toHaveLength(0)
+        const invalidOrders = orders.filter((o: any) => o.markedInvalid)
+        expect(invalidOrders).toHaveLength(0)
     })
 
-    it('post order API handles ', async () => {
-        const hashedOrder = englishSellOrderJSON;
+    it('API fetches fees for an asset', async () => {
+        const asset = await apiToTest.getAsset({ tokenAddress: CK_RINKEBY_ADDRESS, tokenId: CK_RINKEBY_TOKEN_ID })
+        expect(asset.tokenId).toEqual(CK_RINKEBY_TOKEN_ID.toString())
+        expect(asset.assetContract.name).toEqual("CryptoKittiesRinkeby")
+        expect(asset.assetContract.sellerFeeBasisPoints).toEqual(CK_RINKEBY_SELLER_FEE)
+    })
 
-        hashedOrder.maker = users.betty.key.address
+    it('API fetches assets', async () => {
+        const { assets } = await apiToTest.getAssets({ asset_contract_address: CK_RINKEBY_ADDRESS, order_by: "current_price" })
+        expect(assets).toBeInstanceOf(Array)
+        expect(assets.length).toEqual(apiToTest.pageSize)
 
-        await apiToTest.postOrder(hashedOrder, users.betty)
+        const asset = assets[0]
+        expect(asset.assetContract.name).toEqual("CryptoKittiesRinkeby")
+    })
 
+    it('API handles errors', async () => {
+        // 401 Unauthorized
+        try {
+            await apiToTest.get('/user')
+        } catch (error) {
+            expect(error.message).toMatch("Unauthorized")
+        }
+
+        // 404 Not found
+        try {
+            await apiToTest.get(`/asset/${CK_RINKEBY_ADDRESS}/0`)
+        } catch (error) {
+            expect(error.message).toMatch("Not found")
+        }
+
+        // 400 malformed
+        const res = await apiToTest.getOrders({
+            // Get an old order to make sure listing time is too early
+            listed_before: Math.round(Date.now() / 1000 - 3600)
+        })
+        const order = res.orders[0]
+        expect(order).not.toBeNull()
+
+        try {
+            const newOrder = {
+                ...orderToJSON(order),
+                v: 1,
+                r: "",
+                s: ""
+            }
+            await apiToTest.postOrder(newOrder)
+        } catch (error) {
+            // TODO sometimes the error is "Expected the listing time to be at or past the current time"
+            // expect(error.message).stringContaining("Order failed exchange validation")
+        }
     })
 })

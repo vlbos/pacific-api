@@ -30,8 +30,8 @@ const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
         // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
         //   const provider = new WsProvider('ws://127.0.0.1:9944/');
-const provider =  new WsProvider('ws://127.0.0.1:9944/');
-const rinkebyProvider =  new WsProvider('ws://127.0.0.1:9944/');
+const provider = {}; //new WsProvider('ws://127.0.0.1:9944/');
+const rinkebyProvider = {};// new WsProvider('ws://127.0.0.1:9944/');
 
 const client = new OpenSeaPort(provider, {
   networkName: Network.Main,
@@ -901,7 +901,7 @@ export async function testMatchingNewOrder(unhashedOrder: UnhashedOrder, account
       toAddress,
       useProxy,
     })
-    expect(isTransferrable). toBeTruthy()// `Not transferrable: ${asset.tokenAddress} # ${asset.tokenId} schema ${asset.schemaName} quantity ${quantity} from ${fromAddress} to ${toAddress} using proxy: ${useProxy}`
+    expect(isTransferrable).toBeTruthy()// `Not transferrable: ${asset.tokenAddress} # ${asset.tokenId} schema ${asset.schemaName} quantity ${quantity} from ${fromAddress} to ${toAddress} using proxy: ${useProxy}`
   }))
 }
 
