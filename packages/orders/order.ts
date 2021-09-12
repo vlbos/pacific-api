@@ -100,9 +100,6 @@ export const orderFieldsJSONToOrder = (orderFieldsJSON: any) => {
     return orderFieldsJSON;
 }
 
-
-
-
 const makeOrderEx = () => {
     let objs = [];
     ordersJSON.map((orderJSON, index) => {
@@ -167,8 +164,6 @@ const orderJSONToHexArray = (orderJSON: any) => {
 
     return arr;
 }
-
-
 
 const hash_address = [
     'exchange',
@@ -277,6 +272,7 @@ async function calculateFinalPrice() {
     exchangeInstance.calculateFinalPrice.call(0, 1, 100, 200, time - 50, time + 50);
     // assert.equal(price.toNumber(), 200, 'Incorrect price')
 }
+
 function calculateCurrentPrice_() {
     const order = makeOrder(exchangeInstance.address, true)
     order.saleKind = 0

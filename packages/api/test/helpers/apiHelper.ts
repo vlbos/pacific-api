@@ -42,17 +42,14 @@ export function createApi(): Promise<ApiPromise> {
 }
 
 export async function createApiAndTestAccounts(): Promise<{ api: ApiPromise; accounts: any; users: any }> {
-    console.log("==================wwwwwwwwwwwww=============")
     const provider = new WsProvider('ws://127.0.0.1:9944/');
 
     await provider.connect();
-    console.log("==================wwwwwwwwwwwww=============")
 
     await sleepMs(100); // Hack to give the provider time to connect
     if (null == users) {
         users = testUsers();
     }
-    console.log("==================wwwwwwwwwwwww=============")
 
     const rpcData = await provider.send('state_getMetadata', []);
     const genesisHash = registry.createType('Hash', await provider.send('chain_getBlockHash', [])).toHex();

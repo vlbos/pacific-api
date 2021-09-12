@@ -11,7 +11,7 @@ import '../interfaces/augment-types';
 // import types from './config/types.json'
 // import rpcs from './config/rpcs.json'
 // const rpc = { ...rpcs }
-// import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../orders/order'
+import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../orders/order'
 
 import { WyvernProtocol } from '../wyvern-js/wyvernProtocol'
 import * as WyvernSchemas from '../wyvern-schemas/src/index'
@@ -92,7 +92,6 @@ const AtomicizerContractAddress = ""// target
 
 import { createApiAndTestAccounts, saveNonce, sleepMs } from '../api/test/helpers/apiHelper'
 const salary = 100_000_000_000_000;
-let a:any;
 let users: any;
 async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     const papi = await createApiAndTestAccounts();
@@ -106,9 +105,9 @@ async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     return { api, accounts };
 
 }
-
+let buy:any=""
 export class OpenSeaPort {
-
+    public accounts: any = "";
     // ApiPromise instance to use
     public apip: any = "";//new ApiPromise({})
     public apipReadOnly: any = "";// new ApiPromise({})
@@ -145,10 +144,6 @@ export class OpenSeaPort {
         apiConfig.networkName = apiConfig.networkName || Network.Main
         apiConfig.gasPrice = apiConfig.gasPrice || makeBigNumber(300000)
         this.api = new OpenSeaAPI(apiConfig)
-                  console.log("=============dddddddd=====sss==============")
-
-      
-
 
         this._networkName = apiConfig.networkName
         this.provider = provider;
@@ -188,12 +183,16 @@ export class OpenSeaPort {
 
     }
     public async apipro() {
-                  console.log("============sss=fsssss=====sss==============")
+        const papi = await init();
+        this.accounts = papi.accounts;
+        this.accounts = papi.accounts;
 
-            const papi = await init();
-            a = papi.api;
-            this._wyvernProtocol = a.rpc;
-            this._wyvernProtocolReadOnly = a.rpc;
+
+        buy = makeOrder(users.bob.key.address, true, 0);
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = this.accounts.slice(0,7);
+        console.log(buy)
+        this._wyvernProtocol = papi.api.tx;
+        this._wyvernProtocolReadOnly = papi.api.rpc;
         // this.apip = await ApiPromise.create({ provider:this.provider })
         // this.apipReadOnly = await ApiPromise.create({ provider: this.provider })
         // const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -214,6 +213,42 @@ export class OpenSeaPort {
             createType(api.registry, 'OrderId').toString()
         ]);
         // this.api.apip = this.apip
+    }
+    public getOrderP(order: UnhashedOrder) {
+        // let a = this.accounts;
+        // order.exchange = a[0];
+        // order.maker = a[1];
+        // order.taker = a[2];
+        // order.feeRecipient = a[3];
+        // order.target = a[4];
+        // order.staticTarget = a[5];
+        // order.paymentToken = a[6];
+        const accounts = this.accounts.slice(0, 7);
+        return {
+            exchange: accounts[0],
+            maker: accounts[0],
+            taker: accounts[0],
+            makerRelayerFee: order.makerRelayerFee.toNumber(),
+            takerRelayerFee: order.makerRelayerFee.toNumber(),
+            makerProtocolFee: order.makerRelayerFee.toNumber(),
+            takerProtocolFee: order.makerRelayerFee.toNumber(),
+            feeRecipient:  accounts[0] ,
+            feeMethod: order.feeMethod,
+            side: order.side,
+            saleKind: order.saleKind,
+            target: accounts[0] ,
+            howToCall: order.howToCall,
+            calldata: '0x'+order.calldata,
+            replacementPattern: '0x'+order.replacementPattern,
+            staticTarget: accounts[0],
+            staticExtradata: order.staticExtradata,
+            paymentToken: accounts[0],
+            basePrice: order.basePrice.toNumber(),
+            extra: order.extra.toNumber(),
+            listingTime: order.listingTime.toNumber(),
+            expirationTime: order.expirationTime.toNumber(),
+            salt: order.makerRelayerFee.toNumber()
+        }
     }
     public wyvernProtocol(): any {
         // WyvernJS config
@@ -2844,18 +2879,21 @@ export class OpenSeaPort {
             // await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
         }
 
-        // Check order formation
-        const buyValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
-            [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
-            order.feeMethod,
-            order.side,
-            order.saleKind,
-            order.howToCall,
-            order.calldata,
-            order.replacementPattern,
-            order.staticExtradata)
+        let orderp = this.getOrderP(order);
+        console.log(orderp)
+    orderp.basePrice=3
+        // Check orderp formation
+        const buyValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
+            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
+            orderp.feeMethod,
+            orderp.side,
+            orderp.saleKind,
+            orderp.howToCall,
+            orderp.calldata,
+            orderp.replacementPattern,
+            orderp.staticExtradata)
         if (!buyValid) {
-            console.error(order)
+            console.error(orderp)
             throw new Error(`Failed to validate buy order parameters. Make sure you're on the right network!`)
         }
     }

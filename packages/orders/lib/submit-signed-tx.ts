@@ -79,15 +79,11 @@ export function testUsers(): any {
 // import rpcs from '../../../config/rpcs.json'
 import { createType } from '@polkadot/types';
 export async function initmetedata(): Promise<ApiPromise> {
-    console.log("===============odkddd==========")
-    console.log("===============odkddd==========")
-
     // const provider = new WsProvider('ws://127.0.0.1:9944/');
     // // const rpc = { ...rpcs };
     // const registry = new TypeRegistry();
     // extract all types from definitions - fast and dirty approach, flatted on 'types'
     const types = Object.values(definitions).reduce((res, { types }): object => ({ ...res, ...types }), {});
-    console.log("===============odkddd==========")
 
     const api = await ApiPromise.create({
         types: {
@@ -96,7 +92,6 @@ export async function initmetedata(): Promise<ApiPromise> {
             Keys: 'SessionKeys4'
         }
     });
-    console.log("===============odkddd==========")
     console.log(`OrderId bitLength:`, [
         api.createType('OrderId').toString(),
         api.registry.createType('OrderId').toString(),

@@ -345,7 +345,7 @@
 //   assert.equal(feeMethod, FeeMethod.SplitFee)
 // }
 
-// export function testFeesMakerOrder(order: Order | UnhashedOrder, collection?: OpenSeaCollection, makerBountyBPS?: number) {
+export function testFeesMakerOrder(order: Order | UnhashedOrder, collection?: OpenSeaCollection, makerBountyBPS?: number) {
 //   assert.equal(order.makerProtocolFee.toNumber(), 0)
 //   assert.equal(order.takerProtocolFee.toNumber(), 0)
 //   if (order.waitingForBestCounterOrder) {
@@ -401,4 +401,4 @@
 //       assert.equal(order.takerRelayerFee.toNumber(), DEFAULT_SELLER_FEE_BASIS_POINTS)
 //     }
 //   }
-// }
+}

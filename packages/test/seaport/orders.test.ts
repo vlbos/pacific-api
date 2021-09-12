@@ -14,7 +14,7 @@ import { orderFromJSON, getOrderHash, estimateCurrentPrice, assignOrdersToSides,
 import * as ordersJSONFixture from '../fixtures/orders.json'
 import { BigNumber } from 'bignumber.js'
 import { ALEX_ADDRESS, CRYPTO_CRYSTAL_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, CK_ADDRESS, DEVIN_ADDRESS, ALEX_ADDRESS_2, CK_TOKEN_ID, MAINNET_API_KEY, RINKEBY_API_KEY, CK_RINKEBY_ADDRESS, CK_RINKEBY_TOKEN_ID, CATS_IN_MECHS_ID, CRYPTOFLOWERS_CONTRACT_ADDRESS_WITH_BUYER_FEE, DISSOLUTION_TOKEN_ID, ENS_HELLO_NAME, ENS_HELLO_TOKEN_ID, ENS_RINKEBY_TOKEN_ADDRESS, ENS_RINKEBY_SHORT_NAME_OWNER, WETH_ADDRESS } from '../constants'
-// import { //testFeesMakerOrder } from './fees'
+import { testFeesMakerOrder } from './fees.test'
 import {
     ENJIN_ADDRESS,
     INVERSE_BASIS_POINT,
@@ -607,7 +607,7 @@ describe('seaport: orders', () => {
 
         const asset = await client.api.getAsset({ tokenAddress, tokenId })
 
-        const order = await client._makeBuyOrder({
+        let order = await client._makeBuyOrder({
             asset: { tokenAddress, tokenId },
             quantity: 1,
             accountAddress,
@@ -622,8 +622,8 @@ describe('seaport: orders', () => {
         expect(order.basePrice.toNumber()).toEqual(Math.pow(10, paymentToken.decimals) * amountInToken)
         expect(order.extra.toNumber()).toEqual(0)
         expect(order.expirationTime.toNumber()).toEqual(0)
-        //testFeesMakerOrder(order, asset.collection)
-
+        testFeesMakerOrder(order, asset.collection)
+        console.log(order)
         await client._buyOrderValidationAndApprovals({ order, accountAddress })
         // Make sure match is valid
         await testMatchingNewOrder(order, takerAddress)
