@@ -113,7 +113,7 @@ export class WyvernProtocol {
         // Source: https://mikemcl.github.io/bignumber.js/#random
         const randomNumber = BigNumber.random(constants.MAX_DIGITS_IN_UNSIGNED_256_INT)
         const factor = new BigNumber(10).pow(constants.MAX_DIGITS_IN_UNSIGNED_256_INT - 1)
-        const salt = randomNumber.times(factor).round()
+        const salt = new BigNumber(randomNumber.times(factor).toFixed())
         return salt
     }
 
@@ -149,25 +149,25 @@ export class WyvernProtocol {
     //     return unit;
     // }
 
-    // /**
-    //  * A baseUnit is defined as the smallest denomination of a token. An amount expressed in baseUnits
-    //  * is the amount expressed in the smallest denomination.
-    //  * E.g: 1 unit of a token with 18 decimal places is expressed in baseUnits as 1000000000000000000
-    //  * @param   amount      The amount of units that you would like converted to baseUnits.
-    //  * @param   decimals    The number of decimal places the unit amount has.
-    //  * @return  The amount in baseUnits.
-    //  */
-    // public static toBaseUnitAmount(amount: BigNumber, decimals: number): BigNumber {
-    //     assert.isBigNumber('amount', amount);
-    //     assert.isNumber('decimals', decimals);
-    //     const unit = new BigNumber(10).pow(decimals);
-    //     const baseUnitAmount = amount.times(unit);
-    //     const hasDecimals = baseUnitAmount.decimalPlaces() !== 0;
-    //     if (hasDecimals) {
-    //         throw new Error(`Invalid unit amount: ${amount.toString()} - Too many decimal places`);
-    //     }
-    //     return baseUnitAmount;
-    // }
+    /**
+     * A baseUnit is defined as the smallest denomination of a token. An amount expressed in baseUnits
+     * is the amount expressed in the smallest denomination.
+     * E.g: 1 unit of a token with 18 decimal places is expressed in baseUnits as 1000000000000000000
+     * @param   amount      The amount of units that you would like converted to baseUnits.
+     * @param   decimals    The number of decimal places the unit amount has.
+     * @return  The amount in baseUnits.
+     */
+    public static toBaseUnitAmount(amount: BigNumber, decimals: number): BigNumber {
+        // assert.isBigNumber('amount', amount);
+        // assert.isNumber('decimals', decimals);
+        const unit = new BigNumber(10).pow(decimals);
+        const baseUnitAmount = amount.times(unit);
+        const hasDecimals = baseUnitAmount.decimalPlaces() !== 0;
+        if (hasDecimals) {
+            throw new Error(`Invalid unit amount: ${amount.toString()} - Too many decimal places`);
+        }
+        return baseUnitAmount;
+    }
 
     // /**
     //  * Computes the orderHash for a supplied order.
@@ -294,34 +294,34 @@ export class WyvernProtocol {
     //     return assetHashHex;
     // }
 
-    // /**
-    //  * Computes the default value for a type
-    //  * @param type The ABI type to calculate a default value for
-    //  * @return The default value for that type
-    //  */
-    // public static generateDefaultValue = (type: string): any => {
-    //     switch (type) {
-    //       case 'address':
-    //       case 'bytes20':
-    //         /* Null address is sometimes checked in transfer calls. */
-    //         // But we need to use 0x000 because bitwise XOR won't work if there's a 0 in the actual address, since it will be replaced as 1 OR 0 = 1
-    //         return '0x0000000000000000000000000000000000000000';
-    //       case 'bytes32':
-    //         return '0x0000000000000000000000000000000000000000000000000000000000000000';
-    //       case 'bool':
-    //         return false;
-    //       case 'int':
-    //       case 'uint':
-    //       case 'uint8':
-    //       case 'uint16':
-    //       case 'uint32':
-    //       case 'uint64':
-    //       case 'uint256':
-    //         return 0;
-    //       default:
-    //         throw new Error('Default value not yet implemented for type: ' + type);
-    //     }
-    // }
+    /**
+     * Computes the default value for a type
+     * @param type The ABI type to calculate a default value for
+     * @return The default value for that type
+     */
+    public static generateDefaultValue = (type: string): any => {
+        switch (type) {
+          case 'address':
+          case 'bytes20':
+            /* Null address is sometimes checked in transfer calls. */
+            // But we need to use 0x000 because bitwise XOR won't work if there's a 0 in the actual address, since it will be replaced as 1 OR 0 = 1
+            return '0x0000000000000000000000000000000000000000';
+          case 'bytes32':
+            return '0x0000000000000000000000000000000000000000000000000000000000000000';
+          case 'bool':
+            return false;
+          case 'int':
+          case 'uint':
+          case 'uint8':
+          case 'uint16':
+          case 'uint32':
+          case 'uint64':
+          case 'uint256':
+            return 0;
+          default:
+            throw new Error('Default value not yet implemented for type: ' + type);
+        }
+    }
 
     // constructor(provider: Web3Provider, config: WyvernProtocolConfig) {
     //     assert.isWeb3Provider('provider', provider);

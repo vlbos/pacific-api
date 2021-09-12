@@ -170,6 +170,7 @@ export class OpenSeaAPI {
      * @param query Query to use for getting orders. A subset of parameters
      *  on the `OrderJSON` type is supported
      */
+    ///NEEDED
     public async getOrder(query: OrderQuery): Promise<Order> {
 
         const result = await this.get(
@@ -236,6 +237,7 @@ export class OpenSeaAPI {
      * @param tokenId The asset's token ID, or null if ERC-20
      * @param retries Number of times to retry if the service is unavailable for any reason
      */
+    ///NEEDED
     public async getAsset({
         tokenAddress, tokenId
     }: {
@@ -305,7 +307,7 @@ export class OpenSeaAPI {
             await delay(1000)
             return this.getPaymentTokens(query, page, retries - 1)
         }
-
+        // console.log(json)
         return {
             tokens: json.map((t: any) => tokenFromJSON(t))
         }

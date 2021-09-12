@@ -27,14 +27,11 @@ export function sleepMs(ms = 0): Promise<void> {
 }
 
 export function createApi(): Promise<ApiPromise> {
-   jest.setTimeout(30000);
-    process.env.NODE_ENV = 'test';
     //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
     // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
     const types = Object.values(definitions).reduce((res, { types }):
         object => ({ ...res, ...types }), {});
-const provider = new WsProvider('ws://127.0.0.1:9944/');
-
+    const provider = new WsProvider('ws://127.0.0.1:9944/');
     return new ApiPromise({
         provider, rpc: rpcs, types: {
             ...types,
@@ -45,13 +42,18 @@ const provider = new WsProvider('ws://127.0.0.1:9944/');
 }
 
 export async function createApiAndTestAccounts(): Promise<{ api: ApiPromise; accounts: any; users: any }> {
-    jest.setTimeout(30000);
-    process.env.NODE_ENV = 'test';
+    console.log("==================wwwwwwwwwwwww=============")
+    const provider = new WsProvider('ws://127.0.0.1:9944/');
+
     await provider.connect();
+    console.log("==================wwwwwwwwwwwww=============")
+
     await sleepMs(100); // Hack to give the provider time to connect
     if (null == users) {
         users = testUsers();
     }
+    console.log("==================wwwwwwwwwwwww=============")
+
     const rpcData = await provider.send('state_getMetadata', []);
     const genesisHash = registry.createType('Hash', await provider.send('chain_getBlockHash', [])).toHex();
     const specVersion = 0;

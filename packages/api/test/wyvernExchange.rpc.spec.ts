@@ -18,7 +18,7 @@ const registry = new TypeRegistry();
 let users: any;
 const salary = 100_000_000_000_000;
 
-import { createApiAndTestAccounts,saveNonce, sleepMs } from './helpers/apiHelper'
+import { createApiAndTestAccounts, saveNonce, sleepMs } from './helpers/apiHelper'
 
 async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     jest.setTimeout(30000);
@@ -26,7 +26,7 @@ async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     const papi = await createApiAndTestAccounts();
     const api = papi.api;
     const accounts = papi.accounts;
-  users = papi.users;
+    users = papi.users;
     // users = testUsers();
     // let senders = [users.bobBank, users.bob, users.betty];
     // for (let sender of senders) {
@@ -92,10 +92,10 @@ describe('wyvernExchange rpc tests', (): void => {
 
     });
 
-afterAll(() => {
-//   return clearCityDatabase();
-saveNonce(users)
-});
+    afterAll(() => {
+        //   return clearCityDatabase();
+        saveNonce(users)
+    });
     it('hashOrderEx', async (): Promise<void> => {
         // const papi = await init();
         // const api = papi.api;
@@ -144,7 +144,7 @@ saveNonce(users)
             sell.replacementPattern,
             sell.staticExtradata);
 
-         sell_hash = await api.rpc.wyvernExchange.hashToSignEx(
+        sell_hash = await api.rpc.wyvernExchange.hashToSignEx(
             [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
             [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
             sell.feeMethod,

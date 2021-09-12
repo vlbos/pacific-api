@@ -2,7 +2,7 @@
 import { ApiPromise, WsProvider } from '@polkadot/api'
 // import { stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
 
-import { submit, users } from '../orders/lib/submit-signed-tx'
+import { submit } from '../orders/lib/submit-signed-tx'
 import { createType } from '@polkadot/types';
 import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
@@ -40,13 +40,12 @@ import {
     getWyvernBundle,
     getWyvernAsset,
     isContractAddress,
+    toWei
 } from './utils/utils'
-// import {
-//     encodeBuy,
-//     encodeSell,
-//     encodeAtomicizedBuy,
-//     encodeAtomicizedSell
-// } from './utils/schema'
+import {
+    encodeBuy,
+    encodeSell
+} from './utils/schema'
 import {
     requireOrdersCanMatch,
     MAX_ERROR_LENGTH,
@@ -90,6 +89,24 @@ import {
 } from './constants'
 const ExchangeContractAddress = ""
 const AtomicizerContractAddress = ""// target
+
+import { createApiAndTestAccounts, saveNonce, sleepMs } from '../api/test/helpers/apiHelper'
+const salary = 100_000_000_000_000;
+let a:any;
+let users: any;
+async function init(): Promise<{ api: ApiPromise; accounts: any }> {
+    const papi = await createApiAndTestAccounts();
+    const api = papi.api;
+    const accounts = papi.accounts;
+    users = papi.users;
+
+    submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
+    submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
+
+    return { api, accounts };
+
+}
+
 export class OpenSeaPort {
 
     // ApiPromise instance to use
@@ -128,6 +145,10 @@ export class OpenSeaPort {
         apiConfig.networkName = apiConfig.networkName || Network.Main
         apiConfig.gasPrice = apiConfig.gasPrice || makeBigNumber(300000)
         this.api = new OpenSeaAPI(apiConfig)
+                  console.log("=============dddddddd=====sss==============")
+
+      
+
 
         this._networkName = apiConfig.networkName
         this.provider = provider;
@@ -167,7 +188,12 @@ export class OpenSeaPort {
 
     }
     public async apipro() {
+                  console.log("============sss=fsssss=====sss==============")
 
+            const papi = await init();
+            a = papi.api;
+            this._wyvernProtocol = a.rpc;
+            this._wyvernProtocolReadOnly = a.rpc;
         // this.apip = await ApiPromise.create({ provider:this.provider })
         // this.apipReadOnly = await ApiPromise.create({ provider: this.provider })
         // const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -521,6 +547,7 @@ export class OpenSeaPort {
      * @param sellOrder Optional sell order (like an English auction) to ensure fee and schema compatibility
      * @param referrerAddress The optional address that referred the order
      */
+    ///NEEDED
     public async createBundleBuyOrder(
         { assets, collection, quantities, accountAddress, startAmount, expirationTime = 0, paymentTokenAddress, sellOrder, referrerAddress }:
             {
@@ -591,6 +618,7 @@ export class OpenSeaPort {
      * @param sellOrder Optional sell order (like an English auction) to ensure fee and schema compatibility
      * @param referrerAddress The optional address that referred the order
      */
+    ///NEEDED
     public async createBuyOrder(
         { asset, accountAddress, startAmount, quantity = 1, expirationTime = 0, paymentTokenAddress, sellOrder, referrerAddress }:
             {
@@ -664,6 +692,7 @@ export class OpenSeaPort {
      * @param buyerAddress Optional address that's allowed to purchase this item. If specified, no other address will be able to take the order, unless its value is the null address.
      * @param buyerEmail Optional email of the user that's allowed to purchase this item. If specified, a user will have to verify this email before being able to take the order.
      */
+    ///NEEDED
     public async createSellOrder(
         { asset, accountAddress, startAmount, endAmount, quantity = 1, listingTime, expirationTime = 0, waitForHighestBid = false, englishAuctionReservePrice, paymentTokenAddress, extraBountyBasisPoints = 0, buyerAddress, buyerEmail }:
             {
@@ -745,6 +774,7 @@ export class OpenSeaPort {
      * @param numberOfOrders Number of times to repeat creating the same order for each asset. If greater than 5, creates them in batches of 5. Requires an `apiKey` to be set during seaport initialization in order to not be throttled by the API.
      * @returns The number of orders created in total
      */
+    ///NEEDED
     public async createFactorySellOrders(
         { assets, accountAddress, startAmount, endAmount, quantity = 1, listingTime, expirationTime = 0, waitForHighestBid = false, paymentTokenAddress, extraBountyBasisPoints = 0, buyerAddress, buyerEmail, numberOfOrders = 1 }:
             {
@@ -879,6 +909,7 @@ export class OpenSeaPort {
      * @param extraBountyBasisPoints Optional basis points (1/100th of a percent) to reward someone for referring the fulfillment of this order
      * @param buyerAddress Optional address that's allowed to purchase this bundle. If specified, no other address will be able to take the order, unless it's the null address.
      */
+    ///NEEDED
     public async createBundleSellOrder(
         { bundleName, bundleDescription, bundleExternalLink, assets, collection, quantities, accountAddress, startAmount, endAmount, expirationTime = 0, listingTime, waitForHighestBid = false, englishAuctionReservePrice, paymentTokenAddress, extraBountyBasisPoints = 0, buyerAddress }:
             {
@@ -954,6 +985,7 @@ export class OpenSeaPort {
      * @param referrerAddress The optional address that referred the order
      * @returns Transaction hash for fulfilling the order
      */
+    ///NEEDED
     public async fulfillOrder(
         { order, accountAddress, recipientAddress, referrerAddress }:
             {
@@ -1428,6 +1460,7 @@ export class OpenSeaPort {
      * @param quantity The amount of the asset to transfer, if it's fungible (optional). In units (not base units), e.g. not wei.
      * @returns Transaction hash
      */
+    ///NEEDED
     public async transfer(
         { fromAddress, toAddress, asset,
             quantity = 1 }:
@@ -1483,6 +1516,7 @@ export class OpenSeaPort {
      * @param schemaName The Wyvern schema name corresponding to the asset type, if not in each Asset definition
      * @returns Transaction hash
      */
+    ///NEEDED
     public async transferAll(
         { assets, fromAddress, toAddress, schemaName = WyvernSchemaName.ERC721 }:
             {
@@ -1581,6 +1615,7 @@ export class OpenSeaPort {
      * @param asset The Asset to check balance for
      * @param retries How many times to retry if balance is 0
      */
+    ///NEEDED
     public async getAssetBalance(
         { accountAddress, asset }:
             {
@@ -1589,7 +1624,7 @@ export class OpenSeaPort {
             },
         retries = 1
     ): Promise<BigNumber> {
-        return new BigNumber(0)
+        return new BigNumber("100000000000000000000")
         // const schema = this._getSchema(asset.schemaName)
         // const wyAsset = getWyvernAsset(schema, asset)
 
@@ -2018,7 +2053,7 @@ export class OpenSeaPort {
 
         accountAddress = validateAndFormatWalletAddress(this.apip, accountAddress)
         const schema = this._getSchema(asset.schemaName)
-        const quantityBN = new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
+        const quantityBN = WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), asset.decimals || 0)
         const wyAsset = getWyvernAsset(schema, asset, quantityBN)
 
         const openSeaAsset: OpenSeaAsset = await this.api.getAsset(asset)
@@ -2042,7 +2077,7 @@ export class OpenSeaPort {
             feeMethod
         } = this._getBuyFeeParameters(totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, sellOrder)
 
-        const { target, calldata, replacementPattern } = { "target": "", "calldata": "", "replacementPattern": "" }// encodeBuy(schema, wyAsset, accountAddress)
+        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress)
 
         const { basePrice, extra, paymentToken } = await this._getPriceParameters(OrderSide.Buy, paymentTokenAddress, expirationTime, startAmount)
         const times = this._getTimeParameters(expirationTime)
@@ -2104,7 +2139,7 @@ export class OpenSeaPort {
 
         accountAddress = validateAndFormatWalletAddress(this.apip, accountAddress)
         const schema = this._getSchema(asset.schemaName)
-        const quantityBN = new BigNumber(makeBigNumber(quantity), asset.decimals || 10)
+        const quantityBN = WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), asset.decimals || 0)
         const wyAsset = getWyvernAsset(schema, asset, quantityBN)
         const isPrivate = buyerAddress != NULL_ADDRESS
 
@@ -2114,7 +2149,7 @@ export class OpenSeaPort {
             totalBuyerFeeBasisPoints,
             sellerBountyBasisPoints } = await this.computeFees({ asset: openSeaAsset, side: OrderSide.Sell, isPrivate, extraBountyBasisPoints })
 
-        const { target, calldata, replacementPattern } = { "target": "", "calldata": "", "replacementPattern": "" }// "encodeSell(schema, wyAsset, accountAddress)"
+        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress)
 
         const orderSaleKind = endAmount != null && endAmount !== startAmount
             ? SaleKind.DutchAuction
@@ -2265,8 +2300,9 @@ export class OpenSeaPort {
             }
     ): Promise<UnhashedOrder> {
 
+
         accountAddress = validateAndFormatWalletAddress(this.apip, accountAddress)
-        const quantityBNs = quantities.map((quantity, i) => new BigNumber(makeBigNumber(quantity), assets[i].decimals || 0))
+        const quantityBNs = quantities.map((quantity, i) => WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), assets[i].decimals || 0))
         const bundle = getWyvernBundle(assets, "assets.map(a => this._getSchema(a.schemaName))", quantityBNs)
         // const orderedSchemas = bundle.schemas.map(name => this._getSchema(name))
 
@@ -2357,7 +2393,7 @@ export class OpenSeaPort {
     ): Promise<UnhashedOrder> {
 
         accountAddress = validateAndFormatWalletAddress(this.apip, accountAddress)
-        const quantityBNs = quantities.map((quantity, i) => new BigNumber(makeBigNumber(quantity), assets[i].decimals || 0))
+        const quantityBNs = quantities.map((quantity, i) => WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), assets[i].decimals || 0))
         const bundle = getWyvernBundle(assets, assets.map(a => this._getSchema(a.schemaName)), quantityBNs)
         // const orderedSchemas = bundle.schemas.map((name: any) => this._getSchema(name))
         bundle.name = bundleName
@@ -2635,8 +2671,7 @@ export class OpenSeaPort {
             order.howToCall,
             order.calldata,
             order.replacementPattern,
-            order.staticExtradata,
-            { from: accountAddress })
+            order.staticExtradata)
         if (!sellValid) {
             console.error(order)
             throw new Error(`Failed to validate sell order parameters. Make sure you're on the right network!`)
@@ -2794,7 +2829,7 @@ export class OpenSeaPort {
             if (counterOrder) {
                 minimumAmount = await this._getRequiredAmountForTakingSellOrder(counterOrder)
             }
-
+            // console.log(balance.toNumber() , minimumAmount.toNumber())
             // Check WETH balance
             if (balance.toNumber() < minimumAmount.toNumber()) {
                 if (tokenAddress == "WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address") {
@@ -2818,8 +2853,7 @@ export class OpenSeaPort {
             order.howToCall,
             order.calldata,
             order.replacementPattern,
-            order.staticExtradata,
-            { from: accountAddress })
+            order.staticExtradata)
         if (!buyValid) {
             console.error(order)
             throw new Error(`Failed to validate buy order parameters. Make sure you're on the right network!`)
@@ -3048,20 +3082,25 @@ export class OpenSeaPort {
             throw new Error('Reserve price must be greater than or equal to the start amount.')
         }
 
+        // const basePrice = isEther
+        //   ? makeBigNumber(this.web3.toWei(startAmount, 'ether')).round()
+        //   : WyvernProtocol.toBaseUnitAmount(makeBigNumber(startAmount), token.decimals)
+
         // Note: new BigNumber(makeBigNumber(startAmount), token.decimals)
         // will fail if too many decimal places, so special-case ether
+        const BN = BigNumber.clone({ DECIMAL_PLACES: token.decimals || 0 })
         const basePrice = isToken
-            ? makeBigNumber(startAmount).round()
-            : new BigNumber(makeBigNumber(startAmount), token.decimals)
+            ? new BN(makeBigNumber(toWei(startAmount, token.decimals)).toFixed())
+            : WyvernProtocol.toBaseUnitAmount(makeBigNumber(startAmount), token.decimals)
 
         const extra = isToken
-            ? makeBigNumber(priceDiff).round()
-            : new BigNumber(makeBigNumber(priceDiff), token.decimals)
+            ? new BN(makeBigNumber(toWei(priceDiff, token.decimals)).toFixed())
+            : WyvernProtocol.toBaseUnitAmount(makeBigNumber(priceDiff), token.decimals)
 
         const reservePrice = englishAuctionReservePrice
             ? isToken
-                ? makeBigNumber(englishAuctionReservePrice).round()
-                : new BigNumber(makeBigNumber(englishAuctionReservePrice), token.decimals)
+                ? new BN(makeBigNumber(toWei(englishAuctionReservePrice, token.decimals)).toFixed())
+                : WyvernProtocol.toBaseUnitAmount(makeBigNumber(englishAuctionReservePrice), token.decimals)
             : undefined
 
         return { basePrice, extra, paymentToken, reservePrice }

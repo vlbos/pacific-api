@@ -209,6 +209,7 @@ export const confirmTransaction = async (web3: any, txHash: string) => {
 export const assetFromJSON = (asset: any): OpenSeaAsset => {
     const isAnimated = asset.image_url && asset.image_url.endsWith('.gif')
     const isSvg = asset.image_url && asset.image_url.endsWith('.svg')
+    // console.log(asset)
     const fromJSON: OpenSeaAsset = {
         tokenId: asset.token_id.toString(),
         tokenAddress: asset.asset_contract.address,
@@ -582,6 +583,11 @@ export function makeBigNumber(arg: number | string | BigNumber): BigNumber {
     // fix "new BigNumber() number type has more than 15 significant digits"
     arg = arg.toString()
     return new BigNumber(arg)
+}
+
+export function toWei(arg: number ,decimals:number ): BigNumber {
+    arg=Math.pow(10,decimals) * arg
+    return new BigNumber(arg.toString())
 }
 
 // /**
