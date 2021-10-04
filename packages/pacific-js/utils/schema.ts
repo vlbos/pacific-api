@@ -37,11 +37,16 @@ export const encodeCall = (abi: AnnotatedFunctionABI, parameters: any[]): string
 }
 
 export const encodeSell: Encoder = (schema, asset, address) => {
-  const transfer = schema.functions.transfer(asset)
-  return {
-    target: transfer.target,
-    calldata: encodeDefaultCall(transfer, address),
-    replacementPattern: encodeReplacementPattern(transfer),
+//   const transfer = schema.functions.transfer(asset)
+//   return {
+//     target: transfer.target,
+//     calldata: encodeDefaultCall(transfer, address),
+//     replacementPattern: encodeReplacementPattern(transfer),
+//   }
+return {
+    target: "",
+    calldata: "",
+    replacementPattern: "",
   }
 }
 

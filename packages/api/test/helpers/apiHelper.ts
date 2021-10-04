@@ -6,7 +6,7 @@ import { createType } from '@polkadot/types';
 // import type { Registry } from '@polkadot/types/types';
 import { putKV, getValue } from './configHelper'
 
-import { Metadata } from '@polkadot/metadata';
+// import { Metadata } from '@polkadot/metadata';
 // import metaStatic from '@polkadot/metadata/static';
 import * as definitions from '../../../interfaces/definitions';
 import '../../../interfaces/augment-api';
@@ -41,10 +41,10 @@ export function createApi(): Promise<ApiPromise> {
     }).isReady;
 }
 
-export async function createApiAndTestAccounts(): Promise<{ api: ApiPromise; accounts: any; users: any }> {
-    const provider = new WsProvider('ws://127.0.0.1:9944/');
+export async function createApiAndTestAccounts(provider:WsProvider): Promise<{ api: ApiPromise; accounts: any;users: any }> {
+    // const provider = new WsProvider('ws://127.0.0.1:9944/');
 
-    await provider.connect();
+    // await provider.connect();
 
     await sleepMs(100); // Hack to give the provider time to connect
     if (null == users) {
@@ -59,12 +59,12 @@ export async function createApiAndTestAccounts(): Promise<{ api: ApiPromise; acc
     // console.log("======key====", key)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     rawmetadata[key] = rpcData;
-    const metadata = new Metadata(registry, rpcData);
+    // const metadata = new Metadata(registry, rpcData);
 
     const types = Object.values(definitions).reduce((res, { types }):
         object => ({ ...res, ...types }), {});
     registry.register({ ...types });
-    registry.setMetadata(metadata);
+    // registry.setMetadata(metadata);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const api = await ApiPromise.create({
@@ -74,7 +74,7 @@ export async function createApiAndTestAccounts(): Promise<{ api: ApiPromise; acc
             Keys: 'SessionKeys4'
         }
     } as ApiOptions);
-    api.injectMetadata(metadata, true);
+    // api.injectMetadata(metadata, true);
 
     // const metadata1 = await api.rpc.state.getMetadata();
     // console.log('version: ' + metadata1.version);

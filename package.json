@@ -12,7 +12,9 @@
     "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package pacific-api/interfaces --endpoint ./pacific.json --output ./packages/interfaces --strict",
     "test": "polkadot-dev-run-test --coverage ",
     "test:api": "polkadot-dev-run-test packages/test/api/api.test.ts",
-    "test:one": "polkadot-dev-run-test packages/test/seaport/orders.test.ts",
+    "test:order": "polkadot-dev-run-test packages/test/seaport/orders.test.ts  --forceExit",
+    "test:contract": "polkadot-dev-run-test packages/test/seaport/contracts-rust.spec.ts  --forceExit",
+    "test:onex": "polkadot-dev-run-test packages/test/seaport/orders.test.ts --runInBand --detectOpenHandles --forceExit",
     "test:o": "polkadot-dev-run-test packages/api/test/orderbook.rpc.spec.ts",
     "test:t": "polkadot-dev-run-test packages/api/test/orderbook.tx.spec.ts",
     "test:watch": "polkadot-dev-run-test --watch"
@@ -21,19 +23,19 @@
     "@babel/core": "^7.13.10",
     "@babel/register": "^7.13.8",
     "@babel/runtime": "^7.13.10",
-    "@polkadot/dev": "^0.62.7",
-    "@polkadot/ts": "^0.3.62",
-    "@polkadot/typegen": "^4.3.1",
+    "@polkadot/dev": "^0.62.68",
     "@types/jest": "^26.0.21",
     "copyfiles": "^2.4.1"
   },
   "version": "0.0.1",
   "dependencies": {
-    "@polkadot/api": "^4.3.1",
-    "@polkadot/metadata": "^4.4.1",
-    "@polkadot/types": "^4.3.1",
+    "@polkadot/api": "^6.1.2",
+    "@polkadot/api-contract": "^6.1.2",
+    "@polkadot/types": "^6.1.2",
     "bignumber.js": "^9.0.1",
+    "bn.js": "^5.2.0",
     "isomorphic-unfetch": "^3.1.0",
+    "query-string": "^7.0.1",
     "uuid": "^8.3.2"
   }
 }

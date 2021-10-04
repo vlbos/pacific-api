@@ -8,7 +8,7 @@ import '../../interfaces/augment-types';
 import { putKV, getValue } from '../../api/test/helpers/configHelper'
 
 export function submit(api: any, txn: any, sender: any) {
-    const txnId = `${sender.key.meta.name}+${sender.nonce}`
+    const txnId =`${sender.key.meta.name}+${sender.nonce}`
     const getType = (arg: any) => `${arg.type}` === 'Bytes' && arg.Type.name === 'Text' ? 'Text' : arg.type
     const args = txn.args.map((arg: any, idx: any) => `${api.registry.createType(getType(txn.meta.args[idx]), arg)}`)
     console.log(` > [${txnId}] Submitting: ${txn.method.section}.${txn.method.method}(${args})`)

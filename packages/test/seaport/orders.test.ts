@@ -30,8 +30,8 @@ const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
 // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
 //   const provider = new WsProvider('ws://127.0.0.1:9944/');
-const provider = {}; //new WsProvider('ws://127.0.0.1:9944/');
-const rinkebyProvider = {};// new WsProvider('ws://127.0.0.1:9944/');
+const provider = new WsProvider('ws://127.0.0.1:9944/');
+const rinkebyProvider = new WsProvider('ws://127.0.0.1:9944/');
 
 const client = new OpenSeaPort(provider, {
     networkName: Network.Main,
@@ -58,6 +58,15 @@ describe('seaport: orders', () => {
     beforeAll(async () => {
         jest.setTimeout(30000);
         await client.apipro();
+        // daiAddress = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0].address
+        // manaAddress = (await client.api.getPaymentTokens({ symbol: 'MANA' })).tokens[0].address
+    })
+    afterAll(async () => {
+        await provider.disconnect();
+        await rinkebyProvider.disconnect();
+        await client.closeProvider();
+        // jest.setTimeout(30000);
+        // await client.apipro();
         // daiAddress = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0].address
         // manaAddress = (await client.api.getPaymentTokens({ symbol: 'MANA' })).tokens[0].address
     })
@@ -400,7 +409,7 @@ describe('seaport: orders', () => {
         await client._buyOrderValidationAndApprovals({ order: buyOrder, accountAddress })
         await client._sellOrderValidationAndApprovals({ order: sellOrder, accountAddress: takerAddress })
     })
-    ///NEEDED
+    ///TEST NEEDED
     it.skip("Creates ENS name buy order", async () => {
         const paymentTokenAddress = WETH_ADDRESS
         const buyOrder = await rinkebyClient._makeBuyOrder({
@@ -559,7 +568,7 @@ describe('seaport: orders', () => {
         await testMatchingNewOrder(order, takerAddress)
     })
 
-    ///TEST NEEDED
+    ///TEST NEEDED  OK
     it('Matches a new bountied sell order for an ERC-20 token (MANA)', async () => {
         const accountAddress = ALEX_ADDRESS
         const takerAddress = ALEX_ADDRESS_2
@@ -595,8 +604,8 @@ describe('seaport: orders', () => {
         await testMatchingNewOrder(order, takerAddress)
     })
 
-    ///TEST NEEDED
-    it.only('Matches a buy order with an ERC-20 token (DAI)', async () => {
+    ///TEST NEEDED OK
+    it('Matches a buy order with an ERC-20 token (DAI)', async () => {
         const accountAddress = ALEX_ADDRESS
         const takerAddress = ALEX_ADDRESS_2
         const paymentToken = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0]
@@ -623,7 +632,7 @@ describe('seaport: orders', () => {
         expect(order.extra.toNumber()).toEqual(0)
         expect(order.expirationTime.toNumber()).toEqual(0)
         testFeesMakerOrder(order, asset.collection)
-        console.log(order)
+        // console.log(order)
         await client._buyOrderValidationAndApprovals({ order, accountAddress })
         // Make sure match is valid
         await testMatchingNewOrder(order, takerAddress)
@@ -646,7 +655,6 @@ describe('seaport: orders', () => {
         // TODO why can't we test atomicMatch?
         await testMatchingOrder(order, takerAddress, false)
     })
-
     it('Bulk transfer', async () => {
         const accountAddress = ALEX_ADDRESS
         const takerAddress = ALEX_ADDRESS_2
@@ -758,7 +766,7 @@ describe('seaport: orders', () => {
         // Taker might not have all approval permissions so only test match
         await testMatchingOrder(order, takerAddress, false)
     })
-
+    ///TEST NEEDED
     it('Matches a buy order and estimates gas on fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
         const takerAddress = ALEX_ADDRESS

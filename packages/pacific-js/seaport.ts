@@ -93,14 +93,15 @@ const AtomicizerContractAddress = ""// target
 import { createApiAndTestAccounts, saveNonce, sleepMs } from '../api/test/helpers/apiHelper'
 const salary = 100_000_000_000_000;
 let users: any;
-async function init(): Promise<{ api: ApiPromise; accounts: any }> {
-    const papi = await createApiAndTestAccounts();
+async function init(provider:WsProvider): Promise<{ api: ApiPromise; accounts: any }> {
+    const papi = await createApiAndTestAccounts(provider);
     const api = papi.api;
     const accounts = papi.accounts;
     users = papi.users;
-
-    submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
-    submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
+    await provider.connect();
+    // const provider = papi.provider;
+    // submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
+    // submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
 
     return { api, accounts };
 
@@ -182,15 +183,17 @@ export class OpenSeaPort {
         //  })
 
     }
+    public async closeProvider(){
+       await  this.provider.disconnect();
+    }
     public async apipro() {
-        const papi = await init();
+        const papi = await init(this.provider);
         this.accounts = papi.accounts;
-        this.accounts = papi.accounts;
-
+        // this.provider = papi.provider;
 
         buy = makeOrder(users.bob.key.address, true, 0);
         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = this.accounts.slice(0,7);
-        console.log(buy)
+        // console.log(buy)
         this._wyvernProtocol = papi.api.tx;
         this._wyvernProtocolReadOnly = papi.api.rpc;
         // this.apip = await ApiPromise.create({ provider:this.provider })
@@ -1456,12 +1459,12 @@ export class OpenSeaPort {
 
         let from = fromAddress
         if (useProxy) {
-            const proxyAddress = null;//await this._getProxy(fromAddress)
-            if (!proxyAddress) {
-                console.error(`This asset's owner (${fromAddress}) does not have a proxy!`)
-                return false
-            }
-            from = proxyAddress
+            // const proxyAddress = null;//await this._getProxy(fromAddress)
+            // if (!proxyAddress) {
+            //     console.error(`This asset's owner (${fromAddress}) does not have a proxy!`)
+            //     return false
+            // }
+            // from = proxyAddress
         }
 
         // const data = encodeTransferCall(abi, fromAddress, toAddress)
@@ -2697,18 +2700,20 @@ export class OpenSeaPort {
             // await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
         }
 
+        let orderp = this.getOrderP(order);
+
         // Check sell parameters
-        const sellValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
-            [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
-            order.feeMethod,
-            order.side,
-            order.saleKind,
-            order.howToCall,
-            order.calldata,
-            order.replacementPattern,
-            order.staticExtradata)
+        const sellValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
+            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
+            orderp.feeMethod,
+            orderp.side,
+            orderp.saleKind,
+            orderp.howToCall,
+            orderp.calldata,
+            orderp.replacementPattern,
+            orderp.staticExtradata)
         if (!sellValid) {
-            console.error(order)
+            console.error(orderp)
             throw new Error(`Failed to validate sell order parameters. Make sure you're on the right network!`)
         }
     }
@@ -2880,8 +2885,7 @@ export class OpenSeaPort {
         }
 
         let orderp = this.getOrderP(order);
-        console.log(orderp)
-    orderp.basePrice=3
+        // console.log(orderp)
         // Check orderp formation
         const buyValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
             [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
