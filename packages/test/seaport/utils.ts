@@ -8,7 +8,8 @@ import fs from "fs";
 import path from "path";
 const blake = require('blakejs');
 import { CodePromise, ContractPromise } from '@polkadot/api-contract';
-
+import { SubmittableExtrinsic } from '@polkadot/api/types';
+import { EventRecord, ExtrinsicStatus } from '@polkadot/types/interfaces';
 
 import { GAS_LIMIT, GAS_REQUIRED } from "./consts";
 import { submit } from '../../orders/lib/submit-signed-tx'
@@ -16,6 +17,39 @@ export function sleepMs(ms = 0): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+import { waitFor } from './waitFor';
+
+export async function execute(extrinsic: SubmittableExtrinsic<'promise'>, signer: KeyringPair, logger = { info: console.log }): Promise<void> {
+    let currentTxDone = false;
+
+    function sendStatusCb({ events = [], status }: { events?: EventRecord[], status: ExtrinsicStatus; }) {
+        if (status.isInvalid) {
+            logger.info('Transaction invalid');
+            currentTxDone = true;
+        } else if (status.isReady) {
+            logger.info('Transaction is ready');
+        } else if (status.isBroadcast) {
+            logger.info('Transaction has been broadcasted');
+        } else if (status.isInBlock) {
+            logger.info('Transaction is in block');
+        } else if (status.isFinalized) {
+            logger.info(`Transaction has been included in blockHash ${status.asFinalized.toHex()}`);
+            events.forEach(
+                ({ event }) => {
+                    if (event.method === 'ExtrinsicSuccess') {
+                        logger.info('Transaction succeeded');
+                    } else if (event.method === 'ExtrinsicFailed') {
+                        logger.info('Transaction failed');
+                    }
+                }
+            );
+            currentTxDone = true;
+        }
+    }
+
+    await extrinsic.signAndSend(signer, sendStatusCb);
+    await waitFor(() => currentTxDone, { timeout: 20000 });
+}
 export async function sendAndReturnFinalized(signer: KeyringPair, tx: any, api: any) {
     let nonce = await api.rpc.system.accountNextIndex(signer.address);
 
@@ -219,7 +253,7 @@ export async function instantiate(
         inputData,
         null
     );
-    const result: any = await sendAndReturnFinalized(signer, tx,api);
+    const result: any = await sendAndReturnFinalized(signer, tx, api);
     const record = result.findRecord("contracts", "Instantiated");
 
     if (!record) {
@@ -228,6 +262,7 @@ export async function instantiate(
     // Return the Address of  the instantiated contract.
     return record.event.data[1];
 }
+
 
 export async function callContract(
     api: ApiPromise,
@@ -243,9 +278,10 @@ export async function callContract(
         gasRequired,
         inputData
     );
-    let nonce = await api.rpc.system.accountNextIndex(signer.address);
-    await tx.signAndSend(signer);
-    console.log("===========")
+    execute(tx, signer)
+    // let nonce = await api.rpc.system.accountNextIndex(signer.address);//nonce.toHuman() + 1
+    // await tx.signAndSend(signer, { nonce: -1 });
+    // console.log("===========")
     // const unsub = await tx.signAndSend(signer, { nonce: nonce.toHuman() + 1 }, ({ status, events, dispatchError }) => {
     //     if (!status.isInBlock && !status.isFinalized) {
     //         // console.log(JSON.stringify(status))
@@ -270,7 +306,7 @@ export async function callContract(
 
 export async function rpcContract(
     api: ApiPromise,
-    contractAddress: Address| string,
+    contractAddress: Address | string,
     inputData: any,
     gasLimit: number = GAS_LIMIT,
 ): Promise<Uint8Array> {
@@ -279,18 +315,18 @@ export async function rpcContract(
         gasLimit,
         inputData
     });
- console.log(res.toHuman());
-   
+    console.log(res.toHuman());
+
     if (!res.result.isOk) {
-        console.error("ERROR: rpc call did not succeed");
+        console.error("ERROR: rpc call did not succeed", res.result.asErr);
     }
-    
-    return res.result.asOk.data;
+
+    return res.result.toU8a();
 }
 
 export async function getContractStorage(
     api: ApiPromise,
-    contractAddress: Address|String,
+    contractAddress: any,
     storageKey: Uint8Array
 ): Promise<StorageData> {
     const contractInfo = await api.query.contracts.contractInfoOf(
