@@ -16,7 +16,7 @@
 
 import { ApiPromise, SubmittableResult, WsProvider } from "@polkadot/api";
 import { createTestKeyring } from "@polkadot/keyring/testing";
-import { u8aToHex } from "@polkadot/util";
+import { u8aToHex, bnToHex } from "@polkadot/util";
 import { randomAsU8a } from "@polkadot/util-crypto";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { Option } from "@polkadot/types";
@@ -32,7 +32,7 @@ import {
     rpcContract,
     instantiate,
     getContractStorage,
-    putCode, sleepMs,execute
+    putCode, sleepMs, execute
 } from "./utils";
 
 // This is a test account that is going to be created and funded each test.
@@ -176,7 +176,12 @@ describe("Rust Smart Contracts", () => {
         /**
         * 4. Use the transfer function to transfer some tokens from the FRANKIES account to CAROLS account
         **/
-
+        const s = bnToHex(new BN(20) * new BN(100000000000000), {
+            bitLength: 128,
+            isLe: true,
+            isNegative: false
+        })
+        console.log("s===", s)
         const paramsTransfer =
             '0x84a15da1' // 1 byte: First byte Action.Transfer
             + u8aToHex(CAROL.publicKey, -1, false) // 32 bytes: Hex encoded new account address as u256
@@ -219,17 +224,17 @@ describe("Rust Smart Contracts", () => {
         // console.log(contract.abi.messages[3])
         api.tx.contracts
             .call(address, value, gasLimit, contract.abi.messages[3].toU8a([DAN.address, vv]))
-            .signAndSend(alicePair,{ nonce: nonce.toHuman()+1 }, (result: SubmittableResult) => { });
- nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+            .signAndSend(alicePair, { nonce: nonce.toHuman() + 1 }, (result: SubmittableResult) => { });
+        nonce = await api.rpc.system.accountNextIndex(alicePair.address);
         {
             // Perform the actual read (no params at the end, for the `get` message)
             // (We perform the send from an account, here using Alice's address)
             const to = OSCAR.address;
             // const value = 100000000; // only useful on isPayable messages
-  const value = new BN(30) * new BN(1000000);
+            const value = new BN(30) * new BN(1000000);
             // let { gasConsumed, result, output } = await contract.tx.transfer({ value, gasLimit }, to,value).signAndSend(alicePair,{ nonce: nonce.toHuman() + 1 }) ;//, (result: SubmittableResult) => { });
- execute(contract.tx.transfer({ value:0, gasLimit }, to,value),alicePair);
-nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+            execute(contract.tx.transfer({ value: 0, gasLimit }, to, value), alicePair);
+            nonce = await api.rpc.system.accountNextIndex(alicePair.address);
 
             // The actual result from RPC as `ContractExecResult`
             // console.log(result.toHuman());
