@@ -19,7 +19,7 @@ export function sleepMs(ms = 0): Promise<void> {
 
 import { waitFor } from './waitFor';
 
-export async function execute(extrinsic: SubmittableExtrinsic<'promise'>, signer: KeyringPair, logger = { info: console.log }): Promise<void> {
+export async function execute(extrinsic: SubmittableExtrinsic<'promise'>, signer: KeyringPair, api: ApiPromise, logger = { info: console.log }): Promise<void> {
     let currentTxDone = false;
 
     function sendStatusCb({ events = [], status }: { events?: EventRecord[], status: ExtrinsicStatus; }) {
@@ -46,8 +46,9 @@ export async function execute(extrinsic: SubmittableExtrinsic<'promise'>, signer
             currentTxDone = true;
         }
     }
+    // const nonce = await api.rpc.system.accountNextIndex(signer.address); { nonce: nonce.toHuman() + 1 }, 
 
-    await extrinsic.signAndSend(signer, sendStatusCb);
+    await extrinsic.signAndSend(signer,sendStatusCb);
     await waitFor(() => currentTxDone, { timeout: 20000 });
 }
 export async function sendAndReturnFinalized(signer: KeyringPair, tx: any, api: any) {
@@ -278,7 +279,9 @@ export async function callContract(
         gasRequired,
         inputData
     );
-    execute(tx, signer)
+
+
+    execute(tx, signer, api)
     // let nonce = await api.rpc.system.accountNextIndex(signer.address);//nonce.toHuman() + 1
     // await tx.signAndSend(signer, { nonce: -1 });
     // console.log("===========")

@@ -102,6 +102,9 @@ describe("Rust Smart Contracts", () => {
         * 7. Use the transferFrom to let DAN try to transfer the full original allowance from FRANKIE to OSCAR. This attempt should fail.
         **/
         const metadata = require("./abis/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
+        const selector = metadata.spec.constructors[1].selector;
+        const flipAction = metadata.spec.messages[0].selector;
+        const getAction = metadata.spec.messages[1].selector;
 
         const TOTAL_SUPPLY_STORAGE_KEY = (new Uint8Array(32)).fill(3);
 
@@ -241,7 +244,6 @@ describe("Rust Smart Contracts", () => {
 
         let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
 
-
         // console.log(contract.abi.messages[3])
         // api.tx.contracts
         //     .call(address, value, gasLimit, contract.abi.messages[3].toU8a([DAN.address, vv]))
@@ -292,7 +294,7 @@ describe("Rust Smart Contracts", () => {
         **/
 
         // 16 bytes: Amount of tokens to transfer as u128 little endian hex (5000000000000000 in decimal)) value
-        // const approvedAmount = '0080e03779c311000000000000000000';
+        const approvedAmount = '0080e03779c311000000000000000000';
         // const approvedAmount = bnToHex(new BN(90) * new BN(100000000000000), {
         //     bitLength: 128,
         //     isLe: true,
@@ -304,7 +306,7 @@ describe("Rust Smart Contracts", () => {
         //     + approvedAmount;
 
         // await callContract(api, FRANKIE, address, paramsApprove);
-        // sleepMs(10000)
+        // sleepMs(500000)
         // nonce = await api.rpc.system.accountNextIndex(alicePair.address);
         // // Create a new storage key from the FRANKIE.publicKey and the DAN.publicKey
         // // It will be hashed to 32 byte hash with blake2b in the `getContractStorage` function before querying.
@@ -356,7 +358,7 @@ describe("Rust Smart Contracts", () => {
             + '80969800000000000000000000000000'; // 16 bytes: Amount of tokens to transfer as u128 little endian hex (10000000 in decimal)) value
 
         await callContract(api, DAN, address, paramsTransferFrom);
-        // sleepMs(500000)
+        sleepMs(500000)
         nonce = await api.rpc.system.accountNextIndex(alicePair.address);
         // // frankieBalanceNew = frankieBalance.sub(new BN(10000000));
 
@@ -400,7 +402,6 @@ describe("Rust Smart Contracts", () => {
         // allowanceRaw = await getContractStorage(api, address, storageKeyApprove32);
         // allowance = hexToBn(allowanceRaw.toString(), true);
         // expect(allowanceOld.toString()).toBe(allowance.toString());
-
         //  done();
     });
     test("ERC20 contract", async () => {
