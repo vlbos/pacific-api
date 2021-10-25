@@ -44,7 +44,7 @@ import { createApiAndTestAccounts, saveNonce, sleepMs } from './helpers/apiHelpe
 async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     jest.setTimeout(30000);
     process.env.NODE_ENV = 'test';
-    const papi = await createApiAndTestAccounts();
+    const papi = await createApiAndTestAccounts(provider);
     const api = papi.api;
     const accounts = papi.accounts;
     users = papi.users;
@@ -72,7 +72,7 @@ async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     // } as ApiOptions);
     // // const api = await createApi();
     // users = testUsers();
-    // let senders = [users.bobBank, users.bob, users.betty];
+    // let senders = [users.dave, users.bob, users.admin];
     // for (let sender of senders) {
     //     if (0== sender.nonce) {
     //         console.log("sender.nonce==7==", sender.nonce);
@@ -90,8 +90,8 @@ async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     // console.log(accounts, "=======account=====", accounts77);
 
     // console.log("======transfer====");
-    submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
-    submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
+    submit(api, api.tx.balances.transfer(users.admin.key.address, salary), users.dave);
+    submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.dave);
 
     return { api, accounts };
 
@@ -110,11 +110,11 @@ describe('orderbook tx tests', (): void => {
         const papi = await init();
         api = papi.api;
         submit(api, api.tx.orderbook.changeOwner(
-            users.betty.key.address), users.betty);
+            users.admin.key.address), users.admin);
         submit(api, api.tx.orderbook.setOrderLimits(
-            1000), users.betty);
+            1000), users.admin);
         submit(api, api.tx.orderbook.setAssetWhiteListLimits(
-            1000), users.betty);
+            1000), users.admin);
     });
 
     afterAll(() => {
@@ -134,12 +134,12 @@ describe('orderbook tx tests', (): void => {
         for (let o of orderArray) {
             // console.log(o);
             order_id = uuidv4();
-            submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.betty);
+            submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.admin);
         }
 
         sleepMs(65000)
         // console.log("========postAssetWhiteList=======");
-        // submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.betty);
+        // submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.admin);
 
     });
 
@@ -156,27 +156,27 @@ describe('orderbook tx tests', (): void => {
         // for (let o of orderArray) {
         //     // console.log(o);
         //     order_id = uuidv4();
-        //     submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.betty);
+        //     submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.admin);
         // }
 
         console.log("========postAssetWhiteList=======");
-        submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.betty);
+        submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.admin);
 
     });
 
     it('changeOwner', async (): Promise<void> => {
         submit(api, api.tx.orderbook.changeOwner(
-            users.betty.key.address), users.betty);
+            users.admin.key.address), users.admin);
     });
 
     it('setOrderLimits', async (): Promise<void> => {
         submit(api, api.tx.orderbook.setOrderLimits(
-            1000), users.betty);
+            1000), users.admin);
     });
 
     it('setAssetWhiteListLimits', async (): Promise<void> => {
         submit(api, api.tx.orderbook.setAssetWhiteListLimits(
-            1000), users.betty);
+            1000), users.admin);
 
     });
 
