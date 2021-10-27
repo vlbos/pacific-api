@@ -3,12 +3,14 @@ import {
   AnnotatedFunctionInput,
   AnnotatedFunctionABI,
   FunctionInputKind,
+AbiType,
 } from '../../wyvern-js/src/types'
 
 export {
   AnnotatedFunctionInput,
   AnnotatedFunctionABI,
   FunctionInputKind,
+AbiType
 }
 
 export enum Network {
@@ -17,10 +19,10 @@ export enum Network {
   Kovan = 'kovan',
 }
 
-// export enum ABIType {
-//   Function = Web3.AbiType.Function,
-//   Event = Web3.AbiType.Event,
-// }
+export enum ABIType {
+  Function = 1,
+  Event = 2,
+}
 
 export interface Token {
   name: string
@@ -73,11 +75,11 @@ export interface AnnotatedEventInput {
 }
 
 export interface AnnotatedEventABI<T> {
-  type: any
+  type?: any
   name: string
   target: string
   anonymous: boolean
-  inputs: AnnotatedEventInput[]
+  inputs?: AnnotatedEventInput[]
   assetFromInputs: (inputs: any, web3: any) => Promise<T>
 }
 

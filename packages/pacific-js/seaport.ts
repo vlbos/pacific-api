@@ -93,7 +93,7 @@ const AtomicizerContractAddress = ""// target
 import { createApiAndTestAccounts, saveNonce, sleepMs } from '../api/test/helpers/apiHelper'
 const salary = 100_000_000_000_000;
 let users: any;
-async function init(provider:WsProvider): Promise<{ api: ApiPromise; accounts: any }> {
+async function init(provider: WsProvider): Promise<{ api: ApiPromise; accounts: any }> {
     const papi = await createApiAndTestAccounts(provider);
     const api = papi.api;
     const accounts = papi.accounts;
@@ -106,7 +106,7 @@ async function init(provider:WsProvider): Promise<{ api: ApiPromise; accounts: a
     return { api, accounts };
 
 }
-let buy:any=""
+let buy: any = ""
 export class OpenSeaPort {
     public accounts: any = "";
     // ApiPromise instance to use
@@ -114,7 +114,7 @@ export class OpenSeaPort {
     public apipReadOnly: any = "";// new ApiPromise({})
     public provider: WsProvider
     // Logger function to use when debugging
-    // public logger: (arg: string) => void
+    public logger: (arg: string) => void
     // API instance on this seaport
     public readonly api: OpenSeaAPI
     // Extra gwei to add to the mean gas price when making transactions
@@ -174,7 +174,7 @@ export class OpenSeaPort {
         // //this._emitter = new EventEmitter()
 
         // Debugging: default to nothing
-        // //this.logger = logger || ((arg: string) => arg)
+        this.logger = logger || ((arg: string) => arg)
 
 
 
@@ -183,8 +183,8 @@ export class OpenSeaPort {
         //  })
 
     }
-    public async closeProvider(){
-       await  this.provider.disconnect();
+    public async closeProvider() {
+        await this.provider.disconnect();
     }
     public async apipro() {
         const papi = await init(this.provider);
@@ -192,10 +192,12 @@ export class OpenSeaPort {
         // this.provider = papi.provider;
 
         buy = makeOrder(users.bob.key.address, true, 0);
-        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = this.accounts.slice(0,7);
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = this.accounts.slice(0, 7);
         // console.log(buy)
         this._wyvernProtocol = papi.api.tx;
         this._wyvernProtocolReadOnly = papi.api.rpc;
+        this.apip = papi.api.tx;
+        this.apipReadOnly = papi.api.rpc;
         // this.apip = await ApiPromise.create({ provider:this.provider })
         // this.apipReadOnly = await ApiPromise.create({ provider: this.provider })
         // const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -235,14 +237,14 @@ export class OpenSeaPort {
             takerRelayerFee: order.makerRelayerFee.toNumber(),
             makerProtocolFee: order.makerRelayerFee.toNumber(),
             takerProtocolFee: order.makerRelayerFee.toNumber(),
-            feeRecipient:  accounts[0] ,
+            feeRecipient: accounts[0],
             feeMethod: order.feeMethod,
             side: order.side,
             saleKind: order.saleKind,
-            target: accounts[0] ,
+            target: accounts[0],
             howToCall: order.howToCall,
-            calldata: '0x'+order.calldata,
-            replacementPattern: '0x'+order.replacementPattern,
+            calldata: '0x' + order.calldata,
+            replacementPattern: '0x' + order.replacementPattern,
             staticTarget: accounts[0],
             staticExtradata: order.staticExtradata,
             paymentToken: accounts[0],
@@ -1510,38 +1512,38 @@ export class OpenSeaPort {
             }
     ): Promise<string> {
 
-        // const schema = this._getSchema(asset.schemaName)
-        // const quantityBN = new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
-        // const wyAsset = getWyvernAsset(schema, asset, quantityBN)
-        // const isCryptoKitties = [CK_ADDRESS, CK_RINKEBY_ADDRESS].includes(wyAsset.address)
-        // // Since CK is common, infer isOldNFT from it in case user
-        // // didn't pass in `version`
-        // const isOldNFT = isCryptoKitties || !!asset.version && [
-        //     TokenStandardVersion.ERC721v1, TokenStandardVersion.ERC721v2
-        // ].includes(asset.version)
+        const schema = this._getSchema(asset.schemaName)
+        const quantityBN = new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
+        const wyAsset = getWyvernAsset(schema, asset, quantityBN)
+        const isCryptoKitties = [CK_ADDRESS, CK_RINKEBY_ADDRESS].includes(wyAsset.address)
+        // Since CK is common, infer isOldNFT from it in case user
+        // didn't pass in `version`
+        const isOldNFT = isCryptoKitties || !!asset.version && [
+            TokenStandardVersion.ERC721v1, TokenStandardVersion.ERC721v2
+        ].includes(asset.version)
 
-        // const abi = asset.schemaName === WyvernSchemaName.ERC20
-        //     ? annotateERC20TransferABI(wyAsset as WyvernFTAsset)
-        //     : isOldNFT
-        //         ? annotateERC721TransferABI(wyAsset as WyvernNFTAsset)
-        //         : schema.functions.transfer(wyAsset)
+        const abi = asset.schemaName === WyvernSchemaName.ERC20
+            ? annotateERC20TransferABI(wyAsset as WyvernFTAsset)
+            : isOldNFT
+                ? annotateERC721TransferABI(wyAsset as WyvernNFTAsset)
+                : schema.functions.transfer(wyAsset)
 
-        // this._dispatch(EventType.TransferOne, { accountAddress: fromAddress, toAddress, asset: wyAsset })
+        this._dispatch(EventType.TransferOne, { accountAddress: fromAddress, toAddress, asset: wyAsset })
 
-        // const gasPrice = await this._computeGasPrice()
-        // const data = encodeTransferCall(abi, fromAddress, toAddress)
-        // const txHash = await sendRawTransaction(this.apip, {
-        //     from: fromAddress,
-        //     to: abi.target,
-        //     data,
-        //     gasPrice
-        // }, error => {
-        //     this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
-        // })
+        const gasPrice = await this._computeGasPrice()
+        const data = encodeTransferCall(abi, fromAddress, toAddress)
+        const txHash = await sendRawTransaction(this.apip, {
+            from: fromAddress,
+            to: abi.target,
+            data,
+            gasPrice
+        }, error => {
+            this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
+        })
 
-        // await this._confirmTransaction(txHash, EventType.TransferOne, `Transferring asset`)
-        // return txHash
-        return ""
+        await this._confirmTransaction(txHash, EventType.TransferOne, `Transferring asset`)
+        return txHash
+        // return ""
     }
 
     /**
@@ -1662,51 +1664,51 @@ export class OpenSeaPort {
             },
         retries = 1
     ): Promise<BigNumber> {
-        return new BigNumber("100000000000000000000")
-        // const schema = this._getSchema(asset.schemaName)
-        // const wyAsset = getWyvernAsset(schema, asset)
+        // return new BigNumber("100000000000000000000")
+        const schema = this._getSchema(asset.schemaName)
+        const wyAsset = getWyvernAsset(schema, asset)
 
-        // if (schema.functions.countOf) {
-        //   // ERC20 or ERC1155 (non-Enjin)
+        if (schema.functions.countOf) {
+          // ERC20 or ERC1155 (non-Enjin)
 
-        //   const abi = schema.functions.countOf(wyAsset)
-        //   const contract = this._getClientsForRead(retries).apip.eth.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
+          const abi = schema.functions.countOf(wyAsset)
+        //   const contract = this._getClientsForRead(retries).apip.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
         //   const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
         //   const count = await promisifyCall<BigNumber>(c => contract[abi.name].call(accountAddress, ...inputValues, c))
 
-        //   if (count !== undefined) {
-        //     return count
-        //   }
+          if (count !== undefined) {
+            return count
+          }
 
-        // } else if (schema.functions.ownerOf) {
-        //   // ERC721 asset
+        } else if (schema.functions.ownerOf) {
+          // ERC721 asset
 
-        //   const abi = schema.functions.ownerOf(wyAsset)
-        //   const contract = this._getClientsForRead(retries).apip.eth.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
-        //   if (abi.inputs.filter(x => x.value === undefined)[0]) {
-        //     throw new Error("Missing an argument for finding the owner of this asset")
-        //   }
-        //   const inputValues = abi.inputs.map(i => i.value.toString())
-        //   const owner = await promisifyCall<string>(c => contract[abi.name].call(...inputValues, c))
-        //   if (owner) {
-        //     return owner.toLowerCase() == accountAddress.toLowerCase()
-        //       ? new BigNumber(1)
-        //       : new BigNumber(0)
-        //   }
+          const abi = schema.functions.ownerOf(wyAsset)
+          const contract = this._getClientsForRead(retries).apip.eth.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
+          if (abi.inputs.filter(x => x.value === undefined)[0]) {
+            throw new Error("Missing an argument for finding the owner of this asset")
+          }
+          const inputValues = abi.inputs.map(i => i.value.toString())
+          const owner = await promisifyCall<string>(c => contract[abi.name].call(...inputValues, c))
+          if (owner) {
+            return owner.toLowerCase() == accountAddress.toLowerCase()
+              ? new BigNumber(1)
+              : new BigNumber(0)
+          }
 
-        // } else {
-        //   // Missing ownership call - skip check to allow listings
-        //   // by default
-        //   throw new Error('Missing ownership schema for this asset type')
-        // }
+        } else {
+          // Missing ownership call - skip check to allow listings
+          // by default
+          throw new Error('Missing ownership schema for this asset type')
+        }
 
-        // if (retries <= 0) {
-        //   throw new Error('Unable to get current owner from smart contract')
-        // } else {
-        //   await delay(500)
-        //   // Recursively check owner again
-        //   return await this.getAssetBalance({accountAddress, asset}, retries - 1)
-        // }
+        if (retries <= 0) {
+          throw new Error('Unable to get current owner from smart contract')
+        } else {
+          await delay(500)
+          // Recursively check owner again
+          return await this.getAssetBalance({accountAddress, asset}, retries - 1)
+        }
     }
 
     /**

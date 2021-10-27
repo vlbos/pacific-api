@@ -1,10 +1,11 @@
 // import * as Web3 from 'web3';
 
 import {
-//   FunctionInputKind,
-//   FunctionOutputKind,
+  FunctionInputKind,
+  FunctionOutputKind,
   Schema,
-//   StateMutability,
+  StateMutability,
+AbiType
 } from '../../types'
 
 export interface FungibleTradeType {
@@ -41,38 +42,38 @@ export const ERC20Schema: Schema<FungibleTradeType> = {
         properties: [],
       }
   },
-//   functions: {
-//     transfer: asset => ({
-//       type: Web3.AbiType.Function,
-//       name: 'transferFrom',
-//       payable: false,
-//       constant: false,
-//       stateMutability: StateMutability.Nonpayable,
-//       target: asset.address,
-//       inputs: [
-//         {kind: FunctionInputKind.Owner, name: '_from', type: 'address'},
-//         {kind: FunctionInputKind.Replaceable, name: '_to', type: 'address'},
-//         {kind: FunctionInputKind.Count, name: '_value', type: 'uint256', value: asset.quantity },
-//       ],
-//       outputs: [],
-//     }),
-//     countOf: asset => ({
-//       type: Web3.AbiType.Function,
-//       name: 'balanceOf',
-//       payable: false,
-//       constant: true,
-//       stateMutability: StateMutability.View,
-//       target: asset.address,
-//       inputs: [
-//         {kind: FunctionInputKind.Owner, name: '_owner', type: 'address'},
-//       ],
-//       outputs: [
-//         {kind: FunctionOutputKind.Count, name: 'balance', type: 'uint'},
-//       ],
-//       assetFromOutputs: (outputs: any) => outputs.balance,
-//     }),
-//     assetsOfOwnerByIndex: [],
-//   },
+  functions: {
+    transfer: asset => ({
+      type: AbiType.Function,
+      name: 'transferFrom',
+      payable: false,
+      constant: false,
+      stateMutability: StateMutability.Nonpayable,
+      target: asset.address,
+      inputs: [
+        {kind: FunctionInputKind.Owner, name: '_from', type: 'address'},
+        {kind: FunctionInputKind.Replaceable, name: '_to', type: 'address'},
+        {kind: FunctionInputKind.Count, name: '_value', type: 'uint256', value: asset.quantity },
+      ],
+      outputs: [],
+    }),
+    countOf: asset => ({
+      type:AbiType.Function,
+      name: 'balanceOf',
+      payable: false,
+      constant: true,
+      stateMutability: StateMutability.View,
+      target: asset.address,
+      inputs: [
+        {kind: FunctionInputKind.Owner, name: '_owner', type: 'address'},
+      ],
+      outputs: [
+        {kind: FunctionOutputKind.Count, name: 'balance', type: 'uint'},
+      ],
+      assetFromOutputs: (outputs: any) => outputs.balance,
+    }),
+    assetsOfOwnerByIndex: [],
+  },
   events: {
     transfer: [],
   },

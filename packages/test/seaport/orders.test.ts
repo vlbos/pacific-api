@@ -839,7 +839,7 @@ export async function testMatchingOrder(order: Order, accountAddress: string, te
         })
         expect(isFulfillable).toBeTruthy()
         const gasPrice = await client._computeGasPrice()
-        console.info(`Gas price to use: ${client.web3.fromWei(gasPrice, 'gwei')} gwei`)
+        console.info(`Gas price to use: ${gasPrice} gwei`)
     }
 }
 

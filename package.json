@@ -13,12 +13,12 @@
     "test": "polkadot-dev-run-test --coverage ",
     "test:api": "polkadot-dev-run-test packages/test/api/api.test.ts",
     "test:order": "polkadot-dev-run-test packages/test/seaport/orders.test.ts  --forceExit",
-    "test:contract": "polkadot-dev-run-test packages/test/seaport/contracts-rust.spec.ts  ",
-    "test:erc20": "polkadot-dev-run-test packages/test/seaport/contracts-erc20.spec.ts  --forceExit",
-    "test:erc721": "polkadot-dev-run-test packages/test/seaport/contracts-erc721.spec.ts  --forceExit",
-    "test:onex": "polkadot-dev-run-test packages/test/seaport/orders.test.ts --runInBand --detectOpenHandles --forceExit",
-    "test:o": "polkadot-dev-run-test packages/api/test/orderbook.rpc.spec.ts",
-    "test:t": "polkadot-dev-run-test packages/api/test/orderbook.tx.spec.ts",
+    "t:contract": "polkadot-dev-run-test packages/test/seaport/contracts-rust.spec.ts  ",
+    "t:erc20": "polkadot-dev-run-test packages/test/seaport/contracts-erc20.spec.ts  --forceExit",
+    "t:erc721": "polkadot-dev-run-test packages/test/seaport/contracts-erc721.spec.ts  --forceExit",
+    "t:onex": "polkadot-dev-run-test packages/test/seaport/orders.test.ts --runInBand --detectOpenHandles --forceExit",
+    "ta:o": "polkadot-dev-run-test packages/api/test/orderbook.rpc.spec.ts",
+    "ta:t": "polkadot-dev-run-test packages/api/test/orderbook.tx.spec.ts",
     "test:watch": "polkadot-dev-run-test --watch"
   },
   "devDependencies": {
