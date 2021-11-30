@@ -13,7 +13,7 @@ import { Network, OrderJSON, OrderSide, Order, SaleKind, UnhashedOrder, Unsigned
 import { orderFromJSON, getOrderHash, estimateCurrentPrice, assignOrdersToSides, makeBigNumber } from '../../pacific-js/utils/utils'
 import * as ordersJSONFixture from '../fixtures/orders.json'
 import { BigNumber } from 'bignumber.js'
-import { ALEX_ADDRESS, CRYPTO_CRYSTAL_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, CK_ADDRESS, DEVIN_ADDRESS, ALEX_ADDRESS_2, CK_TOKEN_ID, MAINNET_API_KEY, RINKEBY_API_KEY, CK_RINKEBY_ADDRESS, CK_RINKEBY_TOKEN_ID, CATS_IN_MECHS_ID, CRYPTOFLOWERS_CONTRACT_ADDRESS_WITH_BUYER_FEE, DISSOLUTION_TOKEN_ID, ENS_HELLO_NAME, ENS_HELLO_TOKEN_ID, ENS_RINKEBY_TOKEN_ADDRESS, ENS_RINKEBY_SHORT_NAME_OWNER, WETH_ADDRESS } from '../constants'
+import { ALICE_ADDRESS, CRYPTO_CRYSTAL_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, CRYPTOFLOWERS_CONTRACT_ADDRESS_WITH_BUYER_FEE, DISSOLUTION_TOKEN_ID, ENS_HELLO_NAME, ENS_HELLO_TOKEN_ID, ENS_DEV_TOKEN_ADDRESS, ENS_DEV_SHORT_NAME_OWNER,WDOT_ADDRESS } from '../constants'
 import { testFeesMakerOrder } from './fees.test'
 import {
     ENJIN_ADDRESS,
@@ -21,7 +21,7 @@ import {
     MAINNET_PROVIDER_URL,
     NULL_ADDRESS,
     OPENSEA_FEE_RECIPIENT,
-    RINKEBY_PROVIDER_URL
+    DEV_PROVIDER_URL
 } from '../../pacific-js/constants'
 
 const ordersJSON = ordersJSONFixture as any
@@ -31,17 +31,17 @@ const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
 //   const provider = new WsProvider('ws://127.0.0.1:9944/');
 const provider = new WsProvider('ws://127.0.0.1:9944/');
-const rinkebyProvider = new WsProvider('ws://127.0.0.1:9944/');
+const devProvider = new WsProvider('ws://127.0.0.1:9944/');
 
 const client = new OpenSeaPort(provider, {
     networkName: Network.Main,
     apiKey: MAINNET_API_KEY
 }, line => console.info(`MAINNET: ${line}`))
 
-const rinkebyClient = new OpenSeaPort(rinkebyProvider, {
-    networkName: Network.Rinkeby,
-    apiKey: RINKEBY_API_KEY
-}, line => console.info(`RINKEBY: ${line}`))
+const devClient = new OpenSeaPort(devProvider, {
+    networkName: Network.Dev,
+    apiKey: DEV_API_KEY
+}, line => console.info(`DEV: ${line}`))
 
 const assetsForBundleOrder = [
     { tokenId: MYTHEREUM_TOKEN_ID.toString(), tokenAddress: MYTHEREUM_ADDRESS },
@@ -63,7 +63,7 @@ describe('seaport: orders', () => {
     })
     afterAll(async () => {
         await provider.disconnect();
-        await rinkebyProvider.disconnect();
+        await devProvider.disconnect();
         await client.closeProvider();
         // jest.setTimeout(30000);
         // await client.apipro();
@@ -90,7 +90,7 @@ describe('seaport: orders', () => {
     })
 
     it("Correctly sets decimals on fungible order", async () => {
-        const accountAddress = ALEX_ADDRESS
+        const accountAddress = ALICE_ADDRESS
         const tokenId = DISSOLUTION_TOKEN_ID.toString()
         const tokenAddress = ENJIN_ADDRESS
         const quantity = 1
@@ -112,7 +112,7 @@ describe('seaport: orders', () => {
     })
 
     it("Correctly errors for invalid sell order price parameters", async () => {
-        const accountAddress = ALEX_ADDRESS
+        const accountAddress = ALICE_ADDRESS
         const expirationTime = Math.round(Date.now() / 1000 + 60) // one minute from now
         const paymentTokenAddress = manaAddress
         const tokenId = MYTHEREUM_TOKEN_ID.toString()
@@ -255,7 +255,7 @@ describe('seaport: orders', () => {
     })
 
     it("Correctly errors for invalid buy order price parameters", async () => {
-        const accountAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_STASH_ADDRESS
         const expirationTime = Math.round(Date.now() / 1000 + 60) // one minute from now
         const tokenId = MYTHEREUM_TOKEN_ID.toString()
         const tokenAddress = MYTHEREUM_ADDRESS
@@ -276,10 +276,10 @@ describe('seaport: orders', () => {
     })
 
     it('Cannot yet match a new English auction sell order, bountied', async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
         const amountInToken = 1.2
-        const paymentTokenAddress = WETH_ADDRESS
+        const paymentTokenAddress =WDOT_ADDRESS
         const expirationTime = Math.round(Date.now() / 1000 + 60) // one minute from now
         const bountyPercent = 1.1
 
@@ -318,16 +318,16 @@ describe('seaport: orders', () => {
     })
 
     it.skip('Can match a finished English auction sell order', async () => {
-        const makerAddress = ALEX_ADDRESS_2
-        const takerAddress = ALEX_ADDRESS
-        const matcherAddress = DEVIN_ADDRESS
+        const makerAddress = ALICE_STASH_ADDRESS
+        const takerAddress = ALICE_ADDRESS
+        const matcherAddress = CHARLIE_ADDRESS
         const now = Math.round(Date.now() / 1000)
         // Get bid from server
-        const paymentTokenAddress = WETH_ADDRESS
-        const { orders } = await rinkebyClient.api.getOrders({
+        const paymentTokenAddress =WDOT_ADDRESS
+        const { orders } = await devClient.api.getOrders({
             side: OrderSide.Buy,
-            asset_contract_address: CK_RINKEBY_ADDRESS,
-            token_id: CK_RINKEBY_TOKEN_ID,
+            asset_contract_address: CK_DEV_ADDRESS,
+            token_id: CK_DEV_TOKEN_ID,
             payment_token_address: paymentTokenAddress,
             maker: makerAddress
         })
@@ -349,23 +349,23 @@ describe('seaport: orders', () => {
         /* Requirements in Wyvern contract for funds transfer. */
         expect(buy.takerRelayerFee.toNumber()).toBeLessThanOrEqual(sell.takerRelayerFee.toNumber())
         expect(buy.takerProtocolFee.toNumber()).toBeLessThanOrEqual(sell.takerProtocolFee.toNumber())
-        const sellPrice = await rinkebyClient.getCurrentPrice(sell)
-        const buyPrice = await rinkebyClient.getCurrentPrice(buy)
+        const sellPrice = await devClient.getCurrentPrice(sell)
+        const buyPrice = await devClient.getCurrentPrice(buy)
         expect(buyPrice.toNumber()).toBeGreaterThanOrEqual(sellPrice.toNumber())
         console.info(`Matching two orders that differ in price by ${buyPrice.toNumber() - sellPrice.toNumber()}`)
 
-        await rinkebyClient._buyOrderValidationAndApprovals({ order: buy, accountAddress: makerAddress })
-        await rinkebyClient._sellOrderValidationAndApprovals({ order: sell, accountAddress: takerAddress })
+        await devClient._buyOrderValidationAndApprovals({ order: buy, accountAddress: makerAddress })
+        await devClient._sellOrderValidationAndApprovals({ order: sell, accountAddress: takerAddress })
 
-        const gas = await rinkebyClient._estimateGasForMatch({ buy, sell, accountAddress: matcherAddress })
+        const gas = await devClient._estimateGasForMatch({ buy, sell, accountAddress: matcherAddress })
         expect(gas || 0).toBeGreaterThan(0)
         console.info(`Match gas cost: ${gas}`)
     })
 
     it('Ensures buy order compatibility with an English sell order', async () => {
-        const accountAddress = ALEX_ADDRESS_2
-        const takerAddress = ALEX_ADDRESS
-        const paymentTokenAddress = WETH_ADDRESS
+        const accountAddress = ALICE_STASH_ADDRESS
+        const takerAddress = ALICE_ADDRESS
+        const paymentTokenAddress =WDOT_ADDRESS
         const amountInToken = 0.01
         const expirationTime = Math.round(Date.now() / 1000 + 60 * 60 * 24) // one day from now
         const extraBountyBasisPoints = 1.1 * 100
@@ -411,16 +411,16 @@ describe('seaport: orders', () => {
     })
     ///TEST NEEDED
     it.skip("Creates ENS name buy order", async () => {
-        const paymentTokenAddress = WETH_ADDRESS
-        const buyOrder = await rinkebyClient._makeBuyOrder({
+        const paymentTokenAddress =WDOT_ADDRESS
+        const buyOrder = await devClient._makeBuyOrder({
             asset: {
                 tokenId: ENS_HELLO_TOKEN_ID,
-                tokenAddress: ENS_RINKEBY_TOKEN_ADDRESS,
+                tokenAddress: ENS_DEV_TOKEN_ADDRESS,
                 name: ENS_HELLO_NAME,
                 schemaName: WyvernSchemaName.ENSShortNameAuction,
             },
             quantity: 1,
-            accountAddress: ENS_RINKEBY_SHORT_NAME_OWNER,
+            accountAddress: ENS_DEV_SHORT_NAME_OWNER,
             paymentTokenAddress,
             startAmount: 0.01,
             expirationTime: Math.round(Date.now() / 1000 + 60 * 60 * 24),  // one day from now
@@ -431,8 +431,8 @@ describe('seaport: orders', () => {
     })
 
     it("Matches a private sell order, doesn't for wrong taker", async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
         const amountInToken = 2
         const bountyPercent = 0
 
@@ -464,7 +464,7 @@ describe('seaport: orders', () => {
         expect(await testMatchingNewOrder(order, takerAddress)).toThrow()
         // Make sure no one else can take it
         try {
-            await testMatchingNewOrder(order, DEVIN_ADDRESS)
+            await testMatchingNewOrder(order, CHARLIE_ADDRESS)
         } catch (e) {
             // It works!
             return
@@ -473,8 +473,8 @@ describe('seaport: orders', () => {
     })
 
     it('Matches a new dutch sell order of a small amount of ERC-20 item (DAI) for ETH', async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
         const amountInEth = 0.012
 
         const tokenId = null
@@ -504,8 +504,8 @@ describe('seaport: orders', () => {
     })
 
     it('Matches a new sell order of an 1155 item for ETH', async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
         const amountInEth = 2
 
         const tokenId = CATS_IN_MECHS_ID
@@ -536,9 +536,9 @@ describe('seaport: orders', () => {
     })
 
     it('Matches a buy order of an 1155 item for W-ETH', async () => {
-        const accountAddress = ALEX_ADDRESS_2
-        const takerAddress = ALEX_ADDRESS
-        const paymentToken = WETH_ADDRESS
+        const accountAddress = ALICE_STASH_ADDRESS
+        const takerAddress = ALICE_ADDRESS
+        const paymentToken =WDOT_ADDRESS
         const amountInToken = 0.01
 
         const tokenId = DISSOLUTION_TOKEN_ID
@@ -570,8 +570,8 @@ describe('seaport: orders', () => {
 
     ///TEST NEEDED  OK
     it('Matches a new bountied sell order for an ERC-20 token (MANA)', async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
         const paymentToken = (await client.api.getPaymentTokens({ symbol: 'MANA' })).tokens[0]
         const amountInToken = 5000
         const bountyPercent = 1
@@ -606,8 +606,8 @@ describe('seaport: orders', () => {
 
     ///TEST NEEDED OK
     it('Matches a buy order with an ERC-20 token (DAI)', async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
         const paymentToken = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0]
         const amountInToken = 3
 
@@ -639,7 +639,7 @@ describe('seaport: orders', () => {
     })
 
     it('Serializes payment token and matches most recent ERC-20 sell order', async () => {
-        const takerAddress = ALEX_ADDRESS
+        const takerAddress = ALICE_ADDRESS
 
         const order = await client.api.getOrder({
             side: OrderSide.Sell,
@@ -656,8 +656,8 @@ describe('seaport: orders', () => {
         await testMatchingOrder(order, takerAddress, false)
     })
     it('Bulk transfer', async () => {
-        const accountAddress = ALEX_ADDRESS
-        const takerAddress = ALEX_ADDRESS_2
+        const accountAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_STASH_ADDRESS
 
         const gas = await client._estimateGasForTransfer({
             assets: assetsForBulkTransfer,
@@ -769,7 +769,7 @@ describe('seaport: orders', () => {
     ///TEST NEEDED
     it('Matches a buy order and estimates gas on fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
-        const takerAddress = ALEX_ADDRESS
+        const takerAddress = ALICE_ADDRESS
 
         const order = await client.api.getOrder({
             side: OrderSide.Buy,
@@ -803,15 +803,15 @@ describe('seaport: orders', () => {
             return
         }
         // Make sure match is valid
-        const takerAddress = ALEX_ADDRESS
-        const referrerAddress = ALEX_ADDRESS_2
+        const takerAddress = ALICE_ADDRESS
+        const referrerAddress = ALICE_STASH_ADDRESS
         await testMatchingOrder(order, takerAddress, true, referrerAddress)
     })
 })
 
 export async function testMatchingOrder(order: Order, accountAddress: string, testAtomicMatch = false, referrerAddress?: string) {
     // Test a separate recipient for sell orders
-    const recipientAddress = order.side === OrderSide.Sell ? ALEX_ADDRESS_2 : accountAddress
+    const recipientAddress = order.side === OrderSide.Sell ? ALICE_STASH_ADDRESS : accountAddress
     const matchingOrder = client._makeMatchingOrder({
         order,
         accountAddress,

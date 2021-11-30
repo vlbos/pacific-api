@@ -2,9 +2,9 @@
 // import { NetworkTokens } from '../types'
 
 import { mainTokens } from './main/index'
-import { rinkebyTokens } from './rinkeby/index'
+import { devTokens } from './dev/index'
 
 export const tokens = {
-  rinkeby: rinkebyTokens,
+  dev: devTokens,
   main: mainTokens,
 }

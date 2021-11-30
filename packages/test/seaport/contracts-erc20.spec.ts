@@ -32,6 +32,7 @@ import {
     rpcContract,
     instantiate,
     getContractStorage,
+
     putCode, sleepMs, execute
 } from "./utils";
 
@@ -40,7 +41,7 @@ const keyring = createTestKeyring({ type: "sr25519" });
 const alicePair = keyring.getPair(ALICE);
 const bobPair = keyring.getPair(BOB);
 const salary = 100_000_000_000_000;
-const metadata = require("./abis/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
+const metadata = require("../../pacific-js/abis/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
 
 
 
@@ -270,30 +271,30 @@ describe("Rust Smart Contracts", () => {
         //     .call(address, value, gasLimit, contract.abi.messages[3].toU8a([davePair.address, vv]))
         //     .signAndSend(alicePair, { nonce: nonce.toHuman() + 1 }, (result: SubmittableResult) => { });
         // nonce = await api.rpc.system.accountNextIndex(alicePair.address);
-        {
-            //     // Perform the actual read (no params at the end, for the `get` message)
-            //     // (We perform the send from an account, here using Alice's address)
-            const to = bobPair.address;
-            // // const value = 100000000; // only useful on isPayable messages
-            const value = new BN(30) * new BN(1000000);
-            let { gasConsumed, result, output } = await contract.tx.transfer({ value, gasLimit }, to, value).signAndSend(alicePair);//, (result: SubmittableResult) => { });
-            // execute(contract.tx.transfer({ value: 0, gasLimit }, to, value), alicePair);
-            // nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+        // {
+        //     //     // Perform the actual read (no params at the end, for the `get` message)
+        //     //     // (We perform the send from an account, here using Alice's address)
+        //     const to = bobPair.address;
+        //     // // const value = 100000000; // only useful on isPayable messages
+        //     const value = new BN(30) * new BN(1000000);
+        //     let { gasConsumed, result, output } = await contract.tx.transfer({ value, gasLimit }, to, value).signAndSend(alicePair);//, (result: SubmittableResult) => { });
+        //     // execute(contract.tx.transfer({ value: 0, gasLimit }, to, value), alicePair);
+        //     // nonce = await api.rpc.system.accountNextIndex(alicePair.address);
 
-            //     // The actual result from RPC as `ContractExecResult`
-            //     // console.log(result.toHuman());
+        //     //     // The actual result from RPC as `ContractExecResult`
+        //     //     // console.log(result.toHuman());
 
-            //     // gas consumed
-            //     // console.log(gasConsumed.toHuman());
+        //     //     // gas consumed
+        //     //     // console.log(gasConsumed.toHuman());
 
-            //     // check if the call was successful
-            //     // if (result.isOk) {
-            //     //     // should output 123 as per our initial set (output here is an i32)
-            //     //     console.log('balanceOf Success', output.toHuman());
-            //     // } else {
-            //     //     console.error('balanceOf Error', result.asErr);
-            //     // }
-        }
+        //     //     // check if the call was successful
+        //     //     // if (result.isOk) {
+        //     //     //     // should output 123 as per our initial set (output here is an i32)
+        //     //     //     console.log('balanceOf Success', output.toHuman());
+        //     //     // } else {
+        //     //     //     console.error('balanceOf Error', result.asErr);
+        //     //     // }
+        // }
         // const paramsbalanceOf =
         //     '0x01' // 1 byte: First byte Action.Transfer
         //     + u8aToHex(alicePair.publicKey, -1, false) // 32 bytes: Hex encoded new account address as u256
@@ -367,20 +368,20 @@ describe("Rust Smart Contracts", () => {
         // // let oscarBalanceRaw = await getContractStorage(api, address, bobPair.publicKey);
         // // let oscarBalance = hexToBn(oscarBalanceRaw.toString(), true);
         // // expect(oscarBalance.toString()).toBe("0");
-        const transferfromAmount = bnToHex(new BN(90) * new BN(100000000000000), {
-            bitLength: 128,
-            isLe: true,
-            isNegative: false
-        })
-        const paramsTransferFrom =
-            '0x0b396f18' // 1 byte: First byte Action.TransferFrom
-            + u8aToHex(alicePair.publicKey, -1, false) // 32 bytes: Hex encoded contract caller address as u256
-            + u8aToHex(bobPair.publicKey, -1, false) // 32 bytes: Hex encoded new account address as u256
-            + '80969800000000000000000000000000'; // 16 bytes: Amount of tokens to transfer as u128 little endian hex (10000000 in decimal)) value
+        // const transferfromAmount = bnToHex(new BN(90) * new BN(100000000000000), {
+        //     bitLength: 128,
+        //     isLe: true,
+        //     isNegative: false
+        // })
+        // const paramsTransferFrom =
+        //     '0x0b396f18' // 1 byte: First byte Action.TransferFrom
+        //     + u8aToHex(alicePair.publicKey, -1, false) // 32 bytes: Hex encoded contract caller address as u256
+        //     + u8aToHex(bobPair.publicKey, -1, false) // 32 bytes: Hex encoded new account address as u256
+        //     + '80969800000000000000000000000000'; // 16 bytes: Amount of tokens to transfer as u128 little endian hex (10000000 in decimal)) value
 
-        await callContract(api, davePair, address, paramsTransferFrom);
-        sleepMs(500000)
-        nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+        // await callContract(api, davePair, address, paramsTransferFrom);
+        // sleepMs(500000)
+        // nonce = await api.rpc.system.accountNextIndex(alicePair.address);
         // // frankieBalanceNew = frankieBalance.sub(new BN(10000000));
 
         // // frankieBalanceRaw = await getContractStorage(api, address, alicePair.publicKey);
@@ -426,7 +427,7 @@ describe("Rust Smart Contracts", () => {
         //  done();
     });
 
-    test.only("AS-Substrate ERC-20 contract   erc20 transfer", async () => {
+    test("AS-Substrate ERC-20 contract   erc20 transfer", async () => {
 
         let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
         const to = bobPair.address;
@@ -440,17 +441,180 @@ describe("Rust Smart Contracts", () => {
 
         {
             console.log("============q==========", nonce.toHuman());
-            let { gasConsumed, result } = await contract.query.transfer(alicePair.address, { value:new BN(0), gasLimit:new BN(-1) }, to, value);//, (result: SubmittableResult) => { });
-           
+            let { gasConsumed, result } = await contract.query.transfer(alicePair.address, { value: new BN(0), gasLimit: new BN(-1) }, to, value);//, (result: SubmittableResult) => { });
 
+            gasLimit = gasConsumed.toString()
             console.log(`outcome: ${result.isOk ? 'Ok' : 'Error'}`);
             console.log(`gasConsumed ${gasConsumed.toString()}`);
             console.log("===========q=q==========", result.toString());
 
-        } 
+        }
         {
             console.log("============ddd==========", nonce);
-            let { gasConsumed, result, output } = await contract.tx.transfer({ value:0, gasLimit }, to, value).signAndSend(alicePair);//, (result: SubmittableResult) => { });
+            let { gasConsumed, result, output } = await contract.tx.transfer({ value: 0, gasLimit }, to, value).signAndSend(alicePair);//, (result: SubmittableResult) => { });
+            // execute(contract.tx.transfer({ value: 0, gasLimit }, to, value), alicePair);
+            nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+            console.log("=============ddd===d======", result);
+        }
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            let { gasConsumed, result, output } = await contract.query.balanceOf(to, { value: 0, gasLimit: -1 }, to);
+
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+
+            // gas consumed
+            console.log(gasConsumed.toHuman());
+
+            // check if the call was successful
+            if (result.isOk) {
+                // should output 123 as per our initial set (output here is an i32)
+                console.log(alicePair.address, 'balanceOf Success', output.toHuman());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+        sleepMs(50000000)
+
+    });
+    test.only("AS-Substrate ERC-20 contract   erc20 balanceOf", async () => {
+
+        let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+        const to = bobPair.address;
+
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            let { gasConsumed, result, output } = await contract.query.balanceOf(to, { value: 0, gasLimit: -1 }, to);
+
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+
+            // gas consumed
+            console.log(gasConsumed.toHuman());
+
+            // check if the call was successful
+            if (result.isOk) {
+                // should output 123 as per our initial set (output here is an i32)
+                console.log(alicePair.address, 'balanceOf Success', output.toHuman(), output.toString());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+
+    });
+    test("AS-Substrate ERC-20 contract   erc20 approve", async () => {
+
+        let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+        const spender = charliePair.address;
+        const value = new BN(100000000); // only useful on isPayable messages
+        // const value = new BN(30) * new BN(1000000000000);
+        // const value = bnToHex(new BN(20) * new BN(100000000000000), {
+        //     bitLength: 128,
+        //     isLe: true,
+        //     isNegative: false
+        // })
+
+        {
+            console.log("============q==========", nonce.toHuman());
+            let { gasConsumed, result } = await contract.query.approve(alicePair.address, { value: new BN(0), gasLimit: new BN(-1) }, spender, value);//, (result: SubmittableResult) => { });
+
+            gasLimit = gasConsumed.toString()
+            console.log(`outcome: ${result.isOk ? 'Ok' : 'Error'}`);
+            console.log(`gasConsumed ${gasConsumed.toString()}`);
+            console.log("===========q=q==========", result.toString());
+
+        }
+        {
+            console.log("============ddd==========", nonce);
+            let { gasConsumed, result, output } = await contract.tx.approve({ value: 0, gasLimit }, spender, value).signAndSend(alicePair);//, (result: SubmittableResult) => { });
+            // execute(contract.tx.transfer({ value: 0, gasLimit }, to, value), alicePair);
+            nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+            console.log("=============ddd===d======", result);
+        }
+
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            const owner = alicePair.address;
+            let { gasConsumed, result, output } = await contract.query.allowance(alicePair.address, { value: 0, gasLimit: -1 }, owner, spender);
+
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+
+            // gas consumed
+            console.log(gasConsumed.toHuman());
+
+            // check if the call was successful
+            if (result.isOk) {
+                // should output 123 as per our initial set (output here is an i32)
+                console.log('allowance Success', output.toHuman());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+
+        sleepMs(50000000)
+
+    });
+    test("AS-Substrate ERC-20 contract   erc20 allowance", async () => {
+
+        let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+        const spender = charliePair.address;
+        const value = new BN(100000000); // only useful on isPayable messages
+        // const value = new BN(30) * new BN(1000000000000);
+
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            const owner = alicePair.address;
+            let { gasConsumed, result, output } = await contract.query.allowance(alicePair.address, { value: 0, gasLimit: -1 }, owner, spender);
+
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+
+            // gas consumed
+            console.log(gasConsumed.toHuman());
+
+            // check if the call was successful
+            if (result.isOk) {
+                // should output 123 as per our initial set (output here is an i32)
+                console.log('allowance Success', output.toHuman());
+            } else {
+                console.error('allowance Error', result.asErr);
+            }
+        }
+        console.log("======allow enbd========")
+        // sleepMs(50000000)
+
+    });
+    test("AS-Substrate ERC-20 contract   erc20 transfer_from", async () => {
+
+        let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
+        const from = alicePair.address;
+        const to = davePair.address;
+        const value = new BN(100000000); // only useful on isPayable messages
+        // const value = new BN(30) * new BN(1000000000000);
+        // const value = bnToHex(new BN(20) * new BN(100000000000000), {
+        //     bitLength: 128,
+        //     isLe: true,
+        //     isNegative: false
+        // })
+
+        {
+            console.log("============q==========", nonce.toHuman());
+            let { gasConsumed, result } = await contract.query.transferFrom(charliePair.address, { value: new BN(0), gasLimit: new BN(-1) }, from, to, value);//, (result: SubmittableResult) => { });
+
+            gasLimit = gasConsumed.toString()
+            console.log(`outcome: ${result.isOk ? 'Ok' : 'Error'}`);
+            console.log(`gasConsumed ${gasConsumed.toString()}`);
+            console.log("===========q=q==========", result.toString());
+
+        }
+        {
+            console.log("============ddd==========", nonce);
+            let { gasConsumed, result, output } = await contract.tx.transferFrom({ value: 0, gasLimit }, from, to, value).signAndSend(charliePair);//, (result: SubmittableResult) => { });
             // execute(contract.tx.transfer({ value: 0, gasLimit }, to, value), alicePair);
             nonce = await api.rpc.system.accountNextIndex(alicePair.address);
             console.log("=============ddd===d======", result);
@@ -458,8 +622,6 @@ describe("Rust Smart Contracts", () => {
         sleepMs(50000000)
 
     });
-
-
     test("ERC20 contract", async () => {
         // The next two lines are a not so pretty workaround until the new metadata format has been fully implemented
         const metadata = require("./abis/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json

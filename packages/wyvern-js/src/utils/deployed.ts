@@ -1,5 +1,5 @@
 export const deployed = {
-    'rinkeby': {
+    'dev': {
         'TestToken': '0xf44cf0b9b8328adf6d899667b2427d13759087f0',
         'TestDAO': '0x64a07f5472f87d273846f11e0b1d6d69cd2001fa',
         'Migrations': '0x38dcf18e64a3ed64767919ec6960d71040e35c82',

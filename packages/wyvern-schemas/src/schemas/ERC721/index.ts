@@ -1,10 +1,11 @@
 // import * as Web3 from 'web3';
 
 import {
-//   FunctionInputKind,
-//   FunctionOutputKind,
+  FunctionInputKind,
+  FunctionOutputKind,
   Schema,
-//   StateMutability,
+  StateMutability,
+AbiType
 } from '../../types'
 
 export interface NonFungibleContractType {
@@ -41,37 +42,37 @@ export const ERC721Schema: Schema<NonFungibleContractType> = {
         properties: [],
       }
   },
-//   functions: {
-//     transfer: asset => ({
-//       type: Web3.AbiType.Function,
-//       name: 'transferFrom',
-//       payable: false,
-//       constant: false,
-//       stateMutability: StateMutability.Nonpayable,
-//       target: asset.address,
-//       inputs: [
-//         {kind: FunctionInputKind.Owner, name: '_from', type: 'address'},
-//         {kind: FunctionInputKind.Replaceable, name: '_to', type: 'address'},
-//         {kind: FunctionInputKind.Asset, name: '_tokenId', type: 'uint256', value: asset.id},
-//       ],
-//       outputs: [],
-//     }),
-//     ownerOf: asset => ({
-//       type: Web3.AbiType.Function,
-//       name: 'ownerOf',
-//       payable: false,
-//       constant: true,
-//       stateMutability: StateMutability.View,
-//       target: asset.address,
-//       inputs: [
-//         {kind: FunctionInputKind.Asset, name: '_tokenId', type: 'uint256', value: asset.id},
-//       ],
-//       outputs: [
-//         {kind: FunctionOutputKind.Owner, name: 'owner', type: 'address'},
-//       ],
-//     }),
-//     assetsOfOwnerByIndex: [],
-//   },
+  functions: {
+    transfer: asset => ({
+      type: AbiType.Function,
+      name: 'transferFrom',
+      payable: false,
+      constant: false,
+      stateMutability: StateMutability.Nonpayable,
+      target: asset.address,
+      inputs: [
+        {kind: FunctionInputKind.Owner, name: '_from', type: 'address'},
+        {kind: FunctionInputKind.Replaceable, name: '_to', type: 'address'},
+        {kind: FunctionInputKind.Asset, name: '_tokenId', type: 'uint256', value: asset.id},
+      ],
+      outputs: [],
+    }),
+    ownerOf: asset => ({
+      type: AbiType.Function,
+      name: 'ownerOf',
+      payable: false,
+      constant: true,
+      stateMutability: StateMutability.View,
+      target: asset.address,
+      inputs: [
+        {kind: FunctionInputKind.Asset, name: '_tokenId', type: 'uint256', value: asset.id},
+      ],
+      outputs: [
+        {kind: FunctionOutputKind.Owner, name: 'owner', type: 'address'},
+      ],
+    }),
+    assetsOfOwnerByIndex: [],
+  },
   events: {
     transfer: [],
   },

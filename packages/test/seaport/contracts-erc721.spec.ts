@@ -26,7 +26,7 @@ import { CodePromise, ContractPromise } from '@polkadot/api-contract';
 import BN from "bn.js";
 import { Abi } from '@polkadot/api-contract';
 
-import { ALICE, BOB, CHARLIE, DAVE,EVE, CREATION_FEE, WSURL } from "./consts";
+import { ALICE, BOB, CHARLIE, DAVE, EVE, CREATION_FEE, WSURL } from "./consts";
 import {
     callContract,
     rpcContract,
@@ -58,7 +58,7 @@ let testAccount: KeyringPair;
 let api: ApiPromise;
 let abi: Abi;
 let contract: ContractPromise;
-const metadata = require("./abis/erc721/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
+const metadata = require("../../pacific-js/abis/erc721/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
 
 jest.useRealTimers();
 beforeAll((): void => {
@@ -775,7 +775,7 @@ describe("Rust Smart Contracts", () => {
 
     });
 
-    test.only("AS-Substrate ERC-20 contract  burn", async () => {
+    test("AS-Substrate ERC-20 contract  burn", async () => {
         const id = new BN(1);
         {
             let { gasConsumed, result, output } = await contract.query.burn(evePair.address, { value, gasLimit }, id);
@@ -805,8 +805,37 @@ describe("Rust Smart Contracts", () => {
 
     });
 
+    test.only("AS-Substrate ERC-20 contract  ownerOf", async () => {
+        const id = new BN(1);
 
+        // {
+        //     // Perform the actual read (no params at the end, for the `get` message)
+        //     // (We perform the send from an account, here using Alice's address)
+        //     let { gasConsumed, result, output } = await contract.query.ownerOf(alicePair.address, { value, gasLimit }, id);
 
+        //     // The actual result from RPC as `ContractExecResult`
+        //     console.log(result.toHuman());
+
+        //     // gas consumed
+        //     console.log(gasConsumed.toHuman());
+
+        //     // check if the call was successful
+        //     if (result.isOk) {
+        //         // should output 123 as per our initial set (output here is an i32)
+        //         console.log(alicePair.address, 'ownerOf Success', output.toHuman());
+        //     } else {
+        //         console.error('ownerOf Error', result.asErr);
+        //     }
+        // }
+
+        {
+console.log("=====contract======", contract)
+            const callValue = await contract
+                .read('ownerOf', { value, gasLimit }, id)
+                .send(alicePair.address);
+            console.log("=====callValue======", callValue)
+        }
+    });
 
 
 

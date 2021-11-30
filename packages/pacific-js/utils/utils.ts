@@ -6,7 +6,7 @@ import {
     FunctionInputKind,
     FunctionOutputKind,
     Schema,
-    StateMutability
+    StateMutability,AbiType
 } from '../../wyvern-schemas/src/types'
 import { ERC1155 } from '../contracts'
 
@@ -54,59 +54,59 @@ export {
     WyvernProtocol
 }
 
-// export const annotateERC721TransferABI = (asset: WyvernNFTAsset): AnnotatedFunctionABI => ({
-//   "constant": false,
-//   "inputs": [
-//     {
-//       "name": "_to",
-//       "type": "address",
-//       "kind": FunctionInputKind.Replaceable
-//     },
-//     {
-//       "name": "_tokenId",
-//       "type": "uint256",
-//       "kind": FunctionInputKind.Asset,
-//       "value": asset.id
-//     }
-//   ],
-//   "target": asset.address,
-//   "name": "transfer",
-//   "outputs": [],
-//   "payable": false,
-//   "stateMutability": StateMutability.Nonpayable,
-//   "type": "Web3.AbiType.Function"
-// })
+export const annotateERC721TransferABI = (asset: WyvernNFTAsset): AnnotatedFunctionABI => ({
+  "constant": false,
+  "inputs": [
+    {
+      "name": "_to",
+      "type": "address",
+      "kind": FunctionInputKind.Replaceable
+    },
+    {
+      "name": "_tokenId",
+      "type": "uint256",
+      "kind": FunctionInputKind.Asset,
+      "value": asset.id
+    }
+  ],
+  "target": asset.address,
+  "name": "transfer",
+  "outputs": [],
+  "payable": false,
+  "stateMutability": StateMutability.Nonpayable,
+  "type": AbiType.Function
+})
 
-// export const annotateERC20TransferABI = (asset: WyvernFTAsset): AnnotatedFunctionABI => ({
-//   "constant": false,
-//   "inputs": [
-//     {
-//       "name": "_to",
-//       "type": "address",
-//       "kind": FunctionInputKind.Replaceable
-//     },
-//     {
-//       "name": "_amount",
-//       "type": "uint256",
-//       "kind": FunctionInputKind.Count,
-//       "value": asset.quantity
-//     }
-//   ],
-//   "target": asset.address,
-//   "name": "transfer",
-//   "outputs": [
-//     {
-//       "name": "success",
-//       "type": "bool",
-//       "kind": FunctionOutputKind.Other
-//     }
-//   ],
-//   "payable": false,
-//   "stateMutability": StateMutability.Nonpayable,
-//   "type": "Web3.AbiType.Function"
-// })
+export const annotateERC20TransferABI = (asset: WyvernFTAsset): AnnotatedFunctionABI => ({
+  "constant": false,
+  "inputs": [
+    {
+      "name": "_to",
+      "type": "address",
+      "kind": FunctionInputKind.Replaceable
+    },
+    {
+      "name": "_amount",
+      "type": "uint256",
+      "kind": FunctionInputKind.Count,
+      "value": asset.quantity
+    }
+  ],
+  "target": asset.address,
+  "name": "transfer",
+  "outputs": [
+    {
+      "name": "success",
+      "type": "bool",
+      "kind": FunctionOutputKind.Other
+    }
+  ],
+  "payable": false,
+  "stateMutability": StateMutability.Nonpayable,
+  "type": AbiType.Function
+})
 
-const SCHEMA_NAME_TO_ASSET_CONTRACT_TYPE: { [key in WyvernSchemaName]: AssetContractType } = {
+export const SCHEMA_NAME_TO_ASSET_CONTRACT_TYPE: { [key in WyvernSchemaName]: AssetContractType } = {
     [WyvernSchemaName.ERC721]: AssetContractType.NonFungible,
     [WyvernSchemaName.ERC1155]: AssetContractType.SemiFungible,
     [WyvernSchemaName.ERC20]: AssetContractType.Fungible,
@@ -664,28 +664,27 @@ export function toWei(arg: number ,decimals:number ): BigNumber {
 //   }
 // }
 
-// /**
-//  * Estimate Gas usage for a transaction
-//  * @param web3 Web3 instance
-//  * @param from address sending transaction
-//  * @param to destination contract address
-//  * @param data data to send to contract
-//  * @param value value in ETH to send with data
-//  */
-// export async function estimateGas(
-//     web3: Web3,
-//     {from, to, data, value = 0 }: Web3.TxData
-//   ): Promise<number> {
+/**
+ * Estimate Gas usage for a transaction
+ * @param web3 Web3 instance
+ * @param from address sending transaction
+ * @param to destination contract address
+ * @param data data to send to contract
+ * @param value value in ETH to send with data
+ */
+export async function estimateGas(
+    web3: Web3,
+    {from, to, data, value = 0 }: Web3.TxData
+  ): Promise<number> {
+  const amount = await promisify<number>(c => web3.eth.estimateGas({
+    from,
+    to,
+    value,
+    data,
+  }, c))
 
-//   const amount = await promisify<number>(c => web3.eth.estimateGas({
-//     from,
-//     to,
-//     value,
-//     data,
-//   }, c))
-
-//   return amount
-// }
+  return amount
+}
 
 // /**
 //  * Get mean gas price for sending a txn, in wei
@@ -839,7 +838,7 @@ export function getWyvernAsset(
     return schema.assetFromFields({
         'ID': tokenId,
         'Quantity': quantity.toString(),
-        'Address': asset.tokenAddress.toLowerCase(),
+        'Address': asset.tokenAddress,
         'Name': asset.name
     })
 }
@@ -900,9 +899,9 @@ export function getWyvernBundle(
 export function getOrderHash(order: UnhashedOrder) {
     const orderWithStringTypes = {
         ...order,
-        maker: order.maker.toLowerCase(),
-        taker: order.taker.toLowerCase(),
-        feeRecipient: order.feeRecipient.toLowerCase(),
+        maker: order.maker,
+        taker: order.taker,
+        feeRecipient: order.feeRecipient,
         side: order.side.toString(),
         saleKind: order.saleKind.toString(),
         howToCall: order.howToCall.toString(),
@@ -991,7 +990,7 @@ export function validateAndFormatWalletAddress(web3: any, address: string): stri
     if (address == NULL_ADDRESS) {
         throw new Error('Wallet cannot be the null address')
     }
-    return address.toLowerCase()
+    return address
 }
 
 /**
@@ -1002,18 +1001,18 @@ export function onDeprecated(msg: string) {
     console.warn(`DEPRECATION NOTICE: ${msg}`)
 }
 
-// /**
-//  * Get special-case approval addresses for an erc721 contract
-//  * @param erc721Contract contract to check
-//  */
-// export async function getNonCompliantApprovalAddress(erc721Contract: Web3.ContractInstance, tokenId: string, accountAddress: string): Promise<string | undefined> {
+/**
+ * Get special-case approval addresses for an erc721 contract
+ * @param erc721Contract contract to check
+ */
+export async function getNonCompliantApprovalAddress(erc721Contract: any, tokenId: string, accountAddress: string): Promise<string | undefined> {
 
-//   const results = await Promise.all([
-//     // CRYPTOKITTIES check
-//     promisifyCall<string>(c => erc721Contract.kittyIndexToApproved.call(tokenId, c)),
-//     // Etherbots check
-//     promisifyCall<string>(c => erc721Contract.partIndexToApproved.call(tokenId, c)),
-//   ])
+  const results = await Promise.all([accountAddress
+    // // CRYPTOKITTIES check
+    // promisifyCall<string>(c => erc721Contract.kittyIndexToApproved.call(tokenId, c)),
+    // // Etherbots check
+    // promisifyCall<string>(c => erc721Contract.partIndexToApproved.call(tokenId, c)),
+  ])
 
-//   return _.compact(results)[0]
-// }
+  return _.compact(results)[0]
+}

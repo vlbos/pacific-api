@@ -15,7 +15,7 @@ AbiType
 
 export enum Network {
   Main = 'main',
-  Rinkeby = 'rinkeby',
+  Dev = 'dev',
   Kovan = 'kovan',
 }
 

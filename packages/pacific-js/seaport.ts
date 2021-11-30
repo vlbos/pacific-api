@@ -7,29 +7,39 @@ import { createType } from '@polkadot/types';
 import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
 import '../interfaces/augment-types';
+import { CodePromise, ContractPromise, Abi } from '@polkadot/api-contract';
+const erc20metadata = require("./abis/erc20/metadata.json");
+const erc721metadata = require("./abis/erc721/metadata.json");
+import { createTestKeyring } from "@polkadot/keyring/testing";
+const keyring = createTestKeyring({ type: "sr25519" });
+import BN from "bn.js";
 
 // import types from './config/types.json'
 // import rpcs from './config/rpcs.json'
 // const rpc = { ...rpcs }
 import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../orders/order'
 
-import { WyvernProtocol } from '../wyvern-js/wyvernProtocol'
+import { WyvernProtocol } from '../wyvern-js/src/wyvernProtocol'
 import * as WyvernSchemas from '../wyvern-schemas/src/index'
 // import { Schema } from 'wyvern-schemas/src/types'
 import * as _ from 'lodash'
 import { OpenSeaAPI } from './api'
-// import {
-//     CanonicalWETH, ERC20, ERC721, WrappedNFT, WrappedNFTFactory,
-//     WrappedNFTLiquidationProxy, UniswapFactory, UniswapExchange,
-//     StaticCheckTxOrigin, StaticCheckCheezeWizards, StaticCheckDecentralandEstates,
-//     CheezeWizardsBasicTournament, DecentralandEstates, getMethod
-// } from './contracts'
+
+
+import {
+    // CanonicalWETH,
+     ERC20, ERC721,
+    //  WrappedNFT, WrappedNFTFactory,
+    // WrappedNFTLiquidationProxy, UniswapFactory, UniswapExchange,
+    // StaticCheckTxOrigin, StaticCheckCheezeWizards, StaticCheckDecentralandEstates,
+    // CheezeWizardsBasicTournament, DecentralandEstates, getMethod
+} from './contracts'
 import {
     ECSignature, FeeMethod, HowToCall, Network,
-    OpenSeaAPIConfig, OrderSide, SaleKind, UnhashedOrder,
+    OpenSeaAPIConfig, OrderSide, SaleKind, UnhashedOrder, PartialReadonlyContractAbi,
     Order, UnsignedOrder, EventType,
     EventData, OpenSeaAsset, WyvernSchemaName, WyvernAtomicMatchParameters,
-    WyvernAsset, ComputedFees, Asset
+    WyvernAsset, ComputedFees, Asset, WyvernNFTAsset, WyvernFTAsset, TokenStandardVersion
 } from './types'
 import {
     confirmTransaction,
@@ -40,9 +50,13 @@ import {
     getWyvernBundle,
     getWyvernAsset,
     isContractAddress,
-    toWei
+    toWei,
+    annotateERC721TransferABI,
+    annotateERC20TransferABI,
+  getNonCompliantApprovalAddress,
 } from './utils/utils'
 import {
+    encodeAtomicizedTransfer,
     encodeBuy,
     encodeSell
 } from './utils/schema'
@@ -57,11 +71,11 @@ import { EventEmitter } from 'eventemitter3'
 function isValidAddress(address: any) { return true }
 import {
     // CHEEZE_WIZARDS_BASIC_TOURNAMENT_ADDRESS,
-    // CHEEZE_WIZARDS_BASIC_TOURNAMENT_RINKEBY_ADDRESS,
+    // CHEEZE_WIZARDS_BASIC_TOURNAMENT_DEV_ADDRESS,
     // CHEEZE_WIZARDS_GUILD_ADDRESS,
-    // CHEEZE_WIZARDS_GUILD_RINKEBY_ADDRESS,
-    // CK_ADDRESS,
-    // CK_RINKEBY_ADDRESS,
+    // CHEEZE_WIZARDS_GUILD_DEV_ADDRESS,
+    CK_ADDRESS,
+    CK_DEV_ADDRESS,
     // DECENTRALAND_ESTATE_ADDRESS,
     DEFAULT_BUYER_FEE_BASIS_POINTS,
     DEFAULT_GAS_INCREASE_FACTOR,
@@ -73,17 +87,17 @@ import {
     OPENSEA_SELLER_BOUNTY_BASIS_POINTS,
     ORDER_MATCHING_LATENCY_SECONDS,
     SELL_ORDER_BATCH_SIZE,
-    // STATIC_CALL_CHEEZE_WIZARDS_ADDRESS,RINKEBY_PROVIDER_URL,
-    // STATIC_CALL_CHEEZE_WIZARDS_RINKEBY_ADDRESS,
+    // STATIC_CALL_CHEEZE_WIZARDS_ADDRESS,DEV_PROVIDER_URL,
+    // STATIC_CALL_CHEEZE_WIZARDS_DEV_ADDRESS,
     // STATIC_CALL_DECENTRALAND_ESTATES_ADDRESS,
     // STATIC_CALL_TX_ORIGIN_ADDRESS,
-    // STATIC_CALL_TX_ORIGIN_RINKEBY_ADDRESS,
+    // STATIC_CALL_TX_ORIGIN_DEV_ADDRESS,
     // UNISWAP_FACTORY_ADDRESS_MAINNET,
-    // UNISWAP_FACTORY_ADDRESS_RINKEBY,
+    // UNISWAP_FACTORY_ADDRESS_DEV,
     // WRAPPED_NFT_FACTORY_ADDRESS_MAINNET,
-    // WRAPPED_NFT_FACTORY_ADDRESS_RINKEBY,
+    // WRAPPED_NFT_FACTORY_ADDRESS_DEV,
     // WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_MAINNET,
-    // WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_RINKEBY,
+    // WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_DEV,
     // ENJIN_COIN_ADDRESS,
     // MANA_ADDRESS
 } from './constants'
@@ -110,6 +124,7 @@ let buy: any = ""
 export class OpenSeaPort {
     public accounts: any = "";
     // ApiPromise instance to use
+    public papi: any = "";//new ApiPromise({})
     public apip: any = "";//new ApiPromise({})
     public apipReadOnly: any = "";// new ApiPromise({})
     public provider: WsProvider
@@ -153,7 +168,7 @@ export class OpenSeaPort {
         //   const provider = new WsProvider('ws://127.0.0.1:9944/');
         //   (async function () { this.apip = await this.apipro()
         //  })
-        // const readonlyProvider = provider// this._networkName == Network.Main ? MAINNET_PROVIDER_URL : RINKEBY_PROVIDER_URL)
+        // const readonlyProvider = provider// this._networkName == Network.Main ? MAINNET_PROVIDER_URL : DEV_PROVIDER_URL)
         // ApiPromise Config
 
         // this.apip = new ApiPromise({ provider })
@@ -166,9 +181,9 @@ export class OpenSeaPort {
         // this._wyvernProtocolReadOnly = this.apipReadOnly.rpc;
 
         // // WrappedNFTLiquidationProxy Config
-        // this._wrappedNFTFactoryAddress = this._networkName == Network.Main ? WRAPPED_NFT_FACTORY_ADDRESS_MAINNET : WRAPPED_NFT_FACTORY_ADDRESS_RINKEBY
-        // this._wrappedNFTLiquidationProxyAddress = this._networkName == Network.Main ? WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_MAINNET : WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_RINKEBY
-        // this._uniswapFactoryAddress = this._networkName == Network.Main ? UNISWAP_FACTORY_ADDRESS_MAINNET : UNISWAP_FACTORY_ADDRESS_RINKEBY
+        // this._wrappedNFTFactoryAddress = this._networkName == Network.Main ? WRAPPED_NFT_FACTORY_ADDRESS_MAINNET : WRAPPED_NFT_FACTORY_ADDRESS_DEV
+        // this._wrappedNFTLiquidationProxyAddress = this._networkName == Network.Main ? WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_MAINNET : WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_DEV
+        // this._uniswapFactoryAddress = this._networkName == Network.Main ? UNISWAP_FACTORY_ADDRESS_MAINNET : UNISWAP_FACTORY_ADDRESS_DEV
 
         // Emit events
         // //this._emitter = new EventEmitter()
@@ -198,6 +213,7 @@ export class OpenSeaPort {
         this._wyvernProtocolReadOnly = papi.api.rpc;
         this.apip = papi.api.tx;
         this.apipReadOnly = papi.api.rpc;
+        this.papi = papi.api;
         // this.apip = await ApiPromise.create({ provider:this.provider })
         // this.apipReadOnly = await ApiPromise.create({ provider: this.provider })
         // const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -507,70 +523,70 @@ export class OpenSeaPort {
 
     //   }
 
-    //   /**
-    //    * Wrap ETH into W-ETH.
-    //    * W-ETH is needed for placing buy orders (making offers).
-    //    * Emits the `WrapEth` event when the transaction is prompted.
-    //    * @param param0 __namedParameters Object
-    //    * @param amountInEth How much ether to wrap
-    //    * @param accountAddress Address of the user's wallet containing the ether
-    //    */
-    //   public async wrapEth(
-    //       { amountInEth, accountAddress }:
-    //       { amountInEth: number; accountAddress: string }
-    //     ) {
+    /**
+     * Wrap ETH into W-ETH.
+     * W-ETH is needed for placing buy orders (making offers).
+     * Emits the `WrapEth` event when the transaction is prompted.
+     * @param param0 __namedParameters Object
+     * @param amountInEth How much ether to wrap
+     * @param accountAddress Address of the user's wallet containing the ether
+     */
+    public async wrapEth(
+        { amountInEth, accountAddress }:
+            { amountInEth: number; accountAddress: string }
+    ) {
 
-    //     const token = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther
+        const token = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther
 
-    //     const amount = new BigNumber(makeBigNumber(amountInEth), token.decimals)
+        const amount = new BigNumber(makeBigNumber(amountInEth), token.decimals)
 
-    //     this._dispatch(EventType.WrapEth, { accountAddress, amount })
+        this._dispatch(EventType.WrapEth, { accountAddress, amount })
 
-    //     const gasPrice = await this._computeGasPrice()
-    //     const txHash = await sendRawTransaction(this.apip, {
-    //       from: accountAddress,
-    //       to: token.address,
-    //       value: amount,
-    //       data: encodeCall(getMethod(CanonicalWETH, 'deposit'), []),
-    //       gasPrice
-    //     }, error => {
-    //       this._dispatch(EventType.TransactionDenied, { error, accountAddress })
-    //     })
+        const gasPrice = await this._computeGasPrice()
+        const txHash = await sendRawTransaction(this.apip, {
+            from: accountAddress,
+            to: token.address,
+            value: amount,
+            data: encodeCall(getMethod(CanonicalWETH, 'deposit'), []),
+            gasPrice
+        }, error => {
+            this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+        })
 
-    //     await this._confirmTransaction(txHash, EventType.WrapEth, "Wrapping ETH")
-    //   }
+        await this._confirmTransaction(txHash, EventType.WrapEth, "Wrapping ETH")
+    }
 
-    //   /**
-    //    * Unwrap W-ETH into ETH.
-    //    * Emits the `UnwrapWeth` event when the transaction is prompted.
-    //    * @param param0 __namedParameters Object
-    //    * @param amountInEth How much W-ETH to unwrap
-    //    * @param accountAddress Address of the user's wallet containing the W-ETH
-    //    */
-    //   public async unwrapWeth(
-    //       { amountInEth, accountAddress }:
-    //       { amountInEth: number; accountAddress: string }
-    //     ) {
+    /**
+     * Unwrap W-ETH into ETH.
+     * Emits the `UnwrapWeth` event when the transaction is prompted.
+     * @param param0 __namedParameters Object
+     * @param amountInEth How much W-ETH to unwrap
+     * @param accountAddress Address of the user's wallet containing the W-ETH
+     */
+    public async unwrapWeth(
+        { amountInEth, accountAddress }:
+            { amountInEth: number; accountAddress: string }
+    ) {
 
-    //     const token = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther
+        const token = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther
 
-    //     const amount = new BigNumber(makeBigNumber(amountInEth), token.decimals)
+        const amount = new BigNumber(makeBigNumber(amountInEth), token.decimals)
 
-    //     this._dispatch(EventType.UnwrapWeth, { accountAddress, amount })
+        this._dispatch(EventType.UnwrapWeth, { accountAddress, amount })
 
-    //     const gasPrice = await this._computeGasPrice()
-    //     const txHash = await sendRawTransaction(this.apip, {
-    //       from: accountAddress,
-    //       to: token.address,
-    //       value: 0,
-    //       data: encodeCall(getMethod(CanonicalWETH, 'withdraw'), [amount.toString()]),
-    //       gasPrice
-    //     }, error => {
-    //       this._dispatch(EventType.TransactionDenied, { error, accountAddress })
-    //     })
+        const gasPrice = await this._computeGasPrice()
+        const txHash = await sendRawTransaction(this.apip, {
+            from: accountAddress,
+            to: token.address,
+            value: 0,
+            data: encodeCall(getMethod(CanonicalWETH, 'withdraw'), [amount.toString()]),
+            gasPrice
+        }, error => {
+            this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+        })
 
-    //     await this._confirmTransaction(txHash, EventType.UnwrapWeth, "Unwrapping W-ETH")
-    //   }
+        await this._confirmTransaction(txHash, EventType.UnwrapWeth, "Unwrapping W-ETH")
+    }
 
     /**
      * Create a buy order to make an offer on a bundle or group of assets.
@@ -916,7 +932,7 @@ export class OpenSeaPort {
                 return _makeAndPostOneSellOrder(assets[assetIndex])
             }))
 
-            //this.logger(`Created and posted a batch of ${batchOrdersCreated.length} orders in parallel.`)
+            this.logger(`Created and posted a batch of ${batchOrdersCreated.length} orders in parallel.`)
 
             numOrdersCreated += batchOrdersCreated.length
 
@@ -1088,284 +1104,343 @@ export class OpenSeaPort {
         })
     }
 
-    // /**
-    //  * Approve a non-fungible token for use in trades.
-    //  * Requires an account to be initialized first.
-    //  * Called internally, but exposed for dev flexibility.
-    //  * Checks to see if already approved, first. Then tries different approval methods from best to worst.
-    //  * @param param0 __namedParamters Object
-    //  * @param tokenId Token id to approve, but only used if approve-all isn't
-    //  *  supported by the token contract
-    //  * @param tokenAddress The contract address of the token being approved
-    //  * @param accountAddress The user's wallet address
-    //  * @param proxyAddress Address of the user's proxy contract. If not provided,
-    //  *  will attempt to fetch it from Wyvern.
-    //  * @param tokenAbi ABI of the token's contract. Defaults to a flexible ERC-721
-    //  *  contract.
-    //  * @param skipApproveAllIfTokenAddressIn an optional list of token addresses that, if a token is approve-all type, will skip approval
-    //  * @param schemaName The Wyvern schema name corresponding to the asset type
-    //  * @returns Transaction hash if a new transaction was created, otherwise null
-    //  */
-    // public async approveSemiOrNonFungibleToken(
-    //     { tokenId,
-    //         tokenAddress,
-    //         accountAddress,
-    //         proxyAddress,
-    //         tokenAbi = ERC721,
-    //         skipApproveAllIfTokenAddressIn = new Set(),
-    //         schemaName = WyvernSchemaName.ERC721 }:
-    //         {
-    //             tokenId: string;
-    //             tokenAddress: string;
-    //             accountAddress: string;
-    //             proxyAddress?: string;
-    //             tokenAbi?: PartialReadonlyContractAbi;
-    //             skipApproveAllIfTokenAddressIn?: Set<string>;
-    //             schemaName?: WyvernSchemaName;
-    //         }
-    // ): Promise<string | null> {
+    /**
+     * Approve a non-fungible token for use in trades.
+     * Requires an account to be initialized first.
+     * Called internally, but exposed for dev flexibility.
+     * Checks to see if already approved, first. Then tries different approval methods from best to worst.
+     * @param param0 __namedParamters Object
+     * @param tokenId Token id to approve, but only used if approve-all isn't
+     *  supported by the token contract
+     * @param tokenAddress The contract address of the token being approved
+     * @param accountAddress The user's wallet address
+     * @param proxyAddress Address of the user's proxy contract. If not provided,
+     *  will attempt to fetch it from Wyvern.
+     * @param tokenAbi ABI of the token's contract. Defaults to a flexible ERC-721
+     *  contract.
+     * @param skipApproveAllIfTokenAddressIn an optional list of token addresses that, if a token is approve-all type, will skip approval
+     * @param schemaName The Wyvern schema name corresponding to the asset type
+     * @returns Transaction hash if a new transaction was created, otherwise null
+     */
+    public async approveSemiOrNonFungibleToken(
+        { tokenId,
+            tokenAddress,
+            accountAddress,
+            proxyAddress,
+            tokenAbi = ERC721,
+            skipApproveAllIfTokenAddressIn = new Set(),
+            schemaName = WyvernSchemaName.ERC721 }:
+            {
+                tokenId: string;
+                tokenAddress: string;
+                accountAddress: string;
+                proxyAddress?: string;
+                tokenAbi?: amy;
+                skipApproveAllIfTokenAddressIn?: Set<string>;
+                schemaName?: WyvernSchemaName;
+            }
+    ): Promise<string | null> {
 
-    //     const schema = "";//this._getSchema(schemaName)
-    //     const tokenContract = this.apip.eth.contract(tokenAbi as any[])
-    //     const contract = await tokenContract.at(tokenAddress)
+        const schema = this._getSchema(schemaName)
+        // const tokenContract = this.apip.eth.contract(tokenAbi as any[])
+        // const contract = await tokenContract.at(tokenAddress)
 
-    //     if (!proxyAddress) {
-    //         proxyAddress = "";//await this._getProxy(accountAddress) || undefined
-    //         if (!proxyAddress) {
-    //             throw new Error('Uninitialized account')
-    //         }
-    //     }
+        if (!proxyAddress) {
+            proxyAddress = await this._getProxy(accountAddress) || undefined
+            if (!proxyAddress) {
+                throw new Error('Uninitialized account')
+            }
+        }
+                    const accountPair = keyring.getPair(accountAddress);
 
-    //     const approvalAllCheck = async () => {
-    //         // NOTE:
-    //         // Use this long way of calling so we can check for method existence on a bool-returning method.
-    //         const isApprovedForAllRaw = await rawCall(this.apipReadOnly, {
-    //             from: accountAddress,
-    //             to: contract.address,
-    //             data: contract.isApprovedForAll.getData(accountAddress, proxyAddress)
-    //         })
-    //         return parseInt(isApprovedForAllRaw)
-    //     }
-    //     const isApprovedForAll = await approvalAllCheck()
+        const mabi = new Abi(tokenAbi, this.papi.registry.getChainProperties());
+        const contract = new ContractPromise(this.papi, mabi, tokenAddress);
+        const approvalAllCheck = async () => {
+            // NOTE:
+            // Use this long way of calling so we can check for method existence on a bool-returning method.
+            // const isApprovedForAllRaw = await rawCall(this.apipReadOnly, {
+            //     from: accountAddress,
+            //     to: contract.address,
+            //     data: contract.isApprovedForAll.getData(accountAddress, proxyAddress)
+            // })
+            const isApprovedForAllRaw = await contract.query.isApprovalForAll(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress);
+            
+            return parseInt(isApprovedForAllRaw.toString())
+        }
+        const isApprovedForAll = await approvalAllCheck()
 
-    //     if (isApprovedForAll == 1) {
-    //         // Supports ApproveAll
-    //         //this.logger('Already approved proxy for all tokens')
-    //         return null
-    //     }
+        if (isApprovedForAll == 1) {
+            // Supports ApproveAll
+            this.logger('Already approved proxy for all tokens')
+            return null
+        }
 
-    //     if (isApprovedForAll == 0) {
-    //         // Supports ApproveAll
-    //         //  not approved for all yet
+        if (isApprovedForAll == 0) {
+            // Supports ApproveAll
+            //  not approved for all yet
 
-    //         if (skipApproveAllIfTokenAddressIn.has(tokenAddress)) {
-    //             //this.logger('Already approving proxy for all tokens in another transaction')
-    //             return null
-    //         }
-    //         skipApproveAllIfTokenAddressIn.add(tokenAddress)
+            if (skipApproveAllIfTokenAddressIn.has(tokenAddress)) {
+                this.logger('Already approving proxy for all tokens in another transaction')
+                return null
+            }
+            skipApproveAllIfTokenAddressIn.add(tokenAddress)
 
-    //         try {
-    //             this._dispatch(EventType.ApproveAllAssets, {
-    //                 accountAddress,
-    //                 proxyAddress,
-    //                 contractAddress: tokenAddress
-    //             })
+            try {
+                this._dispatch(EventType.ApproveAllAssets, {
+                    accountAddress,
+                    proxyAddress,
+                    contractAddress: tokenAddress
+                })
 
-    //             const gasPrice = await this._computeGasPrice()
-    //             const txHash = await sendRawTransaction(this.apip, {
-    //                 from: accountAddress,
-    //                 to: contract.address,
-    //                 data: contract.setApprovalForAll.getData(proxyAddress, true),
-    //                 gasPrice
-    //             }, error => {
-    //                 this._dispatch(EventType.TransactionDenied, { error, accountAddress })
-    //             })
-    //             await this._confirmTransaction(txHash, EventType.ApproveAllAssets, 'Approving all tokens of this type for trading', async () => {
-    //                 const result = await approvalAllCheck()
-    //                 return result == 1
-    //             })
-    //             return txHash
-    //         } catch (error) {
-    //             console.error(error)
-    //             throw new Error("Couldn't get permission to approve these tokens for trading. Their contract might not be implemented correctly. Please contact the developer!")
-    //         }
-    //     }
+                // const gasPrice = await this._computeGasPrice()
+                // const txHash = await sendRawTransaction(this.apip, {
+                //     from: accountAddress,
+                //     to: contract.address,
+                //     data: contract.setApprovalForAll.getData(proxyAddress, true),
+                //     gasPrice
+                // }, error => {
+                //     this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+                // })
+                let txHash="";
+                {
+                    let gasConsumed = await contract.query.setApprovalForAll(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, true);
+                    let result = await contract.tx.setApprovalForAll({ value: 0, gasLimit: gasConsumed.toString() }, proxyAddress, true).signAndSend(accountPair);
+                    txHash = result.toString();
+                }
+                await this._confirmTransaction(txHash, EventType.ApproveAllAssets, 'Approving all tokens of this type for trading', async () => {
+                    const result = await approvalAllCheck()
+                    return result == 1
+                })
+                return txHash
+            } catch (error) {
+                console.error(error)
+                throw new Error("Couldn't get permission to approve these tokens for trading. Their contract might not be implemented correctly. Please contact the developer!")
+            }
+        }
 
-    //     // Does not support ApproveAll (ERC721 v1 or v2)
-    //     //this.logger('Contract does not support Approve All')
+        // Does not support ApproveAll (ERC721 v1 or v2)
+        this.logger('Contract does not support Approve All')
 
-    //     const approvalOneCheck = async () => {
-    //         // Note: approvedAddr will be '0x' if not supported
-    //         let approvedAddr = await promisifyCall<string>(c => contract.getApproved.call(tokenId, c))
-    //         if (approvedAddr == proxyAddress) {
-    //             //this.logger('Already approved proxy for this token')
-    //             return true
-    //         }
-    //         //this.logger(`Approve response: ${approvedAddr}`)
+        const approvalOneCheck = async () => {
+            // Note: approvedAddr will be '0x' if not supported
+            // let approvedAddr = await promisifyCall<string>(c => contract.getApproved.call(tokenId, c))
+            let approvedAddrraw = await contract.query.getApproved(accountAddress, { value:0, gasLimit:-1 }, tokenId);
+            let approvedAddr=approvedAddrraw.toString() 
+            if (approvedAddr == proxyAddress) {
+                this.logger('Already approved proxy for this token')
+                return true
+            }
+            this.logger(`Approve response: ${approvedAddr}`)
 
-    //         // SPECIAL CASING non-compliant contracts
-    //         if (!approvedAddr) {
-    //             approvedAddr = await getNonCompliantApprovalAddress(contract, tokenId, accountAddress)
-    //             if (approvedAddr == proxyAddress) {
-    //                 //this.logger('Already approved proxy for this item')
-    //                 return true
-    //             }
-    //             //this.logger(`Special-case approve response: ${approvedAddr}`)
-    //         }
-    //         return false
-    //     }
+            // SPECIAL CASING non-compliant contracts
+            if (!approvedAddr) {
+                let approvedAddru = await getNonCompliantApprovalAddress(contract, tokenId, accountAddress);
+                if (approvedAddru!=undefined){
+                    approvedAddr=approvedAddru;
+                }
+                if (approvedAddr == proxyAddress) {
+                    this.logger('Already approved proxy for this item')
+                    return true
+                }
+                this.logger(`Special-case approve response: ${approvedAddr}`)
+            }
+            return false
+        }
 
-    //     const isApprovedForOne = await approvalOneCheck()
-    //     if (isApprovedForOne) {
-    //         return null
-    //     }
+        const isApprovedForOne = await approvalOneCheck()
+        if (isApprovedForOne) {
+            return null
+        }
 
-    //     // Call `approve`
+        // Call `approve`
 
-    //     try {
-    //         this._dispatch(EventType.ApproveAsset, {
-    //             accountAddress,
-    //             proxyAddress,
-    //             asset: getWyvernAsset(schema, { tokenId, tokenAddress })
-    //         })
+        try {
+            this._dispatch(EventType.ApproveAsset, {
+                accountAddress,
+                proxyAddress,
+                asset: getWyvernAsset(schema, { tokenId, tokenAddress })
+            })
 
-    //         const gasPrice = await this._computeGasPrice()
-    //         const txHash = await sendRawTransaction(this.apip, {
-    //             from: accountAddress,
-    //             to: contract.address,
-    //             data: contract.approve.getData(proxyAddress, tokenId),
-    //             gasPrice
-    //         }, error => {
-    //             this._dispatch(EventType.TransactionDenied, { error, accountAddress })
-    //         })
+            // const gasPrice = await this._computeGasPrice()
+            // const txHash = await sendRawTransaction(this.apip, {
+            //     from: accountAddress,
+            //     to: contract.address,
+            //     data: contract.approve.getData(proxyAddress, tokenId),
+            //     gasPrice
+            // }, error => {
+            //     this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+            // })
+            let { gasConsumed } = await contract.query.approve(accountAddress, { value:0, gasLimit:-1 }, proxyAddress, tokenId);
+            let result= await contract.tx.approve({ value:0, gasLimit:gasConsumed.toString() }, proxyAddress, tokenId).signAndSend(accountPair);
+            if (!result) {
+                const error = new Error(result);
+                 this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+            }
+            const txHash = result.toString()
+            await this._confirmTransaction(txHash, EventType.ApproveAsset, "Approving single token for trading", approvalOneCheck)
+            return txHash
+        } catch (error) {
+            console.error(error)
+            throw new Error("Couldn't get permission to approve this token for trading. Its contract might not be implemented correctly. Please contact the developer!")
+        }
+    }
 
-    //         await this._confirmTransaction(txHash, EventType.ApproveAsset, "Approving single token for trading", approvalOneCheck)
-    //         return txHash
-    //     } catch (error) {
-    //         console.error(error)
-    //         throw new Error("Couldn't get permission to approve this token for trading. Its contract might not be implemented correctly. Please contact the developer!")
-    //     }
-    // }
+    /**
+     * Approve a fungible token (e.g. W-ETH) for use in trades.
+     * Called internally, but exposed for dev flexibility.
+     * Checks to see if the minimum amount is already approved, first.
+     * @param param0 __namedParamters Object
+     * @param accountAddress The user's wallet address
+     * @param tokenAddress The contract address of the token being approved
+     * @param proxyAddress The user's proxy address. If unspecified, uses the Wyvern token transfer proxy address.
+     * @param minimumAmount The minimum amount needed to skip a transaction. Defaults to the max-integer.
+     * @returns Transaction hash if a new transaction occurred, otherwise null
+     */
+    public async approveFungibleToken(
+        { accountAddress,
+            tokenAddress,
+            proxyAddress,
+            minimumAmount = new BigNumber(Number.MAX_VALUE) }:
+            {
+                accountAddress: string;
+                tokenAddress: string;
+                proxyAddress?: string;
+                minimumAmount?: BigNumber
+            }
+    ): Promise<string | null> {
+        proxyAddress = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
 
-    // /**
-    //  * Approve a fungible token (e.g. W-ETH) for use in trades.
-    //  * Called internally, but exposed for dev flexibility.
-    //  * Checks to see if the minimum amount is already approved, first.
-    //  * @param param0 __namedParamters Object
-    //  * @param accountAddress The user's wallet address
-    //  * @param tokenAddress The contract address of the token being approved
-    //  * @param proxyAddress The user's proxy address. If unspecified, uses the Wyvern token transfer proxy address.
-    //  * @param minimumAmount The minimum amount needed to skip a transaction. Defaults to the max-integer.
-    //  * @returns Transaction hash if a new transaction occurred, otherwise null
-    //  */
-    // public async approveFungibleToken(
-    //     { accountAddress,
-    //         tokenAddress,
-    //         proxyAddress,
-    //         minimumAmount = Number.MAX_VALUE }:
-    //         {
-    //             accountAddress: string;
-    //             tokenAddress: string;
-    //             proxyAddress?: string;
-    //             minimumAmount?: BigNumber
-    //         }
-    // ): Promise<string | null> {
-    //     proxyAddress = proxyAddress || "";// WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
+        const approvedAmount = await this._getApprovedTokenCount({
+            accountAddress,
+            tokenAddress,
+            proxyAddress
+        })
 
-    //     const approvedAmount = await this._getApprovedTokenCount({
-    //         accountAddress,
-    //         tokenAddress,
-    //         proxyAddress
-    //     })
+        if (approvedAmount.isGreaterThanOrEqualTo(minimumAmount)) {
+            this.logger('Already approved enough currency for trading')
+            return null
+        }
 
-    //     if (approvedAmount.greaterThanOrEqualTo(minimumAmount)) {
-    //         //this.logger('Already approved enough currency for trading')
-    //         return null
-    //     }
+        this.logger(`Not enough token approved for trade: ${approvedAmount} approved to transfer ${tokenAddress}`)
 
-    //     //this.logger(`Not enough token approved for trade: ${approvedAmount} approved to transfer ${tokenAddress}`)
+        this._dispatch(EventType.ApproveCurrency, {
+            accountAddress,
+            contractAddress: tokenAddress,
+            proxyAddress
+        })
 
-    //     this._dispatch(EventType.ApproveCurrency, {
-    //         accountAddress,
-    //         contractAddress: tokenAddress,
-    //         proxyAddress
-    //     })
+        const hasOldApproveMethod = [ENJIN_COIN_ADDRESS, MANA_ADDRESS].includes(tokenAddress.toLowerCase())
 
-    //     const hasOldApproveMethod = [ENJIN_COIN_ADDRESS, MANA_ADDRESS].includes(tokenAddress.toLowerCase())
+        if (minimumAmount.isGreaterThan(0) && hasOldApproveMethod) {
+            // Older erc20s require initial approval to be 0
+            await this.unapproveFungibleToken({ accountAddress, tokenAddress, proxyAddress })
+        }
+        let txHash;
+        let gas;
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+            const contract = new ContractPromise(this.papi, mabi, abi.target);
+            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
 
-    //     if (minimumAmount.greaterThan(0) && hasOldApproveMethod) {
-    //         // Older erc20s require initial approval to be 0
-    //         await this.unapproveFungibleToken({ accountAddress, tokenAddress, proxyAddress })
-    //     }
+            let { gasConsumed, result, output } = await contract.query.approve(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, approvedAmount);
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+            gas = new BN(gasConsumed.toString());
+            // gas consumed
+            console.log(gasConsumed.toHuman());
 
-    //     const gasPrice = await this._computeGasPrice()
-    //     const txHash = await sendRawTransaction(this.apip, {
-    //         from: accountAddress,
-    //         to: tokenAddress,
-    //         data: encodeCall(getMethod(ERC20, 'approve'),
-    //             // Always approve maximum amount, to prevent the need for followup
-    //             // transactions (and because old ERC20s like MANA/ENJ are non-compliant)
-    //             [proxyAddress, Number.MAX_VALUE.toString()]),
-    //         gasPrice
-    //     }, error => {
-    //         this._dispatch(EventType.TransactionDenied, { error, accountAddress })
-    //     })
+            // check if the call was successful
+            if (result.isOk) {
+                // should output 123 as per our initial set (output here is an i32)
+                console.log(accountAddress, 'transfer Success', output.toHuman());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+            const contract = new ContractPromise(this.papi, mabi, abi.target);
+            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
+            const fromPair = keyring.getPair(accountAddress);
+            let result = await contract.tx.approve({ value: 0, gasLimit: gas }, proxyAddress, approvedAmount).signAndSend(fromPair);
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+            txHash = result.toString();
+        }
+        await this._confirmTransaction(txHash, EventType.ApproveCurrency, `Approving currency for trading`)
+        // const gasPrice = await this._computeGasPrice()
+        // const txHash = await sendRawTransaction(this.apip, {
+        //     from: accountAddress,
+        //     to: tokenAddress,
+        //     data: encodeCall(getMethod(ERC20, 'approve'),
+        //         // Always approve maximum amount, to prevent the need for followup
+        //         // transactions (and because old ERC20s like MANA/ENJ are non-compliant)
+        //         [proxyAddress, Number.MAX_VALUE.toString()]),
+        //     gasPrice
+        // }, error => {
+        //     this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+        // })
 
-    //     await this._confirmTransaction(txHash, EventType.ApproveCurrency, "Approving currency for trading", async () => {
-    //         const newlyApprovedAmount = await this._getApprovedTokenCount({
-    //             accountAddress,
-    //             tokenAddress,
-    //             proxyAddress
-    //         })
-    //         return newlyApprovedAmount.greaterThanOrEqualTo(minimumAmount)
-    //     })
-    //     return txHash
-    // }
+        // await this._confirmTransaction(txHash, EventType.ApproveCurrency, "Approving currency for trading", async () => {
+        //     const newlyApprovedAmount = await this._getApprovedTokenCount({
+        //         accountAddress,
+        //         tokenAddress,
+        //         proxyAddress
+        //     })
+        //     return newlyApprovedAmount.isGreaterThanOrEqualTo(minimumAmount)
+        // })
 
-    // /**
-    //  * Un-approve a fungible token (e.g. W-ETH) for use in trades.
-    //  * Called internally, but exposed for dev flexibility.
-    //  * Useful for old ERC20s that require a 0 approval count before
-    //  * changing the count
-    //  * @param param0 __namedParamters Object
-    //  * @param accountAddress The user's wallet address
-    //  * @param tokenAddress The contract address of the token being approved
-    //  * @param proxyAddress The user's proxy address. If unspecified, uses the Wyvern token transfer proxy address.
-    //  * @returns Transaction hash
-    //  */
-    // public async unapproveFungibleToken(
-    //     { accountAddress,
-    //         tokenAddress,
-    //         proxyAddress }:
-    //         {
-    //             accountAddress: string;
-    //             tokenAddress: string;
-    //             proxyAddress?: string;
-    //         }
-    // ): Promise<string> {
-    //     proxyAddress = proxyAddress || "";//WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
+        return txHash
+    }
 
-    //     const gasPrice = await this._computeGasPrice()
+    /**
+     * Un-approve a fungible token (e.g. W-ETH) for use in trades.
+     * Called internally, but exposed for dev flexibility.
+     * Useful for old ERC20s that require a 0 approval count before
+     * changing the count
+     * @param param0 __namedParamters Object
+     * @param accountAddress The user's wallet address
+     * @param tokenAddress The contract address of the token being approved
+     * @param proxyAddress The user's proxy address. If unspecified, uses the Wyvern token transfer proxy address.
+     * @returns Transaction hash
+     */
+    public async unapproveFungibleToken(
+        { accountAddress,
+            tokenAddress,
+            proxyAddress }:
+            {
+                accountAddress: string;
+                tokenAddress: string;
+                proxyAddress?: string;
+            }
+    ): Promise<string> {
+        proxyAddress = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
 
-    //     const txHash = await sendRawTransaction(this.apip, {
-    //         from: accountAddress,
-    //         to: tokenAddress,
-    //         data: encodeCall(getMethod(ERC20, 'approve'), [proxyAddress, 0]),
-    //         gasPrice
-    //     }, error => {
-    //         this._dispatch(EventType.TransactionDenied, { error, accountAddress })
-    //     })
+        const gasPrice = await this._computeGasPrice()
 
-    //     await this._confirmTransaction(txHash, EventType.UnapproveCurrency, "Resetting Currency Approval", async () => {
-    //         const newlyApprovedAmount = await this._getApprovedTokenCount({
-    //             accountAddress,
-    //             tokenAddress,
-    //             proxyAddress
-    //         })
-    //         return newlyApprovedAmount.isZero()
-    //     })
-    //     return txHash
-    // }
+        const txHash = await sendRawTransaction(this.apip, {
+            from: accountAddress,
+            to: tokenAddress,
+            data: encodeCall(getMethod(ERC20, 'approve'), [proxyAddress, 0]),
+            gasPrice
+        }, error => {
+            this._dispatch(EventType.TransactionDenied, { error, accountAddress })
+        })
+
+        await this._confirmTransaction(txHash, EventType.UnapproveCurrency, "Resetting Currency Approval", async () => {
+            const newlyApprovedAmount = await this._getApprovedTokenCount({
+                accountAddress,
+                tokenAddress,
+                proxyAddress
+            })
+            return newlyApprovedAmount.isZero()
+        })
+        return txHash
+    }
 
     /**
      * Gets the price for the order using the contract
@@ -1452,35 +1527,57 @@ export class OpenSeaPort {
         retries = 1
     ): Promise<boolean> {
 
-        // const schema = this._getSchema(asset.schemaName)
-        // const quantityBN = quantity
-        //     ? new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
-        //     : makeBigNumber(1)
-        // const wyAsset = getWyvernAsset(schema, asset, quantityBN)
-        // const abi = schema.functions.transfer(wyAsset)
+        const schema = this._getSchema(asset.schemaName)
+        const quantityBN = quantity
+            ? WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), asset.decimals || 0)
+            : makeBigNumber(1)
+        const wyAsset = getWyvernAsset(schema, asset, quantityBN)
+        const abi = schema.functions.transfer(wyAsset)
 
         let from = fromAddress
         if (useProxy) {
-            // const proxyAddress = null;//await this._getProxy(fromAddress)
-            // if (!proxyAddress) {
-            //     console.error(`This asset's owner (${fromAddress}) does not have a proxy!`)
-            //     return false
-            // }
-            // from = proxyAddress
+            const proxyAddress = await this._getProxy(fromAddress)
+            if (!proxyAddress) {
+                console.error(`This asset's owner (${fromAddress}) does not have a proxy!`)
+                return false
+            }
+            from = proxyAddress
         }
 
         // const data = encodeTransferCall(abi, fromAddress, toAddress)
 
         try {
-            const gas = 1;//await estimateGas(this._getClientsForRead(retries).apip, {
-            //     from,
-            //     to: abi.target,
-            //     data
-            // })
-            return gas > 0
+            let gas;
+            {
+                // Perform the actual read (no params at the end, for the `get` message)
+                // (We perform the send from an account, here using Alice's address)
+                const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+                const contract = new ContractPromise(this.papi, mabi, abi.target);
+                // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
+
+                let { gasConsumed, result, output } = await contract.query.transfer(fromAddress, { value: 0, gasLimit: -1 }, toAddress, quantity);
+                // The actual result from RPC as `ContractExecResult`
+                console.log(result.toHuman());
+                gas = new BigNumber(gasConsumed.toString());
+                // gas consumed
+                console.log(gasConsumed.toHuman());
+
+                // check if the call was successful
+                if (result.isOk) {
+                    // should output 123 as per our initial set (output here is an i32)
+                    console.log(fromAddress, 'transfer Success', output.toHuman());
+                } else {
+                    console.error('balanceOf Error', result.asErr);
+                }
+            }
+            // const gas = await estimateGas(this._getClientsForRead(retries).apip, {
+            // //     from,
+            // //     to: abi.target,
+            // //     data
+            // // })
+            return gas > new BigNumber(0)
 
         } catch (error) {
-
             if (retries <= 0) {
                 console.error(error)
                 console.error(from, abi.target, data)
@@ -1513,9 +1610,9 @@ export class OpenSeaPort {
     ): Promise<string> {
 
         const schema = this._getSchema(asset.schemaName)
-        const quantityBN = new BigNumber(makeBigNumber(quantity), asset.decimals || 0)
+        const quantityBN = WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), asset.decimals || 0)
         const wyAsset = getWyvernAsset(schema, asset, quantityBN)
-        const isCryptoKitties = [CK_ADDRESS, CK_RINKEBY_ADDRESS].includes(wyAsset.address)
+        const isCryptoKitties = [CK_ADDRESS, CK_DEV_ADDRESS].includes(wyAsset.address)
         // Since CK is common, infer isOldNFT from it in case user
         // didn't pass in `version`
         const isOldNFT = isCryptoKitties || !!asset.version && [
@@ -1530,17 +1627,54 @@ export class OpenSeaPort {
 
         this._dispatch(EventType.TransferOne, { accountAddress: fromAddress, toAddress, asset: wyAsset })
 
-        const gasPrice = await this._computeGasPrice()
-        const data = encodeTransferCall(abi, fromAddress, toAddress)
-        const txHash = await sendRawTransaction(this.apip, {
-            from: fromAddress,
-            to: abi.target,
-            data,
-            gasPrice
-        }, error => {
-            this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
-        })
+        // const gasPrice = await this._computeGasPrice()
+        // const data = encodeTransferCall(abi, fromAddress, toAddress)
+        // const txHash = await sendRawTransaction(this.apip, {
+        //     from: fromAddress,
+        //     to: abi.target,
+        //     data,
+        //     gasPrice
+        // }, error => {
+        //     this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
+        // })
+        const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
 
+        let txHash;
+        let gas;
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+            const contract = new ContractPromise(this.papi, mabi, abi.target);
+            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
+
+            let { gasConsumed, result, output } = await contract.query.transfer(fromAddress, { value: 0, gasLimit: -1 }, toAddress, ...inputValues);
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+            gas = new BN(gasConsumed.toString());
+            // gas consumed
+            console.log(gasConsumed.toHuman());
+
+            // check if the call was successful
+            if (result.isOk) {
+                // should output 123 as per our initial set (output here is an i32)
+                console.log(fromAddress, 'transfer Success', output.toHuman());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+        {
+            // Perform the actual read (no params at the end, for the `get` message)
+            // (We perform the send from an account, here using Alice's address)
+            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+            const contract = new ContractPromise(this.papi, mabi, abi.target);
+            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
+            const fromPair = keyring.getPair(fromAddress);
+            let result = await contract.tx.transfer({ value: 0, gasLimit: gas }, toAddress, ...inputValues).signAndSend(fromPair);
+            // The actual result from RPC as `ContractExecResult`
+            console.log(result.toHuman());
+            txHash = result.toString();
+        }
         await this._confirmTransaction(txHash, EventType.TransferOne, `Transferring asset`)
         return txHash
         // return ""
@@ -1567,86 +1701,66 @@ export class OpenSeaPort {
             }
     ): Promise<string> {
 
-        //     toAddress = validateAndFormatWalletAddress(this.apip, toAddress)
+        toAddress = validateAndFormatWalletAddress(this.apip, toAddress)
 
-        //     const schemaNames = assets.map(asset => asset.schemaName || schemaName)
-        //     const wyAssets = assets.map(asset => getWyvernAsset(this._getSchema(asset.schemaName), asset))
+        const schemaNames = assets.map(asset => asset.schemaName || schemaName)
+        const wyAssets = assets.map(asset => getWyvernAsset(this._getSchema(asset.schemaName), asset))
 
-        //     const { calldata, target } = encodeAtomicizedTransfer(
-
+        // const { calldata, target } = encodeAtomicizedTransfer(
         // schemaNames.map(name => this._getSchema(name)), wyAssets, fromAddress, toAddress, this._wyvernProtocol, this._networkName)
+        const schemas = schemaNames.map(name => this._getSchema(name));
 
-        //     let proxyAddress = await this._getProxy(fromAddress)
-        //     if (!proxyAddress) {
-        //       proxyAddress = await this._initializeProxy(fromAddress)
-        //     }
+        let txes = assets.map((asset: Asset, i) => {
+            const schema = schemas[i]
+            const wyAsset = wyAssets[i]
+            const isCryptoKitties = [CK_ADDRESS, CK_DEV_ADDRESS].includes(wyAsset.address)
+            // Since CK is common, infer isOldNFT from it in case user
+            // didn't pass in `version`
+            const isOldNFT = isCryptoKitties || !!asset.version && [
+                TokenStandardVersion.ERC721v1, TokenStandardVersion.ERC721v2
+            ].includes(asset.version)
 
-        //     await this._approveAll({ schemaNames, wyAssets, accountAddress: fromAddress, proxyAddress })
+            const abi = asset.schemaName === WyvernSchemaName.ERC20
+                ? annotateERC20TransferABI(wyAsset as WyvernFTAsset)
+                : isOldNFT
+                    ? annotateERC721TransferABI(wyAsset as WyvernNFTAsset)
+                    : schema.functions.transfer(wyAsset)
+            const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
+            let gas;
+            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+            const contract = new ContractPromise(this.papi, mabi, abi.target);
+            return contract.tx.transfer({ value: 0, gasLimit: gas }, toAddress, ...inputValues)
+        })
 
-        //     this._dispatch(EventType.TransferAll, { accountAddress: fromAddress, toAddress, assets: wyAssets })
+        let txHash;
 
-        //     const gasPrice = await this._computeGasPrice()
-        //     const txHash = await sendRawTransaction(this.apip, {
-        //       from: fromAddress,
-        //       to: proxyAddress,
-        //       data: encodeProxyCall(target, HowToCall.DelegateCall, calldata),
-        //       gasPrice
-        //     }, error => {
-        //       this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
-        //     })
+        // let proxyAddress = await this._getProxy(fromAddress)
+        // if (!proxyAddress) {
+        //     proxyAddress = await this._initializeProxy(fromAddress)
+        // }
 
-        //     await this._confirmTransaction(txHash, EventType.TransferAll, `Transferring ${assets.length} asset${assets.length == 1 ? '' : 's'}`)
-        //     return txHash
-        return ""
+        await this._approveAll({ schemaNames, wyAssets, accountAddress: fromAddress, proxyAddress })
+
+        this._dispatch(EventType.TransferAll, { accountAddress: fromAddress, toAddress, assets: wyAssets })
+
+        // const gasPrice = await this._computeGasPrice()
+        // const txHash = await sendRawTransaction(this.apip, {
+        //     from: fromAddress,
+        //     to: proxyAddress,
+        //     data: encodeProxyCall(target, HowToCall.DelegateCall, calldata),
+        //     gasPrice
+        // }, error => {
+        //     this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
+        // })
+        const fromPair = keyring.getPair(fromAddress);
+
+        let result = this.papi.tx.utility
+            .batch(txes)
+            .signAndSend(fromPair);
+        txHash = result.toString();
+        // await this._confirmTransaction(txHash, EventType.TransferAll, `Transferring ${assets.length} asset${assets.length == 1 ? '' : 's'}`)
+        return txHash
     }
-
-    //   /**
-    //    * Get known payment tokens (ERC-20) that match your filters.
-    //    * @param param0 __namedParamters Object
-    //    * @param symbol Filter by the ERC-20 symbol for the token,
-    //    *    e.g. "DAI" for Dai stablecoin
-    //    * @param address Filter by the ERC-20 contract address for the token,
-    //    *    e.g. "0x89d24a6b4ccb1b6faa2625fe562bdd9a23260359" for Dai
-    //    * @param name Filter by the name of the ERC-20 contract.
-    //    *    Not guaranteed to exist or be unique for each token type.
-    //    *    e.g. '' for Dai and 'Decentraland' for MANA
-    //    * FUTURE: officiallySupported: Filter for tokens that are
-    //    *    officially supported and shown on opensea.io
-    //    */
-    //   public async getFungibleTokens(
-    //       { symbol, address, name }:
-    //       { symbol?: string;
-    //         address?: string;
-    //         name?: string } = {}
-    //     ): Promise<OpenSeaFungibleToken[]> {
-
-    //     onDeprecated("Use `api.getPaymentTokens` instead")
-
-    //     const tokenSettings = {canonicalWrappedEther:"",otherTokens:[]};//WyvernSchemas.tokens[this._networkName]
-
-    //     const { tokens } = await this.api.getPaymentTokens({ symbol, address, name })
-
-    //     const offlineTokens: OpenSeaFungibleToken[] = [
-    //       tokenSettings.canonicalWrappedEther,
-    //       ...tokenSettings.otherTokens,
-    //     ].filter(t => {
-    //       if (symbol != null && t.symbol.toLowerCase() != symbol.toLowerCase()) {
-    //         return false
-    //       }
-    //       if (address != null && t.address.toLowerCase() != address.toLowerCase()) {
-    //         return false
-    //       }
-    //       if (name != null && t.name != name) {
-    //         return false
-    //       }
-    //       return true
-    //     })
-
-    //     return [
-    //       ...offlineTokens,
-    //       ...tokens
-    //     ]
-    //   }
 
     /**
      * Get an account's balance of any Asset.
@@ -1664,50 +1778,98 @@ export class OpenSeaPort {
             },
         retries = 1
     ): Promise<BigNumber> {
-        // return new BigNumber("100000000000000000000")
         const schema = this._getSchema(asset.schemaName)
         const wyAsset = getWyvernAsset(schema, asset)
 
         if (schema.functions.countOf) {
-          // ERC20 or ERC1155 (non-Enjin)
+            // ERC20 or ERC1155 (non-Enjin)
 
-          const abi = schema.functions.countOf(wyAsset)
-        //   const contract = this._getClientsForRead(retries).apip.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
-        //   const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
-        //   const count = await promisifyCall<BigNumber>(c => contract[abi.name].call(accountAddress, ...inputValues, c))
+            const abi = schema.functions.countOf(wyAsset)
+            const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
+            //   const contract = this._getClientsForRead(retries).apip.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
+            //   const count = await promisifyCall<BigNumber>(c => contract[abi.name].call(accountAddress, ...inputValues, c))
+            let count = 0;
+            {
+                // Perform the actual read (no params at the end, for the `get` message)
+                // (We perform the send from an account, here using Alice's address)
+                const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+                const contract = new ContractPromise(this.papi, mabi, abi.target);
+                // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
 
-          if (count !== undefined) {
-            return count
-          }
+                let { gasConsumed, result, output } = await contract.query.balanceOf(accountAddress, { value: 0, gasLimit: -1 }, accountAddress);
+                count = output?.toString();
+                // The actual result from RPC as `ContractExecResult`
+                console.log(result.toHuman());
+
+                // gas consumed
+                console.log(gasConsumed.toHuman());
+
+                // check if the call was successful
+                if (result.isOk) {
+                    // should output 123 as per our initial set (output here is an i32)
+                    console.log(accountAddress, 'balanceOf Success', output.toHuman());
+                } else {
+                    console.error('balanceOf Error', result.asErr);
+                }
+            }
+            if (count !== undefined) {
+                return new BigNumber(count)
+            }
 
         } else if (schema.functions.ownerOf) {
-          // ERC721 asset
+            // ERC721 asset
 
-          const abi = schema.functions.ownerOf(wyAsset)
-          const contract = this._getClientsForRead(retries).apip.eth.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
-          if (abi.inputs.filter(x => x.value === undefined)[0]) {
-            throw new Error("Missing an argument for finding the owner of this asset")
-          }
-          const inputValues = abi.inputs.map(i => i.value.toString())
-          const owner = await promisifyCall<string>(c => contract[abi.name].call(...inputValues, c))
-          if (owner) {
-            return owner.toLowerCase() == accountAddress.toLowerCase()
-              ? new BigNumber(1)
-              : new BigNumber(0)
-          }
+            const abi = schema.functions.ownerOf(wyAsset)
+            // const contract = this._getClientsForRead(retries).apip.eth.contract([abi as ApiPromise.FunctionAbi]).at(abi.target)
+
+            if (abi.inputs.filter(x => x.value === undefined)[0]) {
+                throw new Error("Missing an argument for finding the owner of this asset")
+            }
+            const inputValues = abi.inputs.map(i => i.value.toString())
+            // const owner = await promisifyCall<string>(c => contract[abi.name].call(...inputValues, c))
+            let owner;
+            {
+                // Perform the actual read (no params at the end, for the `get` message)
+                // (We perform the send from an account, here using Alice's address)
+                const mabi = new Abi(erc721metadata, this.papi.registry.getChainProperties());
+                const contract = new ContractPromise(this.papi, mabi, abi.target);
+                // const address = "5FkmJ5zuMvqSGau2AGrwyz2ensv4ge6VHP2d8KenFpUXEEkJ";
+                console.log(abi.target, "inputValues=================", ...inputValues)
+                const id = 1;
+                let { gasConsumed, result, output } = await contract.query.ownerOf(accountAddress, { value: 0, gasLimit: -1 }, ...inputValues);
+                owner = output?.toString();
+                // The actual result from RPC as `ContractExecResult`
+                console.log(result.toHuman());
+
+                // gas consumed
+                console.log(gasConsumed.toHuman());
+
+                // check if the call was successful
+                if (result.isOk) {
+                    // should output 123 as per our initial set (output here is an i32)
+                    console.log(accountAddress, 'ownerOf Success', output.toHuman());
+                } else {
+                    console.error('ownerOf Error', result.asErr);
+                }
+            }
+            if (owner) {
+                return owner == accountAddress
+                    ? new BigNumber(1)
+                    : new BigNumber(0)
+            }
 
         } else {
-          // Missing ownership call - skip check to allow listings
-          // by default
-          throw new Error('Missing ownership schema for this asset type')
+            // Missing ownership call - skip check to allow listings
+            // by default
+            throw new Error('Missing ownership schema for this asset type')
         }
 
         if (retries <= 0) {
-          throw new Error('Unable to get current owner from smart contract')
+            throw new Error('Unable to get current owner from smart contract')
         } else {
-          await delay(500)
-          // Recursively check owner again
-          return await this.getAssetBalance({accountAddress, asset}, retries - 1)
+            await delay(500)
+            // Recursively check owner again
+            return await this.getAssetBalance({ accountAddress, asset }, retries - 1)
         }
     }
 
@@ -1954,127 +2116,139 @@ export class OpenSeaPort {
         }
     }
 
-    //   /**
-    //    * Estimate the gas needed to transfer assets in bulk
-    //    * Used for tests
-    //    * @param param0 __namedParamaters Object
-    //    * @param assets An array of objects with the tokenId and tokenAddress of each of the assets to transfer.
-    //    * @param fromAddress The owner's wallet address
-    //    * @param toAddress The recipient's wallet address
-    //    * @param schemaName The Wyvern schema name corresponding to the asset type, if not in each asset
-    //    */
-    //   public async _estimateGasForTransfer(
-    //       { assets, fromAddress, toAddress, schemaName = WyvernSchemaName.ERC721 }:
-    //       { assets: Asset[];
-    //         fromAddress: string;
-    //         toAddress: string;
-    //         schemaName?: WyvernSchemaName; }
-    //     ): Promise<number> {
+    /**
+     * Estimate the gas needed to transfer assets in bulk
+     * Used for tests
+     * @param param0 __namedParamaters Object
+     * @param assets An array of objects with the tokenId and tokenAddress of each of the assets to transfer.
+     * @param fromAddress The owner's wallet address
+     * @param toAddress The recipient's wallet address
+     * @param schemaName The Wyvern schema name corresponding to the asset type, if not in each asset
+     */
+    public async _estimateGasForTransfer(
+        { assets, fromAddress, toAddress, schemaName = WyvernSchemaName.ERC721 }:
+            {
+                assets: Asset[];
+                fromAddress: string;
+                toAddress: string;
+                schemaName?: WyvernSchemaName;
+            }
+    ): Promise<number> {
 
-    //     const schemaNames = assets.map(asset => asset.schemaName || schemaName)
-    //     const wyAssets = assets.map(asset => getWyvernAsset(this._getSchema(asset.schemaName), asset))
+        const schemaNames = assets.map(asset => asset.schemaName || schemaName)
+        const wyAssets = assets.map(asset => getWyvernAsset(this._getSchema(asset.schemaName), asset))
 
-    //     const proxyAddress = await this._getProxy(fromAddress)
-    //     if (!proxyAddress) {
-    //       throw new Error('Uninitialized proxy address')
-    //     }
+        const proxyAddress = await this._getProxy(fromAddress)
+        if (!proxyAddress) {
+            throw new Error('Uninitialized proxy address')
+        }
 
-    //     await this._approveAll({schemaNames, wyAssets, accountAddress: fromAddress, proxyAddress})
+        await this._approveAll({ schemaNames, wyAssets, accountAddress: fromAddress, proxyAddress })
 
-    //     const { calldata, target } = encodeAtomicizedTransfer(schemaNames.map(name => this._getSchema(name)), wyAssets, fromAddress, toAddress, this._wyvernProtocol, this._networkName)
+        const { calldata, target } = encodeAtomicizedTransfer(schemaNames.map(name => this._getSchema(name)), wyAssets, fromAddress, toAddress, this._wyvernProtocol, this._networkName)
 
-    //     return estimateGas(this.apip, {
-    //       from: fromAddress,
-    //       to: proxyAddress,
-    //       data: encodeProxyCall(target, HowToCall.DelegateCall, calldata)
-    //     })
-    //   }
+        // return estimateGas(this.apip, {
+        //   from: fromAddress,
+        //   to: proxyAddress,
+        //   data: encodeProxyCall(target, HowToCall.DelegateCall, calldata)
+        // })
+        return 0;
+    }
 
-    //   /**
-    //    * Get the proxy address for a user's wallet.
-    //    * Internal method exposed for dev flexibility.
-    //    * @param accountAddress The user's wallet address
-    //    * @param retries Optional number of retries to do
-    //    */
-    //   public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
-    //     let proxyAddress: string | null = await this._wyvernProtocolReadOnly.wyvernProxyRegistry.proxies.callAsync(accountAddress)
+    /**
+     * Get the proxy address for a user's wallet.
+     * Internal method exposed for dev flexibility.
+     * @param accountAddress The user's wallet address
+     * @param retries Optional number of retries to do
+     */
+    public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
+        // console.log(this.papi.query)
+        let proxyAddress: string | null;// = await this.papi.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
-    //     if (proxyAddress == '0x') {
-    //       throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
-    //     }
+        if (proxyAddress == '0x') {
+            throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
+        }
 
-    //     if (!proxyAddress || proxyAddress == NULL_ADDRESS) {
-    //       if (retries > 0) {
-    //         await delay(1000)
-    //         return await this._getProxy(accountAddress, retries - 1)
-    //       }
-    //       proxyAddress = null
-    //     }
-    //     return proxyAddress
-    //   }
+        if (!proxyAddress || proxyAddress == NULL_ADDRESS) {
+            if (retries > 0) {
+                await delay(1000)
+                return await this._getProxy(accountAddress, retries - 1)
+            }
+            proxyAddress = null
+        }
+        return proxyAddress
+    }
 
-    //   /**
-    //    * Initialize the proxy for a user's wallet.
-    //    * Proxies are used to make trades on behalf of the order's maker so that
-    //    *  trades can happen when the maker isn't online.
-    //    * Internal method exposed for dev flexibility.
-    //    * @param accountAddress The user's wallet address
-    //    */
-    //   public async _initializeProxy(accountAddress: string): Promise<string> {
+    /**
+     * Initialize the proxy for a user's wallet.
+     * Proxies are used to make trades on behalf of the order's maker so that
+     *  trades can happen when the maker isn't online.
+     * Internal method exposed for dev flexibility.
+     * @param accountAddress The user's wallet address
+     */
+    public async _initializeProxy(accountAddress: string): Promise<string> {
 
-    //     this._dispatch(EventType.InitializeAccount, { accountAddress })
-    //     //this.logger(`Initializing proxy for account: ${accountAddress}`)
+        this._dispatch(EventType.InitializeAccount, { accountAddress })
+        //this.logger(`Initializing proxy for account: ${accountAddress}`)
 
-    //     const gasPrice = await this._computeGasPrice()
-    //     const txnData: any = { from: accountAddress }
-    //     const gasEstimate = await this._wyvernProtocolReadOnly.wyvernProxyRegistry.registerProxy.estimateGasAsync(txnData)
-    //     const transactionHash = await this._wyvernProtocol.wyvernProxyRegistry.registerProxy.sendTransactionAsync({
-    //       ...txnData,
-    //       gasPrice,
-    //       gas: this._correctGasAmount(gasEstimate)
-    //     })
+        const gasPrice = await this._computeGasPrice()
+        const txnData: any = { from: accountAddress }
+        const gasEstimate = await this._wyvernProtocolReadOnly.wyvernProxyRegistry.registerProxy.estimateGasAsync(txnData)
+        const transactionHash = await this._wyvernProtocol.wyvernProxyRegistry.registerProxy.sendTransactionAsync({
+            ...txnData,
+            gasPrice,
+            gas: this._correctGasAmount(gasEstimate)
+        })
 
-    //     await this._confirmTransaction(transactionHash, EventType.InitializeAccount, "Initializing proxy for account", async () => {
-    //       const polledProxy = await this._getProxy(accountAddress)
-    //       return !!polledProxy
-    //     })
+        await this._confirmTransaction(transactionHash, EventType.InitializeAccount, "Initializing proxy for account", async () => {
+            const polledProxy = await this._getProxy(accountAddress)
+            return !!polledProxy
+        })
 
-    //     const proxyAddress = await this._getProxy(accountAddress, 2)
-    //     if (!proxyAddress) {
-    //       throw new Error('Failed to initialize your account :( Please restart your wallet/browser and try again!')
-    //     }
+        const proxyAddress = await this._getProxy(accountAddress, 2)
+        if (!proxyAddress) {
+            throw new Error('Failed to initialize your account :( Please restart your wallet/browser and try again!')
+        }
 
-    //     return proxyAddress
-    //   }
+        return proxyAddress
+    }
 
-    //   /**
-    //    * For a fungible token to use in trades (like W-ETH), get the amount
-    //    *  approved for use by the Wyvern transfer proxy.
-    //    * Internal method exposed for dev flexibility.
-    //    * @param param0 __namedParamters Object
-    //    * @param accountAddress Address for the user's wallet
-    //    * @param tokenAddress Address for the token's contract
-    //    * @param proxyAddress User's proxy address. If undefined, uses the token transfer proxy address
-    //    */
-    //   public async _getApprovedTokenCount(
-    //       { accountAddress, tokenAddress, proxyAddress }:
-    //       { accountAddress: string;
-    //         tokenAddress?: string;
-    //         proxyAddress?: string;
-    //       }
-    //     ) {
-    //     if (!tokenAddress) {
-    //       tokenAddress = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address
-    //     }
-    //     const addressToApprove = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
-    //     const approved = await rawCall(this.apip, {
-    //       from: accountAddress,
-    //       to: tokenAddress,
-    //       data: encodeCall(getMethod(ERC20, 'allowance'),
-    //         [accountAddress, addressToApprove]),
-    //     })
-    //     return makeBigNumber(approved)
-    //   }
+    /**
+     * For a fungible token to use in trades (like W-ETH), get the amount
+     *  approved for use by the Wyvern transfer proxy.
+     * Internal method exposed for dev flexibility.
+     * @param param0 __namedParamters Object
+     * @param accountAddress Address for the user's wallet
+     * @param tokenAddress Address for the token's contract
+     * @param proxyAddress User's proxy address. If undefined, uses the token transfer proxy address
+     */
+    public async _getApprovedTokenCount(
+        { accountAddress, tokenAddress, proxyAddress }:
+            {
+                accountAddress: string;
+                tokenAddress?: string;
+                proxyAddress?: string;
+            }
+    ) {
+        if (!tokenAddress) {
+            tokenAddress = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address
+        }
+        const addressToApprove = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
+        const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
+        const contract = new ContractPromise(this.papi, mabi, tokenAddress);
+        let { result } = await contract.query.allowance(accountAddress, { value: 0, gasLimit: -1 }, accountAddress, addressToApprove);
+
+        // The actual result from RPC as `ContractExecResult`
+        const approved = Number(result.toHuman());
+
+        // const approved = await rawCall(this.apip, {
+        //     from: accountAddress,
+        //     to: tokenAddress,
+        //     data: encodeCall(getMethod(ERC20, 'allowance'),
+        //         [accountAddress, addressToApprove]),
+        // })
+        return makeBigNumber(approved)
+    }
 
     public async _makeBuyOrder(
         { asset, quantity, accountAddress, startAmount, expirationTime = 0, paymentTokenAddress, extraBountyBasisPoints = 0, sellOrder, referrerAddress }:
@@ -2257,13 +2431,13 @@ export class OpenSeaPort {
     }> {
         // const isCheezeWizards = [
         //     CHEEZE_WIZARDS_GUILD_ADDRESS.toLowerCase(),
-        //     CHEEZE_WIZARDS_GUILD_RINKEBY_ADDRESS.toLowerCase()
+        //     CHEEZE_WIZARDS_GUILD_DEV_ADDRESS.toLowerCase()
         // ].includes(asset.tokenAddress.toLowerCase())
         // const isDecentralandEstate = asset.tokenAddress.toLowerCase() == DECENTRALAND_ESTATE_ADDRESS.toLowerCase()
         // const isMainnet = this._networkName == Network.Main
 
         // if (isMainnet && !useTxnOriginStaticCall) {
-        //     // While testing, we will use dummy values for mainnet. We will remove this if-statement once we have pushed the PR once and tested on Rinkeby
+        //     // While testing, we will use dummy values for mainnet. We will remove this if-statement once we have pushed the PR once and tested on Dev
         //     return {
         //         staticTarget: NULL_ADDRESS,
         //         staticExtradata: '0x',
@@ -2271,7 +2445,7 @@ export class OpenSeaPort {
         // }
 
         // if (isCheezeWizards) {
-        //     const cheezeWizardsBasicTournamentAddress = isMainnet ? CHEEZE_WIZARDS_BASIC_TOURNAMENT_ADDRESS : CHEEZE_WIZARDS_BASIC_TOURNAMENT_RINKEBY_ADDRESS
+        //     const cheezeWizardsBasicTournamentAddress = isMainnet ? CHEEZE_WIZARDS_BASIC_TOURNAMENT_ADDRESS : CHEEZE_WIZARDS_BASIC_TOURNAMENT_DEV_ADDRESS
         //     const cheezeWizardsBasicTournamentABI = this.apip.eth.contract(CheezeWizardsBasicTournament as any[])
         //     const cheezeWizardsBasicTournmentInstance = await cheezeWizardsBasicTournamentABI.at(cheezeWizardsBasicTournamentAddress)
         //     const wizardFingerprint = await rawCall(this.apip, {
@@ -2281,7 +2455,7 @@ export class OpenSeaPort {
         //     return {
         //         staticTarget: isMainnet
         //             ? STATIC_CALL_CHEEZE_WIZARDS_ADDRESS
-        //             : STATIC_CALL_CHEEZE_WIZARDS_RINKEBY_ADDRESS,
+        //             : STATIC_CALL_CHEEZE_WIZARDS_DEV_ADDRESS,
         //         staticExtradata: encodeCall(
         //             getMethod(
         //                 StaticCheckCheezeWizards,
@@ -2309,7 +2483,7 @@ export class OpenSeaPort {
         //     return {
         //         staticTarget: isMainnet
         //             ? STATIC_CALL_TX_ORIGIN_ADDRESS
-        //             : STATIC_CALL_TX_ORIGIN_RINKEBY_ADDRESS,
+        //             : STATIC_CALL_TX_ORIGIN_DEV_ADDRESS,
         //         staticExtradata: encodeCall(
         //             getMethod(StaticCheckTxOrigin, 'succeedIfTxOriginMatchesHardcodedAddress'),
         //             []),
@@ -2774,87 +2948,88 @@ export class OpenSeaPort {
 
     }
 
-    //   public async _approveAll(
-    //       { schemaNames, wyAssets, accountAddress, proxyAddress }:
-    //       { schemaNames: WyvernSchemaName[];
-    //         wyAssets: WyvernAsset[];
-    //         accountAddress: string;
-    //         proxyAddress?: string }
-    //     ) {
+    public async _approveAll(
+        { schemaNames, wyAssets, accountAddress, proxyAddress }:
+            {
+                schemaNames: WyvernSchemaName[];
+                wyAssets: WyvernAsset[];
+                accountAddress: string;
+                proxyAddress?: string
+            }
+    ) {
 
-    //     proxyAddress = proxyAddress || await this._getProxy(accountAddress) || undefined
-    //     if (!proxyAddress) {
-    //       proxyAddress = await this._initializeProxy(accountAddress)
-    //     }
-    //     const contractsWithApproveAll: Set<string> = new Set()
+        proxyAddress = proxyAddress || await this._getProxy(accountAddress) || undefined
+        if (!proxyAddress) {
+            proxyAddress = await this._initializeProxy(accountAddress)
+        }
+        const contractsWithApproveAll: Set<string> = new Set()
 
-    //     return Promise.all(wyAssets.map(async (wyAsset, i) => {
-    //       const schemaName = schemaNames[i]
-    //       // Verify that the taker owns the asset
-    //       let isOwner
-    //       try {
-    //         isOwner = await this._ownsAssetOnChain({
-    //           accountAddress,
-    //           proxyAddress,
-    //           wyAsset,
-    //           schemaName
-    //         })
-    //       } catch (error) {
-    //         // let it through for assets we don't support yet
-    //         isOwner = true
-    //       }
-    //       if (!isOwner) {
-    //         const minAmount = 'quantity' in wyAsset
-    //           ? wyAsset.quantity
-    //           : 1
-    //         console.error(`Failed on-chain ownership check: ${accountAddress} on ${schemaName}:`, wyAsset)
-    //         throw new Error(`You don't own enough to do that (${minAmount} base units of ${wyAsset.address}${
-    //             wyAsset.id ? (" token " + wyAsset.id) : ''
-    //           })`)
-    //       }
-    //       switch (schemaName) {
-    //         case WyvernSchemaName.ERC721:
-    //         case WyvernSchemaName.ERC1155:
-    //         case WyvernSchemaName.LegacyEnjin:
-    //         case WyvernSchemaName.ENSShortNameAuction:
-    //           // Handle NFTs and SFTs
-    //           const wyNFTAsset = wyAsset as WyvernNFTAsset
-    //           return await this.approveSemiOrNonFungibleToken({
-    //             tokenId: wyNFTAsset.id.toString(),
-    //             tokenAddress: wyNFTAsset.address,
-    //             accountAddress,
-    //             proxyAddress,
-    //             schemaName,
-    //             skipApproveAllIfTokenAddressIn: contractsWithApproveAll
-    //           })
-    //         case WyvernSchemaName.ERC20:
-    //           // Handle FTs
-    //           const wyFTAsset = wyAsset as WyvernFTAsset
-    //           if (contractsWithApproveAll.has(wyFTAsset.address)) {
-    //             // Return null to indicate no tx occurred
-    //             return null
-    //           }
-    //           contractsWithApproveAll.add(wyFTAsset.address)
-    //           return await this.approveFungibleToken({
-    //             tokenAddress: wyFTAsset.address,
-    //             accountAddress,
-    //             proxyAddress
-    //           })
-    //         // For other assets, including contracts:
-    //         // Send them to the user's proxy
-    //         // if (where != WyvernAssetLocation.Proxy) {
-    //         //   return this.transferOne({
-    //         //     schemaName: schema.name,
-    //         //     asset: wyAsset,
-    //         //     isWyvernAsset: true,
-    //         //     fromAddress: accountAddress,
-    //         //     toAddress: proxy
-    //         //   })
-    //         // }
-    //         // return true
-    //       }
-    //     }))
-    //   }
+        return Promise.all(wyAssets.map(async (wyAsset, i) => {
+            const schemaName = schemaNames[i]
+            // Verify that the taker owns the asset
+            let isOwner
+            try {
+                isOwner = await this._ownsAssetOnChain({
+                    accountAddress,
+                    proxyAddress,
+                    wyAsset,
+                    schemaName
+                })
+            } catch (error) {
+                // let it through for assets we don't support yet
+                isOwner = true
+            }
+            if (!isOwner) {
+                const minAmount = 'quantity' in wyAsset
+                    ? wyAsset.quantity
+                    : 1
+                console.error(`Failed on-chain ownership check: ${accountAddress} on ${schemaName}:`, wyAsset)
+                throw new Error(`You don't own enough to do that (${minAmount} base units of ${wyAsset.address}${wyAsset.id ? (" token " + wyAsset.id) : ''
+                    })`)
+            }
+            switch (schemaName) {
+                case WyvernSchemaName.ERC721:
+                case WyvernSchemaName.ERC1155:
+                case WyvernSchemaName.LegacyEnjin:
+                case WyvernSchemaName.ENSShortNameAuction:
+                    // Handle NFTs and SFTs
+                    const wyNFTAsset = wyAsset as WyvernNFTAsset
+                    return await this.approveSemiOrNonFungibleToken({
+                        tokenId: wyNFTAsset.id.toString(),
+                        tokenAddress: wyNFTAsset.address,
+                        accountAddress,
+                        proxyAddress,
+                        schemaName,
+                        skipApproveAllIfTokenAddressIn: contractsWithApproveAll
+                    })
+                case WyvernSchemaName.ERC20:
+                    // Handle FTs
+                    const wyFTAsset = wyAsset as WyvernFTAsset
+                    if (contractsWithApproveAll.has(wyFTAsset.address)) {
+                        // Return null to indicate no tx occurred
+                        return null
+                    }
+                    contractsWithApproveAll.add(wyFTAsset.address)
+                    return await this.approveFungibleToken({
+                        tokenAddress: wyFTAsset.address,
+                        accountAddress,
+                        proxyAddress
+                    })
+                // For other assets, including contracts:
+                // Send them to the user's proxy
+                // if (where != WyvernAssetLocation.Proxy) {
+                //   return this.transferOne({
+                //     schemaName: schema.name,
+                //     asset: wyAsset,
+                //     isWyvernAsset: true,
+                //     fromAddress: accountAddress,
+                //     toAddress: proxy
+                //   })
+                // }
+                // return true
+            }
+        }))
+    }
 
     // Throws
     public async _buyOrderValidationAndApprovals(
@@ -2872,7 +3047,7 @@ export class OpenSeaPort {
                 minimumAmount = await this._getRequiredAmountForTakingSellOrder(counterOrder)
             }
             // console.log(balance.toNumber() , minimumAmount.toNumber())
-            // Check WETH balance
+            // CheckWDOT balance
             if (balance.toNumber() < minimumAmount.toNumber()) {
                 if (tokenAddress == "WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address") {
                     throw new Error('Insufficient balance. You may need to wrap Ether.')
@@ -2927,14 +3102,14 @@ export class OpenSeaPort {
             : 1)
 
         const accountBalance = await this.getAssetBalance({ accountAddress, asset })
-        if (accountBalance.greaterThanOrEqualTo(minAmount)) {
+        if (accountBalance.isGreaterThanOrEqualTo(minAmount)) {
             return true
         }
 
-        proxyAddress = proxyAddress || ""// await this._getProxy(accountAddress)
+        proxyAddress = proxyAddress || await this._getProxy(accountAddress)
         if (proxyAddress) {
             const proxyBalance = await this.getAssetBalance({ accountAddress: proxyAddress, asset })
-            if (proxyBalance.greaterThanOrEqualTo(minAmount)) {
+            if (proxyBalance.isGreaterThanOrEqualTo(minAmount)) {
                 return true
             }
         }
@@ -3292,6 +3467,7 @@ export class OpenSeaPort {
 
     private _getSchema(schemaName?: WyvernSchemaName) {
         const schemaName_ = schemaName || WyvernSchemaName.ERC721
+
         const schema = WyvernSchemas.schemas[this._networkName].filter(s => s.name == schemaName_)[0]
 
         if (!schema) {

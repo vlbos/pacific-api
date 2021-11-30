@@ -154,7 +154,7 @@ export const encodeDefaultCall: DefaultCallEncoder = (abi, address) => {
  */
 export function encodeAtomicizedTransfer(schemas: Array<Schema<WyvernAsset>>, assets: WyvernAsset[], from: string, to: string, wyvernProtocol: WyvernProtocol, networkName: Network): LimitedCallSpec {
 
-  const atomicizer = wyvernProtocol.wyvernAtomicizer
+//   const atomicizer = wyvernProtocol.wyvernAtomicizer
 
   const transactions = assets.map((asset: WyvernAsset, i) => {
     const schema = schemas[i]

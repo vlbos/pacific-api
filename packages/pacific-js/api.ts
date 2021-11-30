@@ -37,12 +37,12 @@ import {
 } from './utils/utils'
 import {
     API_BASE_MAINNET,
-    API_BASE_RINKEBY,
+    API_BASE_DEV,
     API_PATH,
     ORDERBOOK_PATH,
     ORDERBOOK_VERSION,
     SITE_HOST_MAINNET,
-    SITE_HOST_RINKEBY
+    SITE_HOST_DEV
 } from './constants'
 
 // import { createApi } from '../api/test/helpers/apiHelper'
@@ -82,9 +82,9 @@ export class OpenSeaAPI {
         //  })
 
         switch (config.networkName) {
-            case Network.Rinkeby:
-                this.apiBaseUrl = config.apiBaseUrl || API_BASE_RINKEBY
-                this.hostUrl = SITE_HOST_RINKEBY
+            case Network.Dev:
+                this.apiBaseUrl = config.apiBaseUrl || API_BASE_DEV
+                this.hostUrl = SITE_HOST_DEV
                 break
             case Network.Main:
             default:

@@ -4,7 +4,7 @@ import { OpenSeaPort } from '../../pacific-js/index'
 // import { WyvernProtocol } from '../../lib/wyvern-js'
 import { Network, Order, OrderSide, OrderJSON } from '../../pacific-js/types'
 import { orderToJSON, orderFromJSON } from '../../pacific-js'
-import { mainApi, rinkebyApi, apiToTest, ALEX_ADDRESS, ALEX_ADDRESS_2, CK_RINKEBY_TOKEN_ID, CK_RINKEBY_ADDRESS, CK_RINKEBY_SELLER_FEE, RINKEBY_API_KEY, CK_ADDRESS, WETH_ADDRESS, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, MAINNET_API_KEY } from '../constants'
+import { mainApi, devApi, apiToTest, ALICE_ADDRESS, ALICE_STASH_ADDRESS, CK_DEV_TOKEN_ID, CK_DEV_ADDRESS, CK_DEV_SELLER_FEE, DEV_API_KEY, CK_ADDRESS,WDOT_ADDRESS, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, MAINNET_API_KEY } from '../constants'
 import { getOrderHash, makeBigNumber } from '../../pacific-js/utils/utils'
 import { ORDERBOOK_VERSION, NULL_ADDRESS, LOCALNET_PROVIDER_URL, ORDER_MATCHING_LATENCY_SECONDS } from '../../pacific-js/constants'
 
@@ -78,7 +78,7 @@ describe('api tests', (): void => {
     });
 
     it('API fetches bundles and prefetches sell orders', async () => {
-        const { bundles } = await apiToTest.getBundles({ asset_contract_address: CK_RINKEBY_ADDRESS, on_sale: true })
+        const { bundles } = await apiToTest.getBundles({ asset_contract_address: CK_DEV_ADDRESS, on_sale: true })
         expect(bundles).toBeInstanceOf(Array)
 
         const bundle = bundles[0]
@@ -86,25 +86,25 @@ describe('api tests', (): void => {
         if (!bundle) {
             return
         }
-        expect(bundle.assets.map(a => a.assetContract.name)).toContain("CryptoKittiesRinkeby")
+        expect(bundle.assets.map(a => a.assetContract.name)).toContain("CryptoKittiesDev")
         expect(bundle.sellOrders).not.toBeNull()
     })
 
     it('Includes API key in token request', async () => {
-        const oldLogger = rinkebyApi.logger
+        const oldLogger = devApi.logger
 
         const logPromise = new Promise((resolve, reject) => {
-            rinkebyApi.logger = log => {
+            devApi.logger = log => {
                 try {
-                    expect(log).toContain(`"X-API-KEY":"${RINKEBY_API_KEY}"`)
+                    expect(log).toContain(`"X-API-KEY":"${DEV_API_KEY}"`)
                     resolve(0)
                 } catch (e) {
                     reject(e)
                 } finally {
-                    rinkebyApi.logger = oldLogger
+                    devApi.logger = oldLogger
                 }
             }
-            rinkebyApi.getPaymentTokens({ symbol: "WETH" })
+            devApi.getPaymentTokens({ symbol: "WETH" })
         })
 
         await logPromise
@@ -131,10 +131,10 @@ describe('api tests', (): void => {
     })
 
     it('orderToJSON is correct', async () => {
-        const accountAddress = ALEX_ADDRESS
+        const accountAddress = ALICE_ADDRESS
         const quantity = 1
         const amountInToken = 1.2
-        const paymentTokenAddress = WETH_ADDRESS
+        const paymentTokenAddress =WDOT_ADDRESS
         const extraBountyBasisPoints = 0
         const expirationTime = Math.round(Date.now() / 1000 + 60) // one minute from now
         const englishAuctionReservePrice = 2
@@ -177,12 +177,12 @@ describe('api tests', (): void => {
         expect(tokens[0].name).toEqual("Decentraland MANA")
     })
 
-    test('Rinkeby API orders have correct OpenSea url', async () => {
-        const order = await rinkebyApi.getOrder({})
+    test('Dev API orders have correct OpenSea url', async () => {
+        const order = await devApi.getOrder({})
         if (!order.asset) {
             return
         }
-        const url = `https://rinkeby.opensea.io/assets/${order.asset.assetContract.address}/${order.asset.tokenId}`
+        const url = `https://dev.opensea.io/assets/${order.asset.assetContract.address}/${order.asset.tokenId}`
         expect(order.asset.openseaLink).toEqual(url)
     })
 
@@ -221,34 +221,34 @@ describe('api tests', (): void => {
     }
 
     it('API fetches orders for asset contract and asset', async () => {
-        const forKitties = await apiToTest.getOrders({ asset_contract_address: CK_RINKEBY_ADDRESS })
+        const forKitties = await apiToTest.getOrders({ asset_contract_address: CK_DEV_ADDRESS })
         expect(forKitties.orders.length).toBeGreaterThan(0)
         expect(forKitties.count).toBeGreaterThan(0)
 
-        const forKitty = await apiToTest.getOrders({ asset_contract_address: CK_RINKEBY_ADDRESS, token_id: CK_RINKEBY_TOKEN_ID })
+        const forKitty = await apiToTest.getOrders({ asset_contract_address: CK_DEV_ADDRESS, token_id: CK_DEV_TOKEN_ID })
         expect(forKitty.orders).toBeInstanceOf(Array)
     })
 
     it('API fetches orders for asset owner', async () => {
-        const forOwner = await apiToTest.getOrders({ owner: ALEX_ADDRESS })
+        const forOwner = await apiToTest.getOrders({ owner: ALICE_ADDRESS })
         expect(forOwner.orders.length).toBeGreaterThan(0)
         expect(forOwner.count).toBeGreaterThan(0)
         const owners = forOwner.orders.map((o: any) => o.asset && o.asset.owner && o.asset.owner.address)
         owners.forEach((owner: any) => {
-            expect([ALEX_ADDRESS, NULL_ADDRESS]).toContain(owner)
+            expect([ALICE_ADDRESS, NULL_ADDRESS]).toContain(owner)
         })
     })
 
     it('API fetches buy orders for maker', async () => {
-        const forMaker = await apiToTest.getOrders({ maker: ALEX_ADDRESS, side: OrderSide.Buy })
+        const forMaker = await apiToTest.getOrders({ maker: ALICE_ADDRESS, side: OrderSide.Buy })
         expect(forMaker.orders.length).toBeGreaterThan(0)
         expect(forMaker.count).toBeGreaterThan(0)
         forMaker.orders.forEach((order: any) => {
-            expect(ALEX_ADDRESS).toEqual(order.maker)
+            expect(ALICE_ADDRESS).toEqual(order.maker)
             expect(OrderSide.Buy).toEqual(order.side)
         })
     })
-
+    ///NEEDED TEST 
     it.only("API  fetch  orders", async () => {
         let s = await apiToTest.getOrder(englishSellOrderJSON)
         console.log(s)
@@ -268,7 +268,7 @@ describe('api tests', (): void => {
 
     it("API doesn't fetch impossible orders", async () => {
         try {
-            expect(await apiToTest.getOrder({ maker: ALEX_ADDRESS, taker: ALEX_ADDRESS })).toThrow()
+            expect(await apiToTest.getOrder({ maker: ALICE_ADDRESS, taker: ALICE_ADDRESS })).toThrow()
         } catch (e) {
             expect(e.message).toContain("Not found")
         }
@@ -281,21 +281,21 @@ describe('api tests', (): void => {
         const invalidOrders = orders.filter((o: any) => o.markedInvalid)
         expect(invalidOrders).toHaveLength(0)
     })
-
+    ///NEEDED TEST 
     it('API fetches fees for an asset', async () => {
-        const asset = await apiToTest.getAsset({ tokenAddress: CK_RINKEBY_ADDRESS, tokenId: CK_RINKEBY_TOKEN_ID })
-        expect(asset.tokenId).toEqual(CK_RINKEBY_TOKEN_ID.toString())
-        expect(asset.assetContract.name).toEqual("CryptoKittiesRinkeby")
-        expect(asset.assetContract.sellerFeeBasisPoints).toEqual(CK_RINKEBY_SELLER_FEE)
+        const asset = await apiToTest.getAsset({ tokenAddress: CK_DEV_ADDRESS, tokenId: CK_DEV_TOKEN_ID })
+        expect(asset.tokenId).toEqual(CK_DEV_TOKEN_ID.toString())
+        expect(asset.assetContract.name).toEqual("CryptoKittiesDev")
+        expect(asset.assetContract.sellerFeeBasisPoints).toEqual(CK_DEV_SELLER_FEE)
     })
 
     it('API fetches assets', async () => {
-        const { assets } = await apiToTest.getAssets({ asset_contract_address: CK_RINKEBY_ADDRESS, order_by: "current_price" })
+        const { assets } = await apiToTest.getAssets({ asset_contract_address: CK_DEV_ADDRESS, order_by: "current_price" })
         expect(assets).toBeInstanceOf(Array)
         expect(assets.length).toEqual(apiToTest.pageSize)
 
         const asset = assets[0]
-        expect(asset.assetContract.name).toEqual("CryptoKittiesRinkeby")
+        expect(asset.assetContract.name).toEqual("CryptoKittiesDev")
     })
 
     it('API handles errors', async () => {
@@ -308,7 +308,7 @@ describe('api tests', (): void => {
 
         // 404 Not found
         try {
-            await apiToTest.get(`/asset/${CK_RINKEBY_ADDRESS}/0`)
+            await apiToTest.get(`/asset/${CK_DEV_ADDRESS}/0`)
         } catch (error) {
             expect(error.message).toMatch("Not found")
         }
