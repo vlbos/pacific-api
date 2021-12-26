@@ -1,4 +1,4 @@
-import { schemas as ZeroExSchemas } from '@0xproject/json-schemas'
+// import { schemas as ZeroExSchemas } from '@0xproject/json-schemas'
 
 const data = {type: 'string', pattern: '^0x[0-9a-f]*$'}
 
@@ -71,11 +71,11 @@ const signedOrderSchema = {
 }
 
 export const schemas = {
-    numberSchema: ZeroExSchemas.numberSchema,
-    addressSchema: ZeroExSchemas.addressSchema,
-    ecSignatureSchema: ZeroExSchemas.ecSignatureSchema,
-    ecSignatureParameterSchema: ZeroExSchemas.ecSignatureParameterSchema,
-    orderHashSchema: ZeroExSchemas.orderHashSchema,
+    // numberSchema: ZeroExSchemas.numberSchema,
+    // addressSchema: ZeroExSchemas.addressSchema,
+    // ecSignatureSchema: ZeroExSchemas.ecSignatureSchema,
+    // ecSignatureParameterSchema: ZeroExSchemas.ecSignatureParameterSchema,
+    // orderHashSchema: ZeroExSchemas.orderHashSchema,
     orderSchema,
     signedOrderSchema,
 }

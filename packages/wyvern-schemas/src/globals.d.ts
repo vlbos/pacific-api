@@ -7,7 +7,7 @@ declare module 'ethereumjs-abi' {
   const isDynamic: (type: string) => boolean
 }
 
-declare module '../lib/wyvern-js/WyvernProtocol' {
+declare module '../lib/wyvern-js/src/WyvernProtocol' {
   export const WyvernProtocol: any
 }
 

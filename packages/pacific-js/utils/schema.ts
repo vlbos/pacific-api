@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js'
 import * as ethABI from 'ethereumjs-abi'
-import { WyvernProtocol } from '../../wyvern-js/WyvernProtocol'
+import { WyvernProtocol } from '../../wyvern-js/src/WyvernProtocol'
 import { HowToCall, ReplacementEncoder, Network } from '../../wyvern-js/src/types'
 // import { WyvernAtomicizerContract } from 'wyvern-js/src/abi_gen/wyvern_atomicizer'
 

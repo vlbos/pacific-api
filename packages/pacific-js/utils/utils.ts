@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-import { WyvernProtocol } from '../../wyvern-js/wyvernProtocol'
+import { WyvernProtocol } from '../../wyvern-js/src/wyvernProtocol'
 import * as _ from 'lodash'
 import {
     AnnotatedFunctionABI,

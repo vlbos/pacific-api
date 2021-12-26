@@ -1,7 +1,7 @@
 import { BigNumber } from 'bignumber.js'
 // import * as ethABI from 'ethereumjs-abi';
 // import * as Web3 from 'web3';
-import { WyvernProtocol } from '../../wyvern-js/WyvernProtocol'
+import { WyvernProtocol } from '../../wyvern-js/src/WyvernProtocol'
 // import { WyvernAtomicizerContract } from '../../wyvern-js/src/abi_gen/wyvern_atomicizer';
 
 // import {

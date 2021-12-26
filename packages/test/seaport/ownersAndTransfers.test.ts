@@ -1,7 +1,7 @@
 
 import { OpenSeaPort } from '../../pacific-js/index'
 import { Network, WyvernSchemaName, WyvernNFTAsset, WyvernFTAsset } from '../../pacific-js/types'
-import { ALICE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID,WDOT_ADDRESS } from '../constants'
+import { ALICE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
 import {
     ENJIN_ADDRESS,
     ENJIN_LEGACY_ADDRESS, MAINNET_PROVIDER_URL, MAX_UINT_256, DEV_PROVIDER_URL
@@ -182,7 +182,7 @@ describe('seaport: owners and transfers', () => {
         expect(isTransferrable).toBeTruthy()
     })
     ///TEST OK
-   test('ERC-721 v1 asset owned by fromAddress is transfer', async () => {
+    test('ERC-721 v1 asset owned by fromAddress is transfer', async () => {
         const isTransferrable = await client.transfer({
             asset: {
                 tokenId: CK_TOKEN_ID.toString(),
@@ -198,7 +198,7 @@ describe('seaport: owners and transfers', () => {
         const isTransferrable = await client.isAssetTransferrable({
             asset: {
                 tokenId: null,
-                tokenAddress:WDOT_ADDRESS,
+                tokenAddress: WDOT_ADDRESS,
                 schemaName: WyvernSchemaName.ERC20
             },
             fromAddress: BOB_ADDRESS,
@@ -211,7 +211,7 @@ describe('seaport: owners and transfers', () => {
         const isTransferrable = await client.isAssetTransferrable({
             asset: {
                 tokenId: null,
-                tokenAddress:WDOT_ADDRESS,
+                tokenAddress: WDOT_ADDRESS,
                 schemaName: WyvernSchemaName.ERC20
             },
             quantity: Math.pow(10, 18) * 0.001,
@@ -220,13 +220,13 @@ describe('seaport: owners and transfers', () => {
         })
         expect(isTransferrable).toBeTruthy()
     })
-    
+
     ///TEST OK
     test('ERC-20 asset owned by fromAddress is transfer', async () => {
         const isTransferrable = await client.transfer({
             asset: {
                 tokenId: null,
-                tokenAddress:WDOT_ADDRESS,
+                tokenAddress: WDOT_ADDRESS,
                 schemaName: WyvernSchemaName.ERC20
             },
             quantity: Math.pow(10, 18) * 0.001,
@@ -241,17 +241,37 @@ describe('seaport: owners and transfers', () => {
         const isTransferrable = await client.transferAll({
             assets: [{
                 tokenId: null,
-                tokenAddress:WDOT_ADDRESS,
+                tokenAddress: WDOT_ADDRESS,
                 schemaName: WyvernSchemaName.ERC20
             }],
             fromAddress: ALICE_ADDRESS,
             toAddress: ALICE_STASH_ADDRESS,
-            schemaName: WyvernSchemaName.ERC20      
+            schemaName: WyvernSchemaName.ERC20
         })
         expect(isTransferrable).toBeTruthy()
     })
 
-    test.only('ERC-721 v1 asset owned by fromAddress is transfer all', async () => {
+    ///TEST 
+    test.only('ERC-20 assets owned by fromAddress is transfer all', async () => {
+        const isTransferrable = await client.transferAll({
+            assets: [{
+                tokenId: null,
+                tokenAddress: WDOT_ADDRESS,
+                schemaName: WyvernSchemaName.ERC20
+            }, {
+                tokenId: null,
+                tokenAddress: WDOT_ADDRESS2,
+                schemaName: WyvernSchemaName.ERC20
+            }],
+            fromAddress: ALICE_ADDRESS,
+            toAddress: ALICE_STASH_ADDRESS,
+            schemaName: WyvernSchemaName.ERC20
+        })
+        expect(isTransferrable).toBeTruthy()
+    })
+
+    ///TEST
+    test('ERC-721 v1 asset owned by fromAddress is transfer all', async () => {
         const isTransferrable = await client.transferAll({
             assets: [{
                 tokenId: CK_TOKEN_ID.toString(),
