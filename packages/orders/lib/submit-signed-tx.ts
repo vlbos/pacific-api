@@ -1,7 +1,7 @@
 import { ApiPromise, Keyring } from '@polkadot/api'//WsProvider,
 // import { ApiOptions } from '@polkadot/api/types';
-import '@polkadot/types/augment'
-import '@polkadot/api/augment'
+import '@polkadot/types-augment'
+import '@polkadot/api-augment'
 import * as definitions from '../../interfaces/definitions';
 import '../../interfaces/augment-api';
 import '../../interfaces/augment-types';

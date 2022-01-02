@@ -12,12 +12,12 @@
                 "packages/*"
             ],
             // here we replace the @polkadot/api augmentation with our own, generated from chain
-            "@polkadot/api/augment": [
-                "src/interfaces/augment-api.ts"
+            "@polkadot/api-augment": [
+                "interfaces/augment-api.ts"
             ],
             // replace the augmented types with our own, as generated from definitions
-            "@polkadot/types/augment": [
-                "src/interfaces/augment-types.ts"
+            "@polkadot/types-augment": [
+                "interfaces/augment-types.ts"
             ]
     },
     "skipLibCheck": true,

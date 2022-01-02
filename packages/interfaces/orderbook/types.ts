@@ -1,7 +1,7 @@
 // Auto-generated via `yarn polkadot-types-from-defs`, do not edit
 /* eslint-disable */
 
-import type { Bytes, Option, Struct, Text, Vec, u64 } from '@polkadot/types';
+import type { Bytes, Option, Struct, Text, Vec, u64 } from '@polkadot/types-codec';
 import type { AccountId, Moment } from '@polkadot/types/interfaces/runtime';
 
 /** @name AssetQuery */

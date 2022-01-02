@@ -36,6 +36,7 @@
     "@polkadot/api": "^7.0.3-2",
     "@polkadot/api-contract": "^7.0.3-2",
     "@polkadot/types": "^7.0.3-2",
+    "@polkadot/types-augment": "^7.1.1",
     "bignumber.js": "^9.0.1",
     "blakejs": "^1.1.1",
     "bn.js": "^5.2.0",

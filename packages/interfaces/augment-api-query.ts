@@ -1,19 +1,20 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
 /* eslint-disable */
 
-import type { Bytes, Option, Vec, bool, u32, u64 } from '@polkadot/types';
-import type { AnyNumber, ITuple, Observable } from '@polkadot/types/types';
+import type { ApiTypes } from '@polkadot/api-base/types';
+import type { Bytes, Option, Vec, bool, u32, u64 } from '@polkadot/types-codec';
+import type { AnyNumber, ITuple } from '@polkadot/types-codec/types';
 import type { AccountData, BalanceLock } from '@polkadot/types/interfaces/balances';
 import type { SetId, StoredPendingChange, StoredState } from '@polkadot/types/interfaces/grandpa';
 import type { AccountId, Balance, BalanceOf, BlockNumber, ExtrinsicsWeight, Hash, Moment, Releases } from '@polkadot/types/interfaces/runtime';
 import type { SessionIndex } from '@polkadot/types/interfaces/session';
 import type { AccountInfo, DigestOf, EventIndex, EventRecord, LastRuntimeUpgradeInfo, Phase } from '@polkadot/types/interfaces/system';
 import type { Multiplier } from '@polkadot/types/interfaces/txpayment';
-import type { OrderId, OrderJSONType } from 'pacific-api/interfaces/orderbook';
-import type { ApiTypes } from '@polkadot/api/types';
+import type { Observable } from '@polkadot/types/types';
+import type { OrderId, OrderJSONType } from 'pacificstore-polkadotjs-typegen/interfaces/orderbook';
 
-declare module '@polkadot/api/types/storage' {
-  export interface AugmentedQueries<ApiType> {
+declare module '@polkadot/api-base/types/storage' {
+  export interface AugmentedQueries<ApiType extends ApiTypes> {
     balances: {
       /**
        * The balance of an account.
@@ -68,14 +69,14 @@ declare module '@polkadot/api/types/storage' {
       state: AugmentedQuery<ApiType, () => Observable<StoredState>, []>;
     };
     orderbook: {
-      assetWhitelist: AugmentedQueryDoubleMap<ApiType, (key1: Bytes | string | Uint8Array, key2: Bytes | string | Uint8Array) => Observable<Bytes>, [Bytes, Bytes]>;
+      assetWhitelist: AugmentedQuery<ApiType, (arg1: Bytes | string | Uint8Array, arg2: Bytes | string | Uint8Array) => Observable<Bytes>, [Bytes, Bytes]>;
       assetWhiteListLimits: AugmentedQuery<ApiType, () => Observable<u64>, []>;
       nextAssetWhiteListIndex: AugmentedQuery<ApiType, () => Observable<u64>, []>;
       nextOrderIndex: AugmentedQuery<ApiType, () => Observable<u64>, []>;
       orderIndices: AugmentedQuery<ApiType, (arg: OrderId | string | Uint8Array) => Observable<u64>, [OrderId]>;
       orderLimits: AugmentedQuery<ApiType, () => Observable<u64>, []>;
       orders: AugmentedQuery<ApiType, (arg: u64 | AnyNumber | Uint8Array) => Observable<Option<OrderJSONType>>, [u64]>;
-      ordersByField: AugmentedQueryDoubleMap<ApiType, (key1: Bytes | string | Uint8Array, key2: Bytes | string | Uint8Array) => Observable<Vec<u64>>, [Bytes, Bytes]>;
+      ordersByField: AugmentedQuery<ApiType, (arg1: Bytes | string | Uint8Array, arg2: Bytes | string | Uint8Array) => Observable<Vec<u64>>, [Bytes, Bytes]>;
       owner: AugmentedQuery<ApiType, () => Observable<AccountId>, []>;
       ownerOf: AugmentedQuery<ApiType, (arg: OrderId | string | Uint8Array) => Observable<Option<AccountId>>, [OrderId]>;
       removedAssetWhiteListCount: AugmentedQuery<ApiType, () => Observable<u64>, []>;
@@ -197,8 +198,5 @@ declare module '@polkadot/api/types/storage' {
       owner: AugmentedQuery<ApiType, () => Observable<AccountId>, []>;
       protocolFeeRecipient: AugmentedQuery<ApiType, () => Observable<AccountId>, []>;
     };
-  }
-
-  export interface QueryableStorage<ApiType extends ApiTypes> extends AugmentedQueries<ApiType> {
-  }
-}
+  } // AugmentedQueries
+} // declare module

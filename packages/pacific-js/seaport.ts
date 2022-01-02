@@ -1321,9 +1321,9 @@ export class OpenSeaPort {
             this.logger('Already approved enough currency for trading')
             return null
         }
-        return "";
-        approvedAmount = new BigNumber(1)
+      
         this.logger(`Not enough token approved for trade: ${approvedAmount} approved to transfer ${tokenAddress}`)
+        approvedAmount = minimumAmount
 
         this._dispatch(EventType.ApproveCurrency, {
             accountAddress,

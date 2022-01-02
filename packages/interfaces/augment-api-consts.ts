@@ -1,13 +1,13 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
 /* eslint-disable */
 
-import type { Vec, u32 } from '@polkadot/types';
+import type { ApiTypes } from '@polkadot/api-base/types';
+import type { Vec, u32 } from '@polkadot/types-codec';
 import type { Balance, BalanceOf, BlockNumber, Moment, RuntimeDbWeight, Weight } from '@polkadot/types/interfaces/runtime';
 import type { WeightToFeeCoefficient } from '@polkadot/types/interfaces/support';
-import type { ApiTypes } from '@polkadot/api/types';
 
-declare module '@polkadot/api/types/consts' {
-  export interface AugmentedConsts<ApiType> {
+declare module '@polkadot/api-base/types/consts' {
+  export interface AugmentedConsts<ApiType extends ApiTypes> {
     balances: {
       /**
        * The minimum amount required to keep an account open.
@@ -59,8 +59,5 @@ declare module '@polkadot/api/types/consts' {
        **/
       weightToFee: Vec<WeightToFeeCoefficient> & AugmentedConst<ApiType>;
     };
-  }
-
-  export interface QueryableConsts<ApiType extends ApiTypes> extends AugmentedConsts<ApiType> {
-  }
-}
+  } // AugmentedConsts
+} // declare module

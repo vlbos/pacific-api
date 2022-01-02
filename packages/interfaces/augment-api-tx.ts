@@ -1,18 +1,17 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
 /* eslint-disable */
 
-import type { Bytes, Compact, Option, Vec, bool, u32, u64 } from '@polkadot/types';
-import type { AnyNumber } from '@polkadot/types/types';
-import type { Extrinsic } from '@polkadot/types/interfaces/extrinsics';
+import type { ApiTypes } from '@polkadot/api-base/types';
+import type { Bytes, Compact, Option, Vec, bool, u32, u64 } from '@polkadot/types-codec';
+import type { AnyNumber } from '@polkadot/types-codec/types';
 import type { GrandpaEquivocationProof, KeyOwnerProof } from '@polkadot/types/interfaces/grandpa';
 import type { AccountId, Balance, BalanceOf, BlockNumber, Call, ChangesTrieConfiguration, KeyValue, LookupSource, Moment, Perbill, Weight } from '@polkadot/types/interfaces/runtime';
 import type { Key } from '@polkadot/types/interfaces/system';
-import type { OrderField, OrderId } from 'pacific-api/interfaces/orderbook';
-import type { FeeMethod, HowToCall, SaleKind, Side } from 'pacific-api/interfaces/wyvernExchangeCore';
-import type { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types';
+import type { OrderField, OrderId } from 'pacificstore-polkadotjs-typegen/interfaces/orderbook';
+import type { FeeMethod, HowToCall, SaleKind, Side } from 'pacificstore-polkadotjs-typegen/interfaces/wyvernExchangeCore';
 
-declare module '@polkadot/api/types/submittable' {
-  export interface AugmentedSubmittables<ApiType> {
+declare module '@polkadot/api-base/types/submittable' {
+  export interface AugmentedSubmittables<ApiType extends ApiTypes> {
     balances: {
       /**
        * Exactly as `transfer`, except the origin must be root and the source account may be
@@ -151,6 +150,8 @@ declare module '@polkadot/api/types/submittable' {
       removeOrder: AugmentedSubmittable<(orderIndex: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
       setAssetWhiteListLimits: AugmentedSubmittable<(limits: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
       setOrderLimits: AugmentedSubmittable<(limits: u64 | AnyNumber | Uint8Array) => SubmittableExtrinsic<ApiType>, [u64]>;
+    };
+    randomnessCollectiveFlip: {
     };
     sudo: {
       /**
@@ -351,9 +352,5 @@ declare module '@polkadot/api/types/submittable' {
       changeProtocolFeeRecipient: AugmentedSubmittable<(newProtocolFeeRecipient: AccountId | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [AccountId]>;
       setContractSelf: AugmentedSubmittable<(contract: AccountId | string | Uint8Array) => SubmittableExtrinsic<ApiType>, [AccountId]>;
     };
-  }
-
-  export interface SubmittableExtrinsics<ApiType extends ApiTypes> extends AugmentedSubmittables<ApiType> {
-    (extrinsic: Call | Extrinsic | Uint8Array | string): SubmittableExtrinsic<ApiType>;
-  }
-}
+  } // AugmentedSubmittables
+} // declare module

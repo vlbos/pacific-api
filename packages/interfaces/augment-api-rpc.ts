@@ -1,30 +1,31 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
 /* eslint-disable */
 
-import type { Metadata } from '@polkadot/metadata';
-import type { Bytes, HashMap, Json, Null, Option, StorageKey, Text, U256, U64, Vec, bool, u32, u64 } from '@polkadot/types';
-import type { AnyNumber, Codec, IExtrinsic, Observable } from '@polkadot/types/types';
+import type { AugmentedRpc } from '@polkadot/rpc-core/types';
+import type { Metadata, StorageKey } from '@polkadot/types';
+import type { Bytes, HashMap, Json, Null, Option, Text, U256, U64, Vec, bool, u32, u64 } from '@polkadot/types-codec';
+import type { AnyNumber, Codec } from '@polkadot/types-codec/types';
 import type { ExtrinsicOrHash, ExtrinsicStatus } from '@polkadot/types/interfaces/author';
 import type { EpochAuthorship } from '@polkadot/types/interfaces/babe';
+import type { BeefySignedCommitment } from '@polkadot/types/interfaces/beefy';
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import type { PrefixedStorageKey } from '@polkadot/types/interfaces/childstate';
 import type { AuthorityId } from '@polkadot/types/interfaces/consensus';
-import type { ContractCallRequest, ContractExecResult } from '@polkadot/types/interfaces/contracts';
+import type { ContractCallRequest, ContractExecResult, ContractInstantiateResult, InstantiateRequest } from '@polkadot/types/interfaces/contracts';
 import type { CreatedBlock } from '@polkadot/types/interfaces/engine';
 import type { EthAccount, EthCallRequest, EthFilter, EthFilterChanges, EthLog, EthReceipt, EthRichBlock, EthSubKind, EthSubParams, EthSyncStatus, EthTransaction, EthTransactionRequest, EthWork } from '@polkadot/types/interfaces/eth';
-import type { Extrinsic, Signature } from '@polkadot/types/interfaces/extrinsics';
+import type { Extrinsic } from '@polkadot/types/interfaces/extrinsics';
 import type { EncodedFinalityProofs, JustificationNotification, ReportedRoundStates } from '@polkadot/types/interfaces/grandpa';
 import type { MmrLeafProof } from '@polkadot/types/interfaces/mmr';
 import type { StorageKind } from '@polkadot/types/interfaces/offchain';
 import type { FeeDetails, RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment';
 import type { RpcMethods } from '@polkadot/types/interfaces/rpc';
-import type { AccountId, Balance, BlockNumber, H160, H256, H64, Hash, Header, Index, Justification, KeyValue, Moment, SignedBlock, StorageData } from '@polkadot/types/interfaces/runtime';
-import type { ReadProof, RuntimeVersion } from '@polkadot/types/interfaces/state';
+import type { AccountId, BlockNumber, H160, H256, H64, Hash, Header, Index, Justification, KeyValue, SignedBlock, StorageData } from '@polkadot/types/interfaces/runtime';
+import type { ReadProof, RuntimeVersion, TraceBlockResponse } from '@polkadot/types/interfaces/state';
 import type { ApplyExtrinsicResult, ChainProperties, ChainType, Health, NetworkState, NodeRole, PeerInfo, SyncState } from '@polkadot/types/interfaces/system';
-import type { AssetQueryJSON, JSONType, OrderJSONType, OrderQueryJSON } from 'pacific-api/interfaces/orderbook';
-import type { FeeMethod, HowToCall, SaleKind, Side } from 'pacific-api/interfaces/wyvernExchangeCore';
+import type { IExtrinsic, Observable } from '@polkadot/types/types';
 
-declare module '@polkadot/rpc-core/types.jsonrpc' {
+declare module '@polkadot/rpc-core/types/jsonrpc' {
   export interface RpcInterface {
     author: {
       /**
@@ -66,6 +67,12 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        **/
       epochAuthorship: AugmentedRpc<() => Observable<HashMap<AuthorityId, EpochAuthorship>>>;
     };
+    beefy: {
+      /**
+       * Returns the block most recently finalized by BEEFY, alongside side its justification.
+       **/
+      subscribeJustifications: AugmentedRpc<() => Observable<BeefySignedCommitment>>;
+    };
     chain: {
       /**
        * Get header and body of a relay chain block
@@ -102,9 +109,17 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        **/
       getKeys: AugmentedRpc<(childKey: PrefixedStorageKey | string | Uint8Array, prefix: StorageKey | string | Uint8Array | any, at?: Hash | string | Uint8Array) => Observable<Vec<StorageKey>>>;
       /**
+       * Returns the keys with prefix from a child storage with pagination support
+       **/
+      getKeysPaged: AugmentedRpc<(childKey: PrefixedStorageKey | string | Uint8Array, prefix: StorageKey | string | Uint8Array | any, count: u32 | AnyNumber | Uint8Array, startKey?: StorageKey | string | Uint8Array | any, at?: Hash | string | Uint8Array) => Observable<Vec<StorageKey>>>;
+      /**
        * Returns a child storage entry at a specific block state
        **/
       getStorage: AugmentedRpc<(childKey: PrefixedStorageKey | string | Uint8Array, key: StorageKey | string | Uint8Array | any, at?: Hash | string | Uint8Array) => Observable<Option<StorageData>>>;
+      /**
+       * Returns child storage entries for multiple keys at a specific block state
+       **/
+      getStorageEntries: AugmentedRpc<(childKey: PrefixedStorageKey | string | Uint8Array, keys: Vec<StorageKey> | (StorageKey | string | Uint8Array | any)[], at?: Hash | string | Uint8Array) => Observable<Vec<Option<StorageData>>>>;
       /**
        * Returns the hash of a child storage entry at a block state
        **/
@@ -118,11 +133,15 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
       /**
        * Executes a call to a contract
        **/
-      call: AugmentedRpc<(callRequest: ContractCallRequest | { origin?: any; dest?: any; value?: any; gasLimit?: any; inputData?: any } | string | Uint8Array, at?: BlockHash | string | Uint8Array) => Observable<ContractExecResult>>;
+      call: AugmentedRpc<(callRequest: ContractCallRequest | { origin?: any; dest?: any; value?: any; gasLimit?: any; storageDepositLimit?: any; inputData?: any } | string | Uint8Array, at?: BlockHash | string | Uint8Array) => Observable<ContractExecResult>>;
       /**
        * Returns the value under a specified storage key in a contract
        **/
       getStorage: AugmentedRpc<(address: AccountId | string | Uint8Array, key: H256 | string | Uint8Array, at?: BlockHash | string | Uint8Array) => Observable<Option<Bytes>>>;
+      /**
+       * Instantiate a new contract
+       **/
+      instantiate: AugmentedRpc<(request: InstantiateRequest | { origin?: any; value?: any; gasLimit?: any; storageDepositLimit?: any; code?: any; data?: any; salt?: any } | string | Uint8Array, at?: BlockHash | string | Uint8Array) => Observable<ContractInstantiateResult>>;
       /**
        * Returns the projected time a given contract will be able to sustain paying its rent
        **/
@@ -144,7 +163,7 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        **/
       accounts: AugmentedRpc<() => Observable<Vec<H160>>>;
       /**
-       * Returns balance of the given account.
+       * Returns the blockNumber
        **/
       blockNumber: AugmentedRpc<() => Observable<U256>>;
       /**
@@ -348,24 +367,6 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        **/
       localStorageSet: AugmentedRpc<(kind: StorageKind | 'PERSISTENT' | 'LOCAL' | number | Uint8Array, key: Bytes | string | Uint8Array, value: Bytes | string | Uint8Array) => Observable<Null>>;
     };
-    orderbook: {
-      /**
-       * Fetch an asset from the API, throwing if none is found
-       **/
-      getAsset: AugmentedRpc<(token_address: Text | string, token_id: Text | string) => Observable<Option<JSONType>>>;
-      /**
-       * Fetch list of assets from the API, returning the page of assets and the count of total assets
-       **/
-      getAssets: AugmentedRpc<(asset_query: Option<AssetQueryJSON> | null | object | string | Uint8Array, page: Option<u64> | null | object | string | Uint8Array) => Observable<Option<Vec<JSONType>>>>;
-      /**
-       * Get an order from the orderbook, throwing if none is found.
-       **/
-      getOrder: AugmentedRpc<(order_query: Option<OrderQueryJSON> | null | object | string | Uint8Array) => Observable<Option<OrderJSONType>>>;
-      /**
-       * Get a list of orders from the orderbook, returning the page of orders
-       **/
-      getOrders: AugmentedRpc<(order_query: Option<OrderQueryJSON> | null | object | string | Uint8Array, page: Option<u64> | null | object | string | Uint8Array) => Observable<Option<Vec<OrderJSONType>>>>;
-    };
     payment: {
       /**
        * Query the detailed fee of a given encoded extrinsic
@@ -391,6 +392,10 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        * Retrieves the keys with prefix of a specific child storage
        **/
       getChildKeys: AugmentedRpc<(childStorageKey: StorageKey | string | Uint8Array | any, childDefinition: StorageKey | string | Uint8Array | any, childType: u32 | AnyNumber | Uint8Array, key: StorageKey | string | Uint8Array | any, at?: BlockHash | string | Uint8Array) => Observable<Vec<StorageKey>>>;
+      /**
+       * Returns proof of storage for child key entries at a specific block state.
+       **/
+      getChildReadProof: AugmentedRpc<(childStorageKey: PrefixedStorageKey | string | Uint8Array, keys: Vec<StorageKey> | (StorageKey | string | Uint8Array | any)[], at?: BlockHash | string | Uint8Array) => Observable<ReadProof>>;
       /**
        * Retrieves the child storage for a key
        **/
@@ -455,6 +460,10 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        * Subscribes to storage changes for the provided keys
        **/
       subscribeStorage: AugmentedRpc<<T = Codec[]>(keys?: Vec<StorageKey> | (StorageKey | string | Uint8Array | any)[]) => Observable<T>>;
+      /**
+       * Provides a way to trace the re-execution of a single block
+       **/
+      traceBlock: AugmentedRpc<(block: Hash | string | Uint8Array, targets: Option<Text> | null | object | string | Uint8Array, storageKeys: Option<Text> | null | object | string | Uint8Array, methods: Option<Text> | null | object | string | Uint8Array) => Observable<TraceBlockResponse>>;
     };
     syncstate: {
       /**
@@ -524,6 +533,10 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        **/
       removeReservedPeer: AugmentedRpc<(peerId: Text | string) => Observable<Text>>;
       /**
+       * Returns the list of reserved peers
+       **/
+      reservedPeers: AugmentedRpc<() => Observable<Vec<Text>>>;
+      /**
        * Resets the log filter to Substrate defaults
        **/
       resetLogFilter: AugmentedRpc<() => Observable<Null>>;
@@ -546,43 +559,5 @@ declare module '@polkadot/rpc-core/types.jsonrpc' {
        **/
       sha3: AugmentedRpc<(data: Bytes | string | Uint8Array) => Observable<H256>>;
     };
-    wyvernExchange: {
-      /**
-       * Calculate the current price of an order
-       **/
-      calculateCurrentPriceEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_method: FeeMethod | 'ProtocolFee' | 'SplitFee' | number | Uint8Array, side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, how_to_call: HowToCall | 'Call' | 'DelegateCall' | number | Uint8Array, calldata: Bytes | string | Uint8Array, replacement_pattern: Bytes | string | Uint8Array, static_extradata: Bytes | string | Uint8Array) => Observable<Balance>>;
-      /**
-       * Calculate the settlement price of an order
-       **/
-      calculateFinalPriceEx: AugmentedRpc<(side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, base_price: Balance | AnyNumber | Uint8Array, extra: Moment | AnyNumber | Uint8Array, listing_time: Moment | AnyNumber | Uint8Array, expiration_time: Moment | AnyNumber | Uint8Array) => Observable<Balance>>;
-      /**
-       * Calculate the price two orders would match at, if in fact they would match (fail:otherwise).
-       **/
-      calculateMatchPriceEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_methods_sides_kinds_how_to_calls: Bytes | string | Uint8Array, calldata_buy: Bytes | string | Uint8Array, calldata_sell: Bytes | string | Uint8Array, replacement_pattern_buy: Bytes | string | Uint8Array, replacement_pattern_sell: Bytes | string | Uint8Array, static_extradata_buy: Bytes | string | Uint8Array, static_extradata_sell: Bytes | string | Uint8Array) => Observable<Balance>>;
-      /**
-       * Hash an order, returning the canonical order hash, without the message prefix.
-       **/
-      hashOrderEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_method: FeeMethod | 'ProtocolFee' | 'SplitFee' | number | Uint8Array, side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, how_to_call: HowToCall | 'Call' | 'DelegateCall' | number | Uint8Array, calldata: Bytes | string | Uint8Array, replacement_pattern: Bytes | string | Uint8Array, static_extradata: Bytes | string | Uint8Array) => Observable<Bytes>>;
-      /**
-       * Hash an order, returning the hash that a client must sign.
-       **/
-      hashToSignEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_method: FeeMethod | 'ProtocolFee' | 'SplitFee' | number | Uint8Array, side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, how_to_call: HowToCall | 'Call' | 'DelegateCall' | number | Uint8Array, calldata: Bytes | string | Uint8Array, replacement_pattern: Bytes | string | Uint8Array, static_extradata: Bytes | string | Uint8Array) => Observable<Bytes>>;
-      /**
-       * Return whether or not two orders can be matched with each other by basic parameters.
-       **/
-      ordersCanMatchEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_methods_sides_kinds_how_to_calls: Bytes | string | Uint8Array, calldata_buy: Bytes | string | Uint8Array, calldata_sell: Bytes | string | Uint8Array, replacement_pattern_buy: Bytes | string | Uint8Array, replacement_pattern_sell: Bytes | string | Uint8Array, static_extradata_buy: Bytes | string | Uint8Array, static_extradata_sell: Bytes | string | Uint8Array) => Observable<Balance>>;
-      /**
-       * Assert an order is valid and return its hash.
-       **/
-      requireValidOrderEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_method: FeeMethod | 'ProtocolFee' | 'SplitFee' | number | Uint8Array, side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, how_to_call: HowToCall | 'Call' | 'DelegateCall' | number | Uint8Array, calldata: Bytes | string | Uint8Array, replacement_pattern: Bytes | string | Uint8Array, static_extradata: Bytes | string | Uint8Array, sig: Signature | string | Uint8Array) => Observable<Bytes>>;
-      /**
-       * Validate a provided previously approved / signed order, hash, and signature.
-       **/
-      validateOrderEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_method: FeeMethod | 'ProtocolFee' | 'SplitFee' | number | Uint8Array, side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, how_to_call: HowToCall | 'Call' | 'DelegateCall' | number | Uint8Array, calldata: Bytes | string | Uint8Array, replacement_pattern: Bytes | string | Uint8Array, static_extradata: Bytes | string | Uint8Array, sig: Signature | string | Uint8Array) => Observable<bool>>;
-      /**
-       * Validate order parameters (does *not* check validity:signature).
-       **/
-      validateOrderParametersEx: AugmentedRpc<(addrs: Vec<AccountId> | (AccountId | string | Uint8Array)[], uints: Vec<u64> | (u64 | AnyNumber | Uint8Array)[], fee_method: FeeMethod | 'ProtocolFee' | 'SplitFee' | number | Uint8Array, side: Side | 'Buy' | 'Sell' | number | Uint8Array, sale_kind: SaleKind | 'FixedPrice' | 'DutchAuction' | number | Uint8Array, how_to_call: HowToCall | 'Call' | 'DelegateCall' | number | Uint8Array, calldata: Bytes | string | Uint8Array, replacement_pattern: Bytes | string | Uint8Array, static_extradata: Bytes | string | Uint8Array) => Observable<bool>>;
-    };
-  }
-}
+  } // RpcInterface
+} // declare module

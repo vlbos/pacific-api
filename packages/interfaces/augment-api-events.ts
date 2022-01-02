@@ -1,17 +1,17 @@
 // Auto-generated via `yarn polkadot-types-from-chain`, do not edit
 /* eslint-disable */
 
-import type { Bytes, bool, u64 } from '@polkadot/types';
+import type { ApiTypes } from '@polkadot/api-base/types';
+import type { Bytes, bool, u64 } from '@polkadot/types-codec';
 import type { BalanceStatus } from '@polkadot/types/interfaces/balances';
 import type { AuthorityList } from '@polkadot/types/interfaces/grandpa';
 import type { AccountId, Balance, Moment } from '@polkadot/types/interfaces/runtime';
 import type { DispatchError, DispatchInfo, DispatchResult } from '@polkadot/types/interfaces/system';
-import type { OrderId } from 'pacific-api/interfaces/orderbook';
-import type { FeeMethod, HowToCall, SaleKind, Side } from 'pacific-api/interfaces/wyvernExchangeCore';
-import type { ApiTypes } from '@polkadot/api/types';
+import type { OrderId } from 'pacificstore-polkadotjs-typegen/interfaces/orderbook';
+import type { FeeMethod, HowToCall, SaleKind, Side } from 'pacificstore-polkadotjs-typegen/interfaces/wyvernExchangeCore';
 
-declare module '@polkadot/api/types/events' {
-  export interface AugmentedEvents<ApiType> {
+declare module '@polkadot/api-base/types/events' {
+  export interface AugmentedEvents<ApiType extends ApiTypes> {
     balances: {
       /**
        * A balance was set by root. \[who, free, reserved\]
@@ -117,8 +117,5 @@ declare module '@polkadot/api/types/events' {
       OwnerChanged: AugmentedEvent<ApiType, [AccountId, AccountId]>;
       ProtocolFeeRecipientChanged: AugmentedEvent<ApiType, [AccountId, AccountId]>;
     };
-  }
-
-  export interface DecoratedEvents<ApiType extends ApiTypes> extends AugmentedEvents<ApiType> {
-  }
-}
+  } // AugmentedEvents
+} // declare module
