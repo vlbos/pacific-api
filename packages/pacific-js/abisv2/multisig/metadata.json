@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x3701f51521dc25c14f6ebb32445038bad22813844909bf2f7cd7f96e2e099923",
+    "hash": "0xf375f3d1e7655da9ab808363ca6b64ec32e612d3c1e216b57db9e7b8ef0fb961",
     "language": "ink! 3.0.0-rc7",
     "compiler": "rustc 1.59.0-nightly"
   },
@@ -712,6 +712,70 @@
             "type": 20
           },
           "selector": "0xd543cd2d"
+        },
+        {
+          "args": [
+            {
+              "label": "selector",
+              "type": {
+                "displayName": [],
+                "type": 11
+              }
+            },
+            {
+              "label": "callees",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "from",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "values",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 24
+              }
+            }
+          ],
+          "docs": [
+            " Evaluate a confirmed execution and return its output as bytes.",
+            "",
+            " Its return value indicates whether the called transaction was successful and contains",
+            " its output when successful.",
+            " This can be called by anyone."
+          ],
+          "label": "atomic_transaction",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 20
+          },
+          "selector": "0x557efb0c"
         }
       ]
     },

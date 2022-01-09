@@ -8,8 +8,9 @@ import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
 import '../interfaces/augment-types';
 import { CodePromise, ContractPromise, Abi } from '@polkadot/api-contract';
-const erc20metadata = require("./abis/erc20/metadata.json");
-const erc721metadata = require("./abis/erc721/metadata.json");
+const erc20metadata = require("./abisv2/erc20/metadata.json");
+const erc721metadata = require("./abisv2/erc721/metadata.json");
+const msigmetadata = require("./abisv2/multisig/metadata.json");
 import { createTestKeyring } from "@polkadot/keyring/testing";
 const keyring = createTestKeyring({ type: "sr25519" });
 import BN from "bn.js";
@@ -1300,14 +1301,17 @@ export class OpenSeaPort {
         { accountAddress,
             tokenAddress,
             proxyAddress,
+            nonce,
             minimumAmount = new BigNumber(Number.MAX_VALUE) }:
             {
                 accountAddress: string;
                 tokenAddress: string;
                 proxyAddress?: string;
+                nonce?: string;
                 minimumAmount?: BigNumber
             }
     ): Promise<string | null> {
+
         proxyAddress = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
 
 
@@ -1321,9 +1325,9 @@ export class OpenSeaPort {
             this.logger('Already approved enough currency for trading')
             return null
         }
-      
+        approvedAmount = new BN(1);//minimumAmount
+
         this.logger(`Not enough token approved for trade: ${approvedAmount} approved to transfer ${tokenAddress}`)
-        approvedAmount = minimumAmount
 
         this._dispatch(EventType.ApproveCurrency, {
             accountAddress,
@@ -1368,7 +1372,8 @@ export class OpenSeaPort {
             const contract = new ContractPromise(this.papi, mabi, tokenAddress);
             // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
             const fromPair = keyring.getPair(accountAddress);
-            let result = await contract.tx.approve({ value: 0, gasLimit: gas }, proxyAddress, approvedAmount).signAndSend(fromPair);
+            console.log(accountAddress, '====nonce===', nonce.toString());
+            let result = await contract.tx.approve({ value: 0, gasLimit: gas }, proxyAddress, approvedAmount).signAndSend(fromPair, { nonce });
             // The actual result from RPC as `ContractExecResult`
             console.log(result.toHuman());
             txHash = result.toString();
@@ -1711,46 +1716,61 @@ export class OpenSeaPort {
         // const { calldata, target } = encodeAtomicizedTransfer(
         // schemaNames.map(name => this._getSchema(name)), wyAssets, fromAddress, toAddress, this._wyvernProtocol, this._networkName)
         const schemas = schemaNames.map(name => this._getSchema(name));
-
-        let txes = assets.map((asset: Asset, i) => {
-            const schema = schemas[i]
-            const wyAsset = wyAssets[i]
-            const isCryptoKitties = [CK_ADDRESS, CK_DEV_ADDRESS].includes(wyAsset.address)
-            // Since CK is common, infer isOldNFT from it in case user
-            // didn't pass in `version`
-            const isOldNFT = isCryptoKitties || !!asset.version && [
-                TokenStandardVersion.ERC721v1, TokenStandardVersion.ERC721v2
-            ].includes(asset.version)
-
-            const abi = asset.schemaName === WyvernSchemaName.ERC20
-                ? annotateERC20TransferABI(wyAsset as WyvernFTAsset)
-                : isOldNFT
-                    ? annotateERC721TransferABI(wyAsset as WyvernNFTAsset)
-                    : schema.functions.transfer(wyAsset)
-            const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
-            let gas;
-            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-            const contract = new ContractPromise(this.papi, mabi, abi.target);
-
-            return contract.tx.transfer({ value: 0, gasLimit: gas }, toAddress, ...inputValues)
+        const selectors = ["0x0b396f18", "0x0b396f18"];
+        const transactions = wyAssets.map((asset: WyvernAsset, i) => {
+console.log(asset.address,"======asset.address========",fromAddress,toAddress)
+            return {
+                from: fromAddress,
+                to: toAddress,
+                tx: { callee: asset.address, selector: selectors[i], transferredValue: 0, gasLimit: 0 },
+                value: 8,
+            }
         })
+        const target = WyvernProtocol.getAtomicizerContractAddress(this._networkName)
+        console.log(this._networkName,"=====_networkName======",target)
+        const atomicizedCalldata = [
+            transactions.map((t: any) => t.tx),
+            transactions.map((t: any) => t.from),
+            transactions.map((t: any) => t.to),
+            transactions.map((t: any) => t.value)
+        ]
 
         let txHash = "";
         const fromPair = keyring.getPair(fromAddress);
-        console.log("===================ddddd=====================")
-        for (let tx of txes) {
-            let result = await tx.signAndSend(fromPair);
-            txHash = result.toString();
-        }
-        console.log("===================ddddd===s==================")
+        console.log("===================ddddd=====================",...atomicizedCalldata)
+        // for (let tx of txes) {
+        //     let result = await tx.signAndSend(fromPair);
+        //     txHash = result.toString();
+        // }
         let proxyAddress = await this._getProxy(fromAddress)
         if (!proxyAddress) {
             proxyAddress = await this._initializeProxy(fromAddress)
         }
-        await this._approveAll({ schemaNames, wyAssets, accountAddress: fromAddress, proxyAddress })
+        console.log("===================proxyAddress===s==================", proxyAddress)
+
+        // await this._approveAll({ schemaNames, wyAssets, accountAddress: fromAddress, proxyAddress })
 
         this._dispatch(EventType.TransferAll, { accountAddress: fromAddress, toAddress, assets: wyAssets })
+        let gas;
+        const mabi = new Abi(msigmetadata, this.papi.registry.getChainProperties());
+        const contract = new ContractPromise(this.papi, mabi, target);
+        {
+            let { gasConsumed, result, output } = await contract.query.evaluaTransaction(fromAddress, { value: 0, gasLimit: -1 }, ...atomicizedCalldata);
+            console.log(result.toHuman());
+            gas = new BN(gasConsumed.toString());
+            console.log(gasConsumed.toHuman());
 
+            if (result.isOk) {
+                console.log(fromAddress, 'transfer Success', output.toHuman());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+        {
+            let result = await contract.tx.evaluaTransaction({ value: 0, gasLimit: gas },  ...atomicizedCalldata).signAndSend(fromPair);
+            console.log(result.toHuman());
+            txHash = result.toString();
+        }
         // const gasPrice = await this._computeGasPrice()
         // const txHash = await sendRawTransaction(this.apip, {
         //     from: fromAddress,
@@ -2166,7 +2186,7 @@ export class OpenSeaPort {
      */
     public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
         // console.log(this.papi.query)
-        let proxyAddress: string | null = "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL";// = await this.papi.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
+        let proxyAddress: string | null = "5GzQ8YbeH5KBdHFnF9VHrsxKf5ZAR9iSSddHoaAuFjmVia4H";// = await this.papi.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
         if (proxyAddress == '0x') {
             throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
@@ -2966,7 +2986,9 @@ export class OpenSeaPort {
             proxyAddress = await this._initializeProxy(accountAddress)
         }
         const contractsWithApproveAll: Set<string> = new Set()
-
+        const fromPair = keyring.getPair(accountAddress);
+        const nonces = await this.papi.rpc.system.accountNextIndex(fromPair.address)
+        acc2nonce[fromPair.address] = Number(nonces.toString());
         return Promise.all(wyAssets.map(async (wyAsset, i) => {
             const schemaName = schemaNames[i]
             // Verify that the taker owns the asset
@@ -3013,10 +3035,12 @@ export class OpenSeaPort {
                         return null
                     }
                     contractsWithApproveAll.add(wyFTAsset.address)
+                    const nonce = (Number(nonces.toString()) + Number(i)).toString();
                     return await this.approveFungibleToken({
                         tokenAddress: wyFTAsset.address,
                         accountAddress,
-                        proxyAddress
+                        proxyAddress,
+                        nonce
                     })
                 // For other assets, including contracts:
                 // Send them to the user's proxy

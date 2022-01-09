@@ -163,7 +163,7 @@ export function encodeAtomicizedTransfer(schemas: Array<Schema<WyvernAsset>>, as
     return {
       calldata,
       address: transfer.target,
-      value: new BigNumber(0),
+      value: asset.quantity,
     }
   })
 

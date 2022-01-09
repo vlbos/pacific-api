@@ -1,7 +1,7 @@
 
 import { OpenSeaPort } from '../../pacific-js/index'
 import { Network, WyvernSchemaName, WyvernNFTAsset, WyvernFTAsset } from '../../pacific-js/types'
-import { ALICE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
+import { ALICE_ADDRESS,EVE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
 import {
     ENJIN_ADDRESS,
     ENJIN_LEGACY_ADDRESS, MAINNET_PROVIDER_URL, MAX_UINT_256, DEV_PROVIDER_URL
@@ -15,6 +15,7 @@ import * as ordersJSONFixture from '../fixtures/orders.json'
 
 import types from '../../pacific-js/config/types.json';
 import rpcs from '../../pacific-js/config/rpcs.json';
+import BigNumber from 'bignumber.js';
 // const provider = new Web3.providers.HttpProvider(MAINNET_PROVIDER_URL)
 // const devProvider = new Web3.providers.HttpProvider(DEV_PROVIDER_URL)
 const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -133,7 +134,7 @@ describe('seaport: owners and transfers', () => {
         expect(isOwner4).toBeFalsy()
     })
 
-    test('ERC-721v3 asset locked in contract is not transferrable', async () => {
+    test('ERC-721 v3 asset locked in contract is not transferrable', async () => {
         const isTransferrable = await client.isAssetTransferrable({
             asset: {
                 tokenId: GODS_UNCHAINED_TOKEN_ID.toString(),
@@ -264,7 +265,7 @@ describe('seaport: owners and transfers', () => {
                 schemaName: WyvernSchemaName.ERC20
             }],
             fromAddress: ALICE_ADDRESS,
-            toAddress: ALICE_STASH_ADDRESS,
+            toAddress: EVE_ADDRESS,
             schemaName: WyvernSchemaName.ERC20
         })
         expect(isTransferrable).toBeTruthy()
