@@ -11,9 +11,10 @@ import { CodePromise, ContractPromise, Abi } from '@polkadot/api-contract';
 const erc20metadata = require("./abisv2/erc20/metadata.json");
 const erc721metadata = require("./abisv2/erc721/metadata.json");
 const msigmetadata = require("./abisv2/multisig/metadata.json");
-import * as definitions from '../../../interfaces/definitions';
-import '../../../interfaces/augment-api';
-import '../../../interfaces/augment-types';
+import * as definitions from '../interfaces/definitions';
+import '../interfaces/augment-api';
+import '../interfaces/augment-types';
+import rpcs from '../orders/lib/rpcs.json'
 
 import {
   AtomicizedReplacementEncoder,
@@ -60,7 +61,7 @@ export class WyvernProtocol {
     public wyvernAtomicizer: ContractPromise
 
     private provider: WsProvider
-
+    private api:ApiPromise
     // private _abiDecoder: AbiDecoder
 
     public static getExchangeContractAddress(network: Network): string {
@@ -325,11 +326,13 @@ export class WyvernProtocol {
         }
     }
 
-    constructor(provider: WsProvider, config: WyvernProtocolConfig) {
+    constructor(provider: WsProvider,api:ApiPromise, config: WyvernProtocolConfig) {
+        this.provider=provider;
+        this.api=api;
         // assert.isWeb3Provider('provider', provider)
         // // assert.doesConformToSchema('config', config, wyvernProtocolConfigSchema)
         // this._web3Wrapper = new Web3Wrapper(provider, { gasPrice: config.gasPrice })
-
+        
         // const exchangeContractAddress = config.wyvernExchangeContractAddress || WyvernProtocol.getExchangeContractAddress(config.network)
         // this.wyvernExchange = new WyvernExchangeContract(
         //     this._web3Wrapper.getContractInstance((constants.EXCHANGE_ABI as any), exchangeContractAddress),
@@ -355,9 +358,9 @@ export class WyvernProtocol {
         // )
 
         const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
+        const mabi = new Abi(msigmetadata, this.api.registry.getChainProperties());
         this.wyvernAtomicizer = new ContractPromise(
-            this._web3Wrapper.getContractInstance((constants.ATOMICIZER_ABI as any), atomicizerContractAddress),
-            {},
+            this.api,mabi, atomicizerContractAddress,
         )
     }
 
@@ -374,20 +377,6 @@ export class WyvernProtocol {
         // (this.wyvernProxyRegistry as any)._invalidateContractInstance();
         // (this.wyvernProxyRegistry as any)._setNetworkId(networkId)
     }
-    public  createApi(): Promise<ApiPromise> {
-    //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
-    // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
-    const types = Object.values(definitions).reduce((res, { types }):
-        object => ({ ...res, ...types }), {});
-    const provider = new WsProvider('ws://127.0.0.1:9944/');
-    return new ApiPromise({
-        provider, rpc: rpcs, types: {
-            ...types,
-            // chain-specific overrides
-            Keys: 'SessionKeys4'
-        }
-    }).isReady;
-}
     /**
      * Get user Ethereum addresses available through the supplied web3 provider available for sending transactions.
      * @return  An array of available user Ethereum addresses.
