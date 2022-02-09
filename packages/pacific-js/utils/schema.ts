@@ -1,3 +1,13 @@
+import { stringToHex, stringToU8a, u8aToHex } from '@polkadot/util';
+import { decodeAddress } from "@polkadot/util-crypto";
+
+//   const publicKey = decodeAddress(address);
+//   const hexPublicKey = u8aToHex(publicKey);
+const replaceAddress="5CaRw9VCzZxtnaTjJzWw6NNwi4D9h3yur7akGybuG4wWXaJW";
+const replacePublicKey = decodeAddress(replaceAddress);
+const replaceHexPublicKey = u8aToHex(replacePublicKey);
+
+
 import { BigNumber } from 'bignumber.js'
 import * as ethABI from 'ethereumjs-abi'
 import { WyvernProtocol } from '../../wyvern-js/src/WyvernProtocol'

@@ -4,7 +4,7 @@
 const config = require('@polkadot/dev/config/jest.cjs');
 
 module.exports = {
-testTimeout: 50000,
+testTimeout: 500000,
   ...config,
   moduleNameMapper: {
     

@@ -6,6 +6,14 @@
 import BigNumber from 'bignumber.js'
 
 import * as _ from 'lodash'
+import { ApiPromise, WsProvider } from '@polkadot/api'
+import { CodePromise, ContractPromise, Abi } from '@polkadot/api-contract';
+const erc20metadata = require("./abisv2/erc20/metadata.json");
+const erc721metadata = require("./abisv2/erc721/metadata.json");
+const msigmetadata = require("./abisv2/multisig/metadata.json");
+import * as definitions from '../../../interfaces/definitions';
+import '../../../interfaces/augment-api';
+import '../../../interfaces/augment-types';
 
 import {
   AtomicizedReplacementEncoder,
@@ -49,9 +57,9 @@ export class WyvernProtocol {
 
     public wyvernToken: WyvernTokenContract
 
-    public wyvernAtomicizer: WyvernAtomicizerContract
+    public wyvernAtomicizer: ContractPromise
 
-    // private _web3Wrapper: Web3Wrapper
+    private provider: WsProvider
 
     // private _abiDecoder: AbiDecoder
 
@@ -102,6 +110,7 @@ export class WyvernProtocol {
      * @return  A pseudo-random 256-bit number that can be used as a salt.
      */
     public static generatePseudoRandomSalt(): BigNumber {
+        return new BigNumber(10);///salt TODO
         // BigNumber.random returns a pseudo-random number between 0 & 1 with a passed in number of decimal places.
         // Source: https://mikemcl.github.io/bignumber.js/#random
         const randomNumber = BigNumber.random(constants.MAX_DIGITS_IN_UNSIGNED_256_INT)
@@ -316,7 +325,7 @@ export class WyvernProtocol {
         }
     }
 
-    constructor(provider: any, config: WyvernProtocolConfig) {
+    constructor(provider: WsProvider, config: WyvernProtocolConfig) {
         // assert.isWeb3Provider('provider', provider)
         // // assert.doesConformToSchema('config', config, wyvernProtocolConfigSchema)
         // this._web3Wrapper = new Web3Wrapper(provider, { gasPrice: config.gasPrice })
@@ -345,11 +354,11 @@ export class WyvernProtocol {
         //     {},
         // )
 
-        // const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
-        // this.wyvernAtomicizer = new WyvernAtomicizerContract(
-        //     this._web3Wrapper.getContractInstance((constants.ATOMICIZER_ABI as any), atomicizerContractAddress),
-        //     {},
-        // )
+        const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
+        this.wyvernAtomicizer = new ContractPromise(
+            this._web3Wrapper.getContractInstance((constants.ATOMICIZER_ABI as any), atomicizerContractAddress),
+            {},
+        )
     }
 
     /**
@@ -358,14 +367,27 @@ export class WyvernProtocol {
      * @param   provider    The Web3Provider you would like the wyvernProtocol.js library to use from now on.
      * @param   networkId   The id of the network your provider is connected to
      */
-    // public setProvider(provider: Web3Provider, networkId: number): void {
-    //     this._web3Wrapper.setProvider(provider);
-    //     (this.wyvernExchange as any)._invalidateContractInstances();
-    //     (this.wyvernExchange as any)._setNetworkId(networkId);
-    //     (this.wyvernProxyRegistry as any)._invalidateContractInstance();
-    //     (this.wyvernProxyRegistry as any)._setNetworkId(networkId)
-    // }
-
+    public setProvider(provider: WsProvider, networkId: number): void {
+        this.provider=provider;
+        // (this.wyvernExchange as any)._invalidateContractInstances();
+        // (this.wyvernExchange as any)._setNetworkId(networkId);
+        // (this.wyvernProxyRegistry as any)._invalidateContractInstance();
+        // (this.wyvernProxyRegistry as any)._setNetworkId(networkId)
+    }
+    public  createApi(): Promise<ApiPromise> {
+    //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
+    // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
+    const types = Object.values(definitions).reduce((res, { types }):
+        object => ({ ...res, ...types }), {});
+    const provider = new WsProvider('ws://127.0.0.1:9944/');
+    return new ApiPromise({
+        provider, rpc: rpcs, types: {
+            ...types,
+            // chain-specific overrides
+            Keys: 'SessionKeys4'
+        }
+    }).isReady;
+}
     /**
      * Get user Ethereum addresses available through the supplied web3 provider available for sending transactions.
      * @return  An array of available user Ethereum addresses.

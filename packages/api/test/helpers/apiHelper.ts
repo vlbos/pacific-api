@@ -42,6 +42,9 @@ export function createApi(): Promise<ApiPromise> {
 }
 
 export async function createApiAndTestAccounts(provider:WsProvider): Promise<{ api: ApiPromise; accounts: any;users: any }> {
+    if (provider==undefined){
+            provider = new WsProvider('ws://127.0.0.1:9944/');
+        }
     // const provider = new WsProvider('ws://127.0.0.1:9944/');
 
     // await provider.connect();

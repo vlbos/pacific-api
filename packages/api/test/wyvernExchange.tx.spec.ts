@@ -13,6 +13,7 @@ import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../../o
 import { v4 as uuidv4 } from 'uuid'
 // import rpcs from './config/rpcs.json';
 import rpcs from '../../orders/lib/rpcs.json'
+// const msigmetadata = require("../pacific-js/abisv2/multisig/metadata.json");
 
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 import { TypeRegistry } from '@polkadot/types/create';
@@ -43,8 +44,8 @@ async function init(): Promise<{ api: ApiPromise; accounts: any }> {
     // }
 
     // console.log("======transfer====");
-    submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
-    submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
+    // submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
+    // submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
 
     return { api, accounts };
 
@@ -272,7 +273,7 @@ describe('wyvernExchange tx tests', (): void => {
 
     });
 
-    it('atomicMatchEx', async (): Promise<void> => {
+    it.only('atomicMatchEx', async (): Promise<void> => {
         // const papi = await init();
         // const api = papi.api;
 

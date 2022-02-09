@@ -137,7 +137,7 @@ describe('orderbook tx tests', (): void => {
             submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.admin);
         }
 
-        sleepMs(65000)
+        sleepMs(650000)
         // console.log("========postAssetWhiteList=======");
         // submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.admin);
 

@@ -45,7 +45,7 @@ export const deployed = {
         'SaleKindInterface': '0x77a1dada690ab5172d80ae3b7ccaf88ee3c2e607',
         'WyvernExchange': '0x7be8076f4ea4a4ad08075c2508e481d6c946d12b',
         'WyvernDAOProxy': '0xa839d4b5a36265795eba6894651a8af3d0ae2e68',
-        'WyvernAtomicizer': '5EwtQbEiwgW27Az8d9vFTrDeRKRXzveQZ3Hs8h5AVTLKdiad',
+        'WyvernAtomicizer': '5DGNjGQtLZPTyi494xfsk1bAM8jQHS7EbaYqQkvcC3mN4tnf',
         'WyvernTokenTransferProxy': '0xe5c783ee536cf5e63e792988335c4255169be4e1',
     },
 }

@@ -21,6 +21,7 @@
     "t:onex": "polkadot-dev-run-test packages/test/seaport/orders.test.ts --runInBand --detectOpenHandles --forceExit",
     "ta:o": "polkadot-dev-run-test packages/api/test/orderbook.rpc.spec.ts",
     "ta:t": "polkadot-dev-run-test packages/api/test/orderbook.tx.spec.ts",
+    "tw:t": "polkadot-dev-run-test packages/api/test/wyvernExchange.tx.spec.ts",
     "test:watch": "polkadot-dev-run-test --watch"
   },
   "devDependencies": {

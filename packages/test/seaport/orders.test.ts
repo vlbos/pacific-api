@@ -13,7 +13,7 @@ import { Network, OrderJSON, OrderSide, Order, SaleKind, UnhashedOrder, Unsigned
 import { orderFromJSON, getOrderHash, estimateCurrentPrice, assignOrdersToSides, makeBigNumber } from '../../pacific-js/utils/utils'
 import * as ordersJSONFixture from '../fixtures/orders.json'
 import { BigNumber } from 'bignumber.js'
-import { ALICE_ADDRESS, CRYPTO_CRYSTAL_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, CRYPTOFLOWERS_CONTRACT_ADDRESS_WITH_BUYER_FEE, DISSOLUTION_TOKEN_ID, ENS_HELLO_NAME, ENS_HELLO_TOKEN_ID, ENS_DEV_TOKEN_ADDRESS, ENS_DEV_SHORT_NAME_OWNER,WDOT_ADDRESS } from '../constants'
+import { ALICE_ADDRESS,EVE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
 import { testFeesMakerOrder } from './fees.test'
 import {
     ENJIN_ADDRESS,
@@ -769,7 +769,7 @@ describe('seaport: orders', () => {
     ///TEST NEEDED
     it('Matches a buy order and estimates gas on fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
-        const takerAddress = ALICE_ADDRESS
+        const takerAddress = ALICE_ADDRESS 
 
         const order = await client.api.getOrder({
             side: OrderSide.Buy,
@@ -786,6 +786,47 @@ describe('seaport: orders', () => {
             return
         }
         await testMatchingOrder(order, takerAddress, true)
+    })
+    
+    it.only('Matches a buy order and  fulfillment', async () => {
+        // Need to use a taker who has created a proxy and approved W-ETH already
+        const accountAddress = ALICE_ADDRESS 
+
+        let order = await client.api.getOrder({
+            side: OrderSide.Buy,
+            owner: accountAddress,
+            // Use a token that has already been approved via approve-all
+            asset_contract_address: DIGITAL_ART_CHAIN_ADDRESS
+        })
+        expect(order).not.toBeNull()
+        if (!order) {
+            console.log("===========")
+            return
+        }
+        expect(order.asset).not.toBeNull()
+        if (!order.asset) {
+            console.log("======d=====")
+
+            return
+        }
+        let calldata=await client.encodeTransferAll({
+            assets: [{
+                tokenId: null,
+                tokenAddress: "5FedJTj4z2T9EqcqwGMsksMd2dc6fC7cxaeAm6fcE8ZXdqtP",
+                schemaName: WyvernSchemaName.ERC20
+            }, {
+                tokenId: null,
+                tokenAddress: "5D4LDS32J567Dh46TEihGDM8V9tKoX497e6FPJKn9HMwYquN",
+                schemaName: WyvernSchemaName.ERC20
+            }],
+            fromAddress: ALICE_ADDRESS,
+            toAddress: "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+            schemaName: WyvernSchemaName.ERC20
+        })
+        console.log(calldata)
+        console.log(calldata.slice(calldata.indexOf("557efb0c")))
+        calldata="0x"+calldata.slice(calldata.indexOf("557efb0c"));
+        await client.fulfillOrder({order, accountAddress,calldata})
     })
 
     it('Matches a referred order via sell_orders and getAssets', async () => {

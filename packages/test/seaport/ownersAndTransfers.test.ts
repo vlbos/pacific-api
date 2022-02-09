@@ -1,7 +1,7 @@
 
 import { OpenSeaPort } from '../../pacific-js/index'
 import { Network, WyvernSchemaName, WyvernNFTAsset, WyvernFTAsset } from '../../pacific-js/types'
-import { ALICE_ADDRESS,EVE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
+import { ALICE_ADDRESS,EVE_ADDRESS,DAVE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
 import {
     ENJIN_ADDRESS,
     ENJIN_LEGACY_ADDRESS, MAINNET_PROVIDER_URL, MAX_UINT_256, DEV_PROVIDER_URL
@@ -9,7 +9,6 @@ import {
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { stringToHex, stringToU8a, u8aToHex } from '@polkadot/util';
 import { ALICE, BOB, CHARLIE, DAVE, EVE, CREATION_FEE, WSURL } from "./consts";
-
 // import { submit, users } from '../orders/lib/submit-signed-tx';
 import * as ordersJSONFixture from '../fixtures/orders.json'
 
@@ -252,7 +251,7 @@ describe('seaport: owners and transfers', () => {
         expect(isTransferrable).toBeTruthy()
     })
 
-    ///TEST 
+    ///TEST OK
     test.only('ERC-20 assets owned by fromAddress is transfer all', async () => {
         const isTransferrable = await client.transferAll({
             assets: [{
@@ -264,8 +263,8 @@ describe('seaport: owners and transfers', () => {
                 tokenAddress: WDOT_ADDRESS2,
                 schemaName: WyvernSchemaName.ERC20
             }],
-            fromAddress: ALICE_ADDRESS,
-            toAddress: EVE_ADDRESS,
+            fromAddress: BOB_ADDRESS,
+            toAddress: DAVE_ADDRESS,
             schemaName: WyvernSchemaName.ERC20
         })
         expect(isTransferrable).toBeTruthy()

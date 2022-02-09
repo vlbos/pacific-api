@@ -179,6 +179,7 @@ export class OpenSeaAPI {
             ...query
         }
         )
+        // console.log("1111")
 
         let orderJSON
         if (ORDERBOOK_VERSION == 0) {
@@ -187,6 +188,8 @@ export class OpenSeaAPI {
         } else {
             const json = result as OrderbookResponse
             orderJSON = json.orders[0]
+        //  console.log("ddddd",result)
+
         }
         if (!orderJSON) {
             throw new Error(`Not found: no matching order found`)
@@ -419,8 +422,8 @@ export class OpenSeaAPI {
             }
         }
 
-        //this.logger(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
-        console.log(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
+        this.logger(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
+        // console.log(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
         return fetch(finalUrl, finalOpts).then(async res => this._handleApiResponse(res))
     }
 

@@ -1,0 +1,1423 @@
+{
+  "source": {
+    "hash": "0xf375f3d1e7655da9ab808363ca6b64ec32e612d3c1e216b57db9e7b8ef0fb961",
+    "language": "ink! 3.0.0-rc7",
+    "compiler": "rustc 1.59.0-nightly"
+  },
+  "contract": {
+    "name": "multisig",
+    "version": "3.0.0-rc5",
+    "authors": [
+      "Parity Technologies <admin@parity.io>"
+    ]
+  },
+  "V2": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [
+            {
+              "label": "requirement",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "label": "owners",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 16
+              }
+            }
+          ],
+          "docs": [
+            "The only constructor of the contract.",
+            "",
+            "A list of owners must be supplied and a number of how many of them must",
+            "confirm a transaction. Duplicate owners are silently dropped.",
+            "",
+            "# Panics",
+            "",
+            "If `requirement` violates our invariant."
+          ],
+          "label": "new",
+          "selector": "0x9bae9d5e"
+        }
+      ],
+      "docs": [],
+      "events": [
+        {
+          "args": [
+            {
+              "docs": [
+                " The transaction that was confirmed."
+              ],
+              "indexed": true,
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "docs": [
+                " The owner that sent the confirmation."
+              ],
+              "indexed": true,
+              "label": "from",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "docs": [
+                " The confirmation status after this confirmation was applied."
+              ],
+              "indexed": true,
+              "label": "status",
+              "type": {
+                "displayName": [
+                  "ConfirmationStatus"
+                ],
+                "type": 19
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when an owner confirms a transaction."
+          ],
+          "label": "Confirmation"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The transaction that was revoked."
+              ],
+              "indexed": true,
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "docs": [
+                " The owner that sent the revocation."
+              ],
+              "indexed": true,
+              "label": "from",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when an owner revoked a confirmation."
+          ],
+          "label": "Revokation"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The transaction that was submitted."
+              ],
+              "indexed": true,
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when an owner submits a transaction."
+          ],
+          "label": "Submission"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The transaction that was canceled."
+              ],
+              "indexed": true,
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when a transaction was canceled."
+          ],
+          "label": "Cancelation"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The transaction that was executed."
+              ],
+              "indexed": true,
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "docs": [
+                " Indicates whether the transaction executed successfully. If so the `Ok` value holds",
+                " the output in bytes. The Option is `None` when the transaction was executed through",
+                " `invoke_transaction` rather than `evaluate_transaction`."
+              ],
+              "indexed": true,
+              "label": "result",
+              "type": {
+                "displayName": [
+                  "Result"
+                ],
+                "type": 25
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when a transaction was executed."
+          ],
+          "label": "Execution"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The owner that was added."
+              ],
+              "indexed": true,
+              "label": "owner",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when an owner is added to the wallet."
+          ],
+          "label": "OwnerAddition"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The owner that was removed."
+              ],
+              "indexed": true,
+              "label": "owner",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when an owner is removed from the wallet."
+          ],
+          "label": "OwnerRemoval"
+        },
+        {
+          "args": [
+            {
+              "docs": [
+                " The new requirement value."
+              ],
+              "indexed": false,
+              "label": "new_requirement",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Emitted when the requirement changed."
+          ],
+          "label": "RequirementChange"
+        }
+      ],
+      "messages": [
+        {
+          "args": [
+            {
+              "label": "new_owner",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [
+            " Add a new owner to the contract.",
+            "",
+            " Only callable by the wallet itself.",
+            "",
+            " # Panics",
+            "",
+            " If the owner already exists.",
+            "",
+            " # Examples",
+            "",
+            " Since this message must be send by the wallet itself it has to be build as a",
+            " `Transaction` and dispatched through `submit_transaction` and `invoke_transaction`:",
+            " ```no_run",
+            " use ink_env::{DefaultEnvironment as Env, AccountId, call::{CallParams, Selector}, test::CallData};",
+            " use multisig::{Transaction, ConfirmationStatus};",
+            "",
+            " // address of an existing `Multisig` contract",
+            " let wallet_id: AccountId = [7u8; 32].into();",
+            "",
+            " // first create the transaction that adds `alice` through `add_owner`",
+            " let alice: AccountId = [1u8; 32].into();",
+            " let mut call = CallData::new(Selector::new([166, 229, 27, 154])); // add_owner",
+            " call.push_arg(&alice);",
+            " let transaction = Transaction {",
+            "     callee: wallet_id,",
+            "     selector: call.selector().to_bytes(),",
+            "     input: call.params().to_owned(),",
+            "     transferred_value: 0,",
+            "     gas_limit: 0",
+            " };",
+            "",
+            " // submit the transaction for confirmation",
+            " let mut submit = CallParams::<Env, _, _>::eval(",
+            "     wallet_id,",
+            "     Selector::new([86, 244, 13, 223]) // submit_transaction",
+            " );",
+            " let (id, _): (u32, ConfirmationStatus)  = submit.push_arg(&transaction)",
+            "     .fire()",
+            "     .expect(\"submit_transaction won't panic.\");",
+            "",
+            " // wait until all required owners have confirmed and then execute the transaction",
+            " let mut invoke = CallParams::<Env, _, ()>::invoke(",
+            "     wallet_id,",
+            "     Selector::new([185, 50, 225, 236]) // invoke_transaction",
+            " );",
+            " invoke.push_arg(&id).fire();",
+            " ```"
+          ],
+          "label": "add_owner",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0xad6d4358"
+        },
+        {
+          "args": [
+            {
+              "label": "owner",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [
+            " Remove an owner from the contract.",
+            "",
+            " Only callable by the wallet itself. If by doing this the amount of owners",
+            " would be smaller than the requirement it is adjusted to be exactly the",
+            " number of owners.",
+            "",
+            " # Panics",
+            "",
+            " If `owner` is no owner of the wallet."
+          ],
+          "label": "remove_owner",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0xfdfe3353"
+        },
+        {
+          "args": [
+            {
+              "label": "old_owner",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "new_owner",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            }
+          ],
+          "docs": [
+            " Replace an owner from the contract with a new one.",
+            "",
+            " Only callable by the wallet itself.",
+            "",
+            " # Panics",
+            "",
+            " If `old_owner` is no owner or if `new_owner` already is one."
+          ],
+          "label": "replace_owner",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x7834854f"
+        },
+        {
+          "args": [
+            {
+              "label": "new_requirement",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Change the requirement to a new value.",
+            "",
+            " Only callable by the wallet itself.",
+            "",
+            " # Panics",
+            "",
+            " If the `new_requirement` violates our invariant."
+          ],
+          "label": "change_requirement",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x9448dea5"
+        },
+        {
+          "args": [
+            {
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "Transaction"
+                ],
+                "type": 10
+              }
+            }
+          ],
+          "docs": [
+            " Add a new transaction candidate to the contract.",
+            "",
+            " This also confirms the transaction for the caller. This can be called by any owner."
+          ],
+          "label": "submit_transaction",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [],
+            "type": 18
+          },
+          "selector": "0x37d395a9"
+        },
+        {
+          "args": [
+            {
+              "label": "trans_id",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Remove a transaction from the contract.",
+            " Only callable by the wallet itself.",
+            "",
+            " # Panics",
+            "",
+            " If `trans_id` is no valid transaction id."
+          ],
+          "label": "cancel_transaction",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0x6614b0a8"
+        },
+        {
+          "args": [
+            {
+              "label": "trans_id",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Confirm a transaction for the sender that was submitted by any owner.",
+            "",
+            " This can be called by any owner.",
+            "",
+            " # Panics",
+            "",
+            " If `trans_id` is no valid transaction id."
+          ],
+          "label": "confirm_transaction",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "ConfirmationStatus"
+            ],
+            "type": 19
+          },
+          "selector": "0x41996bf0"
+        },
+        {
+          "args": [
+            {
+              "label": "trans_id",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Revoke the senders confirmation.",
+            "",
+            " This can be called by any owner.",
+            "",
+            " # Panics",
+            "",
+            " If `trans_id` is no valid transaction id."
+          ],
+          "label": "revoke_confirmation",
+          "mutates": true,
+          "payable": false,
+          "returnType": null,
+          "selector": "0xa871d5a0"
+        },
+        {
+          "args": [
+            {
+              "label": "trans_id",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Invoke a confirmed execution without getting its output.",
+            "",
+            " If the transaction which is invoked transfers value, this value has",
+            " to be sent as payment with this call. The method will fail otherwise,",
+            " and the transaction would then be reverted.",
+            "",
+            " Its return value indicates whether the called transaction was successful.",
+            " This can be called by anyone."
+          ],
+          "label": "invoke_transaction",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 20
+          },
+          "selector": "0x3cd4b36d"
+        },
+        {
+          "args": [
+            {
+              "label": "trans_id",
+              "type": {
+                "displayName": [
+                  "TransactionId"
+                ],
+                "type": 2
+              }
+            }
+          ],
+          "docs": [
+            " Evaluate a confirmed execution and return its output as bytes.",
+            "",
+            " Its return value indicates whether the called transaction was successful and contains",
+            " its output when successful.",
+            " This can be called by anyone."
+          ],
+          "label": "eval_transaction",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 22
+          },
+          "selector": "0xda9878fb"
+        },
+        {
+          "args": [
+            {
+              "label": "transaction",
+              "type": {
+                "displayName": [
+                  "Transaction"
+                ],
+                "type": 10
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "Balance"
+                ],
+                "type": 13
+              }
+            }
+          ],
+          "docs": [
+            " Evaluate a confirmed execution and return its output as bytes.",
+            "",
+            " Its return value indicates whether the called transaction was successful and contains",
+            " its output when successful.",
+            " This can be called by anyone."
+          ],
+          "label": "evalu_transaction",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 20
+          },
+          "selector": "0xeae46375"
+        },
+        {
+          "args": [
+            {
+              "label": "transactions",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 23
+              }
+            },
+            {
+              "label": "froms",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "toes",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "values",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 24
+              }
+            }
+          ],
+          "docs": [
+            " Evaluate a confirmed execution and return its output as bytes.",
+            "",
+            " Its return value indicates whether the called transaction was successful and contains",
+            " its output when successful.",
+            " This can be called by anyone."
+          ],
+          "label": "evalua_transaction",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 20
+          },
+          "selector": "0xd543cd2d"
+        },
+        {
+          "args": [
+            {
+              "label": "selector",
+              "type": {
+                "displayName": [],
+                "type": 11
+              }
+            },
+            {
+              "label": "callees",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 16
+              }
+            },
+            {
+              "label": "from",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "values",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 24
+              }
+            }
+          ],
+          "docs": [
+            " Evaluate a confirmed execution and return its output as bytes.",
+            "",
+            " Its return value indicates whether the called transaction was successful and contains",
+            " its output when successful.",
+            " This can be called by anyone."
+          ],
+          "label": "atomic_transaction",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 20
+          },
+          "selector": "0x557efb0c"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": [
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "ty": 0
+              }
+            },
+            "name": "confirmations"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0100000000000000000000000000000000000000000000000000000000000000",
+                "ty": 8
+              }
+            },
+            "name": "confirmation_count"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0200000000000000000000000000000000000000000000000000000000000000",
+                "ty": 9
+              }
+            },
+            "name": "transactions"
+          },
+          {
+            "layout": {
+              "struct": {
+                "fields": [
+                  {
+                    "layout": {
+                      "cell": {
+                        "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
+                        "ty": 15
+                      }
+                    },
+                    "name": "transactions"
+                  },
+                  {
+                    "layout": {
+                      "cell": {
+                        "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
+                        "ty": 2
+                      }
+                    },
+                    "name": "next_id"
+                  }
+                ]
+              }
+            },
+            "name": "transaction_list"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0500000000000000000000000000000000000000000000000000000000000000",
+                "ty": 16
+              }
+            },
+            "name": "owners"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0600000000000000000000000000000000000000000000000000000000000000",
+                "ty": 17
+              }
+            },
+            "name": "is_owner"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0700000000000000000000000000000000000000000000000000000000000000",
+                "ty": 2
+              }
+            },
+            "name": "requirement"
+          }
+        ]
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 7,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 1
+            },
+            {
+              "name": "V",
+              "type": 6
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "type": {
+          "def": {
+            "tuple": [
+              2,
+              3
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": {
+          "def": {
+            "primitive": "u32"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 4,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "AccountId"
+          ]
+        }
+      },
+      {
+        "id": 4,
+        "type": {
+          "def": {
+            "array": {
+              "len": 32,
+              "type": 5
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": {
+          "def": {
+            "primitive": "u8"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "type": {
+          "def": {
+            "tuple": []
+          }
+        }
+      },
+      {
+        "id": 7,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 4,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_primitives",
+            "Key"
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 7,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 2
+            },
+            {
+              "name": "V",
+              "type": 2
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 7,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 2
+            },
+            {
+              "name": "V",
+              "type": 10
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "callee",
+                  "type": 3,
+                  "typeName": "AccountId"
+                },
+                {
+                  "name": "selector",
+                  "type": 11,
+                  "typeName": "[u8; 4]"
+                },
+                {
+                  "name": "input",
+                  "type": 12,
+                  "typeName": "Vec<u8>"
+                },
+                {
+                  "name": "transferred_value",
+                  "type": 13,
+                  "typeName": "Balance"
+                },
+                {
+                  "name": "gas_limit",
+                  "type": 14,
+                  "typeName": "u64"
+                }
+              ]
+            }
+          },
+          "path": [
+            "multisig",
+            "multisig",
+            "Transaction"
+          ]
+        }
+      },
+      {
+        "id": 11,
+        "type": {
+          "def": {
+            "array": {
+              "len": 4,
+              "type": 5
+            }
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 5
+            }
+          }
+        }
+      },
+      {
+        "id": 13,
+        "type": {
+          "def": {
+            "primitive": "u128"
+          }
+        }
+      },
+      {
+        "id": 14,
+        "type": {
+          "def": {
+            "primitive": "u64"
+          }
+        }
+      },
+      {
+        "id": 15,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 2
+            }
+          }
+        }
+      },
+      {
+        "id": 16,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 3
+            }
+          }
+        }
+      },
+      {
+        "id": 17,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 7,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 3
+            },
+            {
+              "name": "V",
+              "type": 6
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 18,
+        "type": {
+          "def": {
+            "tuple": [
+              2,
+              19
+            ]
+          }
+        }
+      },
+      {
+        "id": 19,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "Confirmed"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 2,
+                      "typeName": "u32"
+                    }
+                  ],
+                  "index": 1,
+                  "name": "ConfirmationsNeeded"
+                }
+              ]
+            }
+          },
+          "path": [
+            "multisig",
+            "multisig",
+            "ConfirmationStatus"
+          ]
+        }
+      },
+      {
+        "id": 20,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 6
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 21
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 6
+            },
+            {
+              "name": "E",
+              "type": 21
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 21,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "TransactionFailed"
+                }
+              ]
+            }
+          },
+          "path": [
+            "multisig",
+            "multisig",
+            "Error"
+          ]
+        }
+      },
+      {
+        "id": 22,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 12
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 21
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 12
+            },
+            {
+              "name": "E",
+              "type": 21
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 23,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 10
+            }
+          }
+        }
+      },
+      {
+        "id": 24,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 13
+            }
+          }
+        }
+      },
+      {
+        "id": 25,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 26
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 21
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 26
+            },
+            {
+              "name": "E",
+              "type": 21
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 26,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 12
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      }
+    ]
+  }
+}
