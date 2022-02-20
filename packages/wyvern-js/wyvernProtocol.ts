@@ -17,17 +17,17 @@ import '../interfaces/augment-types';
 import rpcs from '../orders/lib/rpcs.json'
 
 import {
-  AtomicizedReplacementEncoder,
-  ECSignature,
-  FunctionInputKind,
-  Network,
-  Order,
-  ReplacementEncoder,
-  SignedOrder,
-//   TransactionReceiptWithDecodedLogs,
-//   Web3Provider,
-  WyvernProtocolConfig,
-//   WyvernProtocolError,
+    AtomicizedReplacementEncoder,
+    ECSignature,
+    FunctionInputKind,
+    Network,
+    Order,
+    ReplacementEncoder,
+    SignedOrder,
+    //   TransactionReceiptWithDecodedLogs,
+    //   Web3Provider,
+    WyvernProtocolConfig,
+    //   WyvernProtocolError,
 } from './types'
 
 // import { schemas } from './schemas'
@@ -50,7 +50,7 @@ export class WyvernProtocol {
 
     public static MAX_UINT_256 = new BigNumber(2).pow(256).minus(1)
 
-    public wyvernExchange: WyvernExchangeContract
+    public wyvernExchange: any
 
     public wyvernProxyRegistry: WyvernProxyRegistryContract
 
@@ -61,7 +61,7 @@ export class WyvernProtocol {
     public wyvernAtomicizer: ContractPromise
 
     private provider: WsProvider
-    private api:ApiPromise
+    private api: ApiPromise
     // private _abiDecoder: AbiDecoder
 
     public static getExchangeContractAddress(network: Network): string {
@@ -193,17 +193,17 @@ export class WyvernProtocol {
     public static encodeReplacementPattern: ReplacementEncoder = (abi, replaceKind = FunctionInputKind.Replaceable, encodeToBytes = true): string => {
         const output: Buffer[] = []
         const data: Buffer[] = []
-        const dynamicOffset = abi.inputs.reduce((len, {type}) => {
+        const dynamicOffset = abi.inputs.reduce((len, { type }) => {
             const match = type.match(/\[(.+)\]$/)
             return len + (match ? parseInt(match[1], 10) * 32 : 32)
         }, 0)
         abi.inputs
-            .map(({kind, type, value}) => ({
+            .map(({ kind, type, value }) => ({
                 bitmask: kind === replaceKind ? 255 : 0,
                 type: ethABI.elementaryName(type),
                 value: value !== undefined ? value : WyvernProtocol.generateDefaultValue(type),
             }))
-            .reduce((offset, {bitmask, type, value}) => {
+            .reduce((offset, { bitmask, type, value }) => {
                 // The 0xff bytes in the mask select the replacement bytes. All other bytes are 0x00.
                 const cur = new Buffer(ethABI.encodeSingle(type, value).length).fill(bitmask)
                 if (ethABI.isDynamic(type)) {
@@ -234,7 +234,7 @@ export class WyvernProtocol {
         const doNotAllowReplaceByte = '0'
         /* Four bytes for method ID. */
         const maskArr: string[] = [doNotAllowReplaceByte, doNotAllowReplaceByte,
-        doNotAllowReplaceByte, doNotAllowReplaceByte]
+            doNotAllowReplaceByte, doNotAllowReplaceByte]
 
         const encodedUint256 = ethABI.encodeSingle(ethABI.elementaryName('uint256'), WyvernProtocol.generateDefaultValue('uint256'))
         const dataLocationSize = encodedUint256.length
@@ -281,10 +281,10 @@ export class WyvernProtocol {
         const ret = []
         /* Encode into bytes. */
         for (const char of mask) {
-          const byte = char === allowReplaceByte ? 255 : 0
-          const buf = Buffer.alloc(1)
-          buf.writeUInt8(byte, 0)
-          ret.push(buf)
+            const byte = char === allowReplaceByte ? 255 : 0
+            const buf = Buffer.alloc(1)
+            buf.writeUInt8(byte, 0)
+            ret.push(buf)
         }
         return '0x' + Buffer.concat(ret).toString('hex')
     }
@@ -304,40 +304,43 @@ export class WyvernProtocol {
      */
     public static generateDefaultValue = (type: string): any => {
         switch (type) {
-          case 'address':
-          case 'bytes20':
-            /* Null address is sometimes checked in transfer calls. */
-            // But we need to use 0x000 because bitwise XOR won't work if there's a 0 in the actual address, since it will be replaced as 1 OR 0 = 1
-            return '0x0000000000000000000000000000000000000000'
-          case 'bytes32':
-            return '0x0000000000000000000000000000000000000000000000000000000000000000'
-          case 'bool':
-            return false
-          case 'int':
-          case 'uint':
-          case 'uint8':
-          case 'uint16':
-          case 'uint32':
-          case 'uint64':
-          case 'uint256':
-            return 0
-          default:
-            throw new Error('Default value not yet implemented for type: ' + type)
+            case 'address':
+            case 'bytes20':
+                /* Null address is sometimes checked in transfer calls. */
+                // But we need to use 0x000 because bitwise XOR won't work if there's a 0 in the actual address, since it will be replaced as 1 OR 0 = 1
+                return '0x0000000000000000000000000000000000000000'
+            case 'bytes32':
+                return '0x0000000000000000000000000000000000000000000000000000000000000000'
+            case 'bool':
+                return false
+            case 'int':
+            case 'uint':
+            case 'uint8':
+            case 'uint16':
+            case 'uint32':
+            case 'uint64':
+            case 'uint256':
+                return 0
+            default:
+                throw new Error('Default value not yet implemented for type: ' + type)
         }
     }
 
-    constructor(provider: WsProvider,api:ApiPromise, config: WyvernProtocolConfig) {
-        this.provider=provider;
-        this.api=api;
+    constructor(provider: WsProvider, api: ApiPromise, config: WyvernProtocolConfig) {
+        this.provider = provider;
+        this.api = api;
         // assert.isWeb3Provider('provider', provider)
         // // assert.doesConformToSchema('config', config, wyvernProtocolConfigSchema)
         // this._web3Wrapper = new Web3Wrapper(provider, { gasPrice: config.gasPrice })
-        
+
         // const exchangeContractAddress = config.wyvernExchangeContractAddress || WyvernProtocol.getExchangeContractAddress(config.network)
         // this.wyvernExchange = new WyvernExchangeContract(
         //     this._web3Wrapper.getContractInstance((constants.EXCHANGE_ABI as any), exchangeContractAddress),
         //     {},
         // )
+        if (api.tx != undefined) {
+            this.wyvernExchange = api.tx.wyvernExchange;
+        }
 
         // const proxyRegistryContractAddress = config.wyvernProxyRegistryContractAddress || WyvernProtocol.getProxyRegistryContractAddress(config.network)
         // this.wyvernProxyRegistry = new WyvernProxyRegistryContract(
@@ -356,12 +359,14 @@ export class WyvernProtocol {
         //     this._web3Wrapper.getContractInstance((constants.TOKEN_ABI as any), tokenContractAddress),
         //     {},
         // )
+            console.log(config.wyvernAtomicizerContractAddress, WyvernProtocol.getAtomicizerContractAddress(config.network))
+            const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
+            const mabi = new Abi(msigmetadata,this.api.registry != undefined? this.api.registry.getChainProperties():undefined);
+            this.wyvernAtomicizer = new ContractPromise(
+                this.api, mabi, atomicizerContractAddress,
+            )
+       
 
-        const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
-        const mabi = new Abi(msigmetadata, this.api.registry.getChainProperties());
-        this.wyvernAtomicizer = new ContractPromise(
-            this.api,mabi, atomicizerContractAddress,
-        )
     }
 
     /**
@@ -371,7 +376,7 @@ export class WyvernProtocol {
      * @param   networkId   The id of the network your provider is connected to
      */
     public setProvider(provider: WsProvider, networkId: number): void {
-        this.provider=provider;
+        this.provider = provider;
         // (this.wyvernExchange as any)._invalidateContractInstances();
         // (this.wyvernExchange as any)._setNetworkId(networkId);
         // (this.wyvernProxyRegistry as any)._invalidateContractInstance();

@@ -7,18 +7,19 @@ const replaceAddress="5CaRw9VCzZxtnaTjJzWw6NNwi4D9h3yur7akGybuG4wWXaJW";
 const replacePublicKey = decodeAddress(replaceAddress);
 const replaceHexPublicKey = u8aToHex(replacePublicKey);
 
+import {  ContractPromise, Abi } from '@polkadot/api-contract';
 
 import { BigNumber } from 'bignumber.js'
 import * as ethABI from 'ethereumjs-abi'
-import { WyvernProtocol } from '../../wyvern-js/src/WyvernProtocol'
-import { HowToCall, ReplacementEncoder, Network } from '../../wyvern-js/src/types'
-// import { WyvernAtomicizerContract } from 'wyvern-js/src/abi_gen/wyvern_atomicizer'
+import { WyvernProtocol } from '../../wyvern-js/WyvernProtocol'
+import { HowToCall, ReplacementEncoder, Network } from '../../wyvern-js/types'
+// import { WyvernAtomicizerContract } from 'wyvern-js/abi_gen/wyvern_atomicizer'
 
 import {
   AnnotatedFunctionABI,
   FunctionInputKind,
   Schema,
-} from '../../wyvern-schemas/src/types'
+} from '../../wyvern-schemas/types'
 // export { AbiType } from '../../lib/wyvern-schemas'
 import { WyvernAsset, OrderSide } from '../types'
 import { proxyAssertABI, proxyABI } from '../abi/Proxy'
@@ -228,7 +229,7 @@ export function encodeProxyCall(address: string, howToCall: HowToCall, calldata:
 
 // Helpers for atomicizer
 
-function encodeAtomicizedCalldata(atomicizer: WyvernAtomicizerContract, schemas: Array<Schema<WyvernAsset>>, assets: WyvernAsset[], address: string, side: OrderSide) {
+function encodeAtomicizedCalldata(atomicizer: ContractPromise, schemas: Array<Schema<WyvernAsset>>, assets: WyvernAsset[], address: string, side: OrderSide) {
 
   const encoder = side === OrderSide.Sell ? encodeSell : encodeBuy
 

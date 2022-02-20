@@ -13,7 +13,7 @@ export const deployed = {
         'WyvernProxyRegistry': '0xf57b2c51ded3a29e6891aba85459d600256cf317',
         'TestStatic': '0xc33a203d61c688433e53fcb6f3af7c6aa12192a4',
         'WyvernDAOProxy': '0x65cb6ea254f716ac9ffdf542994214dabf1c8aa2',
-        'WyvernAtomicizer': '0x613a12b156ffa304f714cc38d6ae5d3df70d8063',
+        'WyvernAtomicizer': '5DGNjGQtLZPTyi494xfsk1bAM8jQHS7EbaYqQkvcC3mN4tnf',
         'WyvernTokenTransferProxy': '0x82d102457854c985221249f86659c9d6cf12aa72',
     },
     'development': {
@@ -30,7 +30,7 @@ export const deployed = {
         'WyvernProxyRegistry': '0x63d07b80aa7c31c2b8964da4d93a9c01e430dd93',
         'TestStatic': '0x29dd72597101f211fbfe4ea79b431987a0a005f1',
         'WyvernDAOProxy': '0xccc08fc4e4e897369182edc14acc7c0a6b7abf90',
-        'WyvernAtomicizer': '0xb39dc0b3cdb7dff704be3e8620eb184a666dd330',
+        'WyvernAtomicizer': '5DGNjGQtLZPTyi494xfsk1bAM8jQHS7EbaYqQkvcC3mN4tnf',
         'WyvernTokenTransferProxy': '0x952f05f78209932e47ecebf900b22c15830eac4e',
     },
     'main': {

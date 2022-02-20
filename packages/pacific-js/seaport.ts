@@ -6,9 +6,9 @@ import { decodeAddress } from "@polkadot/util-crypto";
 
 //   const publicKey = decodeAddress(address);
 //   const hexPublicKey = u8aToHex(publicKey);
-const replaceAddress="5CaRw9VCzZxtnaTjJzWw6NNwi4D9h3yur7akGybuG4wWXaJW";
-const replacePublicKey = decodeAddress(replaceAddress);
-const replaceHexPublicKey = u8aToHex(replacePublicKey);
+// const replaceAddress="5CaRw9VCzZxtnaTjJzWw6NNwi4D9h3yur7akGybuG4wWXaJW";
+// const replacePublicKey = decodeAddress(replaceAddress);
+// const replaceHexPublicKey = u8aToHex(replacePublicKey);
 
 import { submit } from '../orders/lib/submit-signed-tx'
 import { createType } from '@polkadot/types';
@@ -16,9 +16,9 @@ import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
 import '../interfaces/augment-types';
 import { CodePromise, ContractPromise, Abi } from '@polkadot/api-contract';
-const erc20metadata = require("./abisv2/erc20/metadata.json");
-const erc721metadata = require("./abisv2/erc721/metadata.json");
-const msigmetadata = require("./abisv2/multisig/metadata.json");
+// const ERC20 = require("./abisv2/erc20/metadata.json");
+// const erc721metadata = require("./abisv2/erc721/metadata.json");
+// const msigmetadata = require("./abisv2/multisig/metadata.json");
 import { createTestKeyring } from "@polkadot/keyring/testing";
 const keyring = createTestKeyring({ type: "sr25519" });
 import BN from "bn.js";
@@ -28,9 +28,9 @@ import BN from "bn.js";
 // const rpc = { ...rpcs }
 import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../orders/order'
 
-import { WyvernProtocol } from '../wyvern-js/src/wyvernProtocol'
-import * as WyvernSchemas from '../wyvern-schemas/src/index'
-// import { Schema } from 'wyvern-schemas/src/types'
+import { WyvernProtocol } from '../wyvern-js/wyvernProtocol'
+import * as WyvernSchemas from '../wyvern-schemas/index'
+// import { Schema } from 'wyvern-schemas/types'
 import * as _ from 'lodash'
 import { OpenSeaAPI } from './api'
 
@@ -113,30 +113,15 @@ import {
 const ExchangeContractAddress = ""
 const AtomicizerContractAddress = ""// target
 
-import { createApiAndTestAccounts, saveNonce, sleepMs } from '../api/test/helpers/apiHelper'
-const salary = 100_000_000_000_000;
-let users: any;
-async function init(provider: WsProvider): Promise<{ api: ApiPromise; accounts: any }> {
-    const papi = await createApiAndTestAccounts(provider);
-    const api = papi.api;
-    const accounts = papi.accounts;
-    users = papi.users;
-    await provider.connect();
-    // const provider = papi.provider;
-    // submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
-    // submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
-
-    return { api, accounts };
-
-}
-let buy: any = ""
+// let buy: any = ""
 export class OpenSeaPort {
     public accounts: any = "";
     // ApiPromise instance to use
     public papi: any = "";//new ApiPromise({})
-    public apip: any = "";//new ApiPromise({})
-    public apipReadOnly: any = "";// new ApiPromise({})
+    public apiPro: any = "";//new ApiPromise({})
+    public apiProReadOnly: any = "";// new ApiPromise({})
     public provider: WsProvider
+    public readonlyProvider: WsProvider
     // Logger function to use when debugging
     public logger: (arg: string) => void
     // API instance on this seaport
@@ -147,8 +132,8 @@ export class OpenSeaPort {
     public gasIncreaseFactor = DEFAULT_GAS_INCREASE_FACTOR
 
     private _networkName: Network
-    private _wyvernProtocol: any
-    private _wyvernProtocolReadOnly: any
+    private _wyvernProtocol: WyvernProtocol
+    private _wyvernProtocolReadOnly: WyvernProtocol
     // private _emitter: EventEmitter
     //   private _wrappedNFTFactoryAddress: string
     //   private _wrappedNFTLiquidationProxyAddress: string
@@ -163,7 +148,7 @@ export class OpenSeaPort {
      * @param logger logger, optional, a function that will be called with debugging
      *  information
      */
-    constructor(provider: WsProvider, apiConfig: OpenSeaAPIConfig = {}, logger?: (arg: string) => void) {
+    constructor(provider: WsProvider, api: ApiPromise, apiConfig: OpenSeaAPIConfig = {}, logger?: (arg: string) => void) {
 
         // API config
         apiConfig.networkName = apiConfig.networkName || Network.Main
@@ -172,6 +157,7 @@ export class OpenSeaPort {
 
         this._networkName = apiConfig.networkName
         this.provider = provider;
+        this.readonlyProvider = provider;
         //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
         // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
         //   const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -179,16 +165,27 @@ export class OpenSeaPort {
         //  })
         // const readonlyProvider = provider// this._networkName == Network.Main ? MAINNET_PROVIDER_URL : DEV_PROVIDER_URL)
         // ApiPromise Config
-
+        this.apiPro = api;
+        this.apiProReadOnly = api;
         // this.apip = new ApiPromise({ provider })
-        // this.apipReadOnly = new ApiPromise({ provider: readonlyProvider })
+        // this.apiProReadOnly = new ApiPromise({ provider: readonlyProvider })
         // this.api.apip = this.apip
         // // WyvernJS config
         // this._wyvernProtocol = this.apip.tx;
 
         // // WyvernJS config for readonly
-        // this._wyvernProtocolReadOnly = this.apipReadOnly.rpc;
+        // this._wyvernProtocolReadOnly = this.apiProReadOnly.rpc;
+        // WyvernJS config
+        this._wyvernProtocol = new WyvernProtocol(provider, api, {
+            network: this._networkName,
+            gasPrice: apiConfig.gasPrice,
+        })
 
+        // WyvernJS config for readonly (optimization for infura calls)
+        this._wyvernProtocolReadOnly = new WyvernProtocol(this.readonlyProvider, api, {
+            network: this._networkName,
+            gasPrice: apiConfig.gasPrice,
+        })
         // // WrappedNFTLiquidationProxy Config
         // this._wrappedNFTFactoryAddress = this._networkName == Network.Main ? WRAPPED_NFT_FACTORY_ADDRESS_MAINNET : WRAPPED_NFT_FACTORY_ADDRESS_DEV
         // this._wrappedNFTLiquidationProxyAddress = this._networkName == Network.Main ? WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_MAINNET : WRAPPED_NFT_LIQUIDATION_PROXY_ADDRESS_DEV
@@ -211,20 +208,21 @@ export class OpenSeaPort {
         await this.provider.disconnect();
     }
     public async apipro() {
-        const papi = await init(this.provider);
-        this.accounts = papi.accounts;
-        // this.provider = papi.provider;
+        // const papi = await init(this.provider);
+        // this.accounts = papi.accounts;
+        // // this.provider = papi.provider;
 
-        buy = makeOrder(users.bob.key.address, true, 0);
-        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = this.accounts.slice(0, 7);
-        // console.log(buy)
-        this._wyvernProtocol = papi.api.tx;
-        this._wyvernProtocolReadOnly = papi.api.rpc;
-        this.apip = papi.api.tx;
-        this.apipReadOnly = papi.api.rpc;
-        this.papi = papi.api;
+        // // buy = makeOrder(users.bob.key.address, true, 0);
+        // // [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = this.accounts.slice(0, 7);
+        // // // console.log(buy)
+        // this._wyvernProtocol = papi.api.tx;
+        // this._wyvernProtocolReadOnly = papi.api.rpc;
+        // this.apip = papi.api.tx;
+        // this.apiProReadOnly = papi.api.rpc;
+        // this.apiPro = papi.api;
+
         // this.apip = await ApiPromise.create({ provider:this.provider })
-        // this.apipReadOnly = await ApiPromise.create({ provider: this.provider })
+        // this.apiProReadOnly = await ApiPromise.create({ provider: this.provider })
         // const provider = new WsProvider('ws://127.0.0.1:9944/');
         // const rpc = { ...rpcs };
         // extract all types from definitions - fast and dirty approach, flatted on 'types'
@@ -244,54 +242,7 @@ export class OpenSeaPort {
         // ]);
         // this.api.apip = this.apip
     }
-    public getOrderP(order: UnhashedOrder) {
-        // console.log(order)
-        // let a = this.accounts;
-        // order.exchange = a[0];
-        // order.maker = a[1];
-        // order.taker = a[2];
-        // order.feeRecipient = a[3];
-        // order.target = a[4];
-        // order.staticTarget = a[5];
-        // order.paymentToken = a[6];
-        const accounts = this.accounts.slice(0, 7);
-        return {
-            exchange: accounts[0],
-            maker: accounts[1],
-            taker: accounts[1],
-            makerRelayerFee: order.makerRelayerFee.toNumber(),
-            takerRelayerFee: order.makerRelayerFee.toNumber(),
-            makerProtocolFee: order.makerRelayerFee.toNumber(),
-            takerProtocolFee: order.makerRelayerFee.toNumber(),
-            feeRecipient: accounts[0],
-            feeMethod: order.feeMethod,
-            side: order.side,
-            saleKind: order.saleKind,
-            target: "5DGNjGQtLZPTyi494xfsk1bAM8jQHS7EbaYqQkvcC3mN4tnf",
-            howToCall: order.howToCall,
-            calldata: order.calldata,
-            replacementPattern: order.replacementPattern,
-            staticTarget: accounts[0],
-            staticExtradata: order.staticExtradata,
-            paymentToken: accounts[0],
-            basePrice: order.basePrice.toNumber() / Number(1000000000),
-            extra: order.extra.toNumber(),
-            listingTime: order.listingTime.toNumber(),
-            expirationTime: order.expirationTime.toNumber(),
-            salt: 0
-        }
-    }
-    public wyvernProtocol(): any {
-        // WyvernJS config
-        this._wyvernProtocol = this.apip.tx
-        return this._wyvernProtocol
-    }
 
-    public wyvernProtocolReadOnly(): any {
-        // WyvernJS config for readonly
-        this._wyvernProtocolReadOnly = this.apipReadOnly.rpc
-        return this._wyvernProtocolReadOnly
-    }
     /**
      * Add a listener to a marketplace event
      * @param event An event to listen for
@@ -1096,11 +1047,11 @@ export class OpenSeaPort {
     ) {
 
         this._dispatch(EventType.CancelOrder, { order, accountAddress })
-
+        const accountPair = keyring.getPair(accountAddress);
         // const gasPrice = await this._computeGasPrice()
-        const transactionHash = submit(this.apip, this._wyvernProtocol.wyvernExchange.cancelOrderEx(
+        const transactionHash = this._wyvernProtocol.wyvernExchange.cancelOrderEx(
             [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
-            [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
             order.feeMethod,
             order.side,
             order.saleKind,
@@ -1108,7 +1059,7 @@ export class OpenSeaPort {
             order.calldata,
             order.replacementPattern,
             order.staticExtradata,
-            order.v), users().bob)
+            order.v).signAndSend(accountPair)
 
         await this._confirmTransaction(transactionHash.toString(), EventType.CancelOrder, "Cancelling order", async () => {
             const isOpen = await this._validateOrder(order)
@@ -1165,12 +1116,12 @@ export class OpenSeaPort {
         }
         const accountPair = keyring.getPair(accountAddress);
 
-        const mabi = new Abi(tokenAbi, this.papi.registry.getChainProperties());
-        const contract = new ContractPromise(this.papi, mabi, tokenAddress);
+        const erc20abi = new Abi(tokenAbi, this.apiPro.registry.getChainProperties());
+        const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
         const approvalAllCheck = async () => {
             // NOTE:
             // Use this long way of calling so we can check for method existence on a bool-returning method.
-            // const isApprovedForAllRaw = await rawCall(this.apipReadOnly, {
+            // const isApprovedForAllRaw = await rawCall(this.apiProReadOnly, {
             //     from: accountAddress,
             //     to: contract.address,
             //     data: contract.isApprovedForAll.getData(accountAddress, proxyAddress)
@@ -1357,8 +1308,8 @@ export class OpenSeaPort {
         {
             // Perform the actual read (no params at the end, for the `get` message)
             // (We perform the send from an account, here using Alice's address)
-            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-            const contract = new ContractPromise(this.papi, mabi, tokenAddress);
+            const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
+            const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
             // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
 
             let { gasConsumed, result, output } = await contract.query.approve(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, approvedAmount);
@@ -1379,8 +1330,8 @@ export class OpenSeaPort {
         {
             // Perform the actual read (no params at the end, for the `get` message)
             // (We perform the send from an account, here using Alice's address)
-            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-            const contract = new ContractPromise(this.papi, mabi, tokenAddress);
+            const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
+            const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
             // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
             const fromPair = keyring.getPair(accountAddress);
             console.log(accountAddress, '====nonce===', nonce.toString());
@@ -1465,26 +1416,16 @@ export class OpenSeaPort {
      * @param order The order to calculate the price for
      */
     public async getCurrentPrice(order: Order) {
-        let orderp = this.getOrderP(order);
-        // console.log("====getCurrentPrice=====", [orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-        //     [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-        //     orderp.feeMethod,
-        //     orderp.side,
-        //     orderp.saleKind,
-        //     orderp.howToCall,
-        //     orderp.calldata,
-        //     orderp.replacementPattern,
-        //     orderp.staticExtradata)
         const currentPrice = await this._wyvernProtocolReadOnly.wyvernExchange.calculateCurrentPriceEx(
-            [orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-            orderp.feeMethod,
-            orderp.side,
-            orderp.saleKind,
-            orderp.howToCall,
-            orderp.calldata,
-            orderp.replacementPattern,
-            orderp.staticExtradata
+            [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata
         )
         return currentPrice
     }
@@ -1577,8 +1518,8 @@ export class OpenSeaPort {
             {
                 // Perform the actual read (no params at the end, for the `get` message)
                 // (We perform the send from an account, here using Alice's address)
-                const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-                const contract = new ContractPromise(this.papi, mabi, abi.target);
+                const erc20abi = new Abi(, this.apiPro.registry.getChainProperties());
+                const contract = new ContractPromise(this.apiPro, erc20abi, abi.target);
                 // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
 
                 let { gasConsumed, result, output } = await contract.query.transfer(fromAddress, { value: 0, gasLimit: -1 }, toAddress, quantity);
@@ -1664,16 +1605,13 @@ export class OpenSeaPort {
         //     this._dispatch(EventType.TransactionDenied, { error, accountAddress: fromAddress })
         // })
         const inputValues = abi.inputs.filter(x => x.value !== undefined).map(x => x.value)
+        const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
+        const contract = new ContractPromise(this.apiPro, erc20abi, abi.target);
+        const fromPair = keyring.getPair(fromAddress);
 
         let txHash;
         let gas;
         {
-            // Perform the actual read (no params at the end, for the `get` message)
-            // (We perform the send from an account, here using Alice's address)
-            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-            const contract = new ContractPromise(this.papi, mabi, abi.target);
-            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
-
             let { gasConsumed, result, output } = await contract.query.transfer(fromAddress, { value: 0, gasLimit: -1 }, toAddress, ...inputValues);
             // The actual result from RPC as `ContractExecResult`
             console.log(result.toHuman());
@@ -1690,12 +1628,6 @@ export class OpenSeaPort {
             }
         }
         {
-            // Perform the actual read (no params at the end, for the `get` message)
-            // (We perform the send from an account, here using Alice's address)
-            const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-            const contract = new ContractPromise(this.papi, mabi, abi.target);
-            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
-            const fromPair = keyring.getPair(fromAddress);
             let result = await contract.tx.transfer({ value: 0, gasLimit: gas }, toAddress, ...inputValues).signAndSend(fromPair);
             // The actual result from RPC as `ContractExecResult`
             console.log(result.toHuman());
@@ -1765,10 +1697,10 @@ export class OpenSeaPort {
 
         this._dispatch(EventType.TransferAll, { accountAddress: fromAddress, toAddress, assets: wyAssets })
         let gas;
-        const mabi = new Abi(msigmetadata, this.papi.registry.getChainProperties());
-        const contract = new ContractPromise(this.papi, mabi, target);
+        // const erc20abi = new Abi(msigmetadata, this.apiPro.registry.getChainProperties());
+        // const contract = new ContractPromise(this.apiPro, erc20abi, target);
         {
-            let { gasConsumed, result, output } = await contract.query.atomicTransaction(fromAddress, { value: 0, gasLimit: -1 }, ...atomicizedCalldata);
+            let { gasConsumed, result, output } = await this._wyvernProtocol.wyvernAtomicizer.query.atomicTransaction(fromAddress, { value: 0, gasLimit: -1 }, ...atomicizedCalldata);
             console.log(result.toHuman());
             gas = new BN(gasConsumed.toString());
             console.log(gasConsumed.toHuman());
@@ -1780,7 +1712,7 @@ export class OpenSeaPort {
             }
         }
         {
-            let result = await contract.tx.atomicTransaction({ value: 0, gasLimit: gas }, ...atomicizedCalldata).signAndSend(fromPair);
+            let result = await this._wyvernProtocol.wyvernAtomicizer.tx.atomicTransaction({ value: 0, gasLimit: gas }, ...atomicizedCalldata).signAndSend(fromPair);
             console.log(result.toHuman());
             txHash = result.toString();
         }
@@ -1827,11 +1759,11 @@ export class OpenSeaPort {
         console.log(this._networkName, "=====_networkName======", target)
         const atomicizedCalldata = [selectors[0], transactions.map((t: any) => t.tx), fromAddress, toAddress, transactions.map((t: any) => t.value)
         ]
-        const mabi = new Abi(msigmetadata, this.papi.registry.getChainProperties());
-        const contract = new ContractPromise(this.papi, mabi, target);
+        // const erc20abi = new Abi(msigmetadata, this.apiPro.registry.getChainProperties());
+        // const contract = new ContractPromise(this.apiPro, erc20abi, target);
 
         console.log(...atomicizedCalldata)
-        return contract.tx.atomicTransaction({ value: 0, gasLimit: -1 }, ...atomicizedCalldata).toHex();
+        return this._wyvernProtocol.wyvernAtomicizer.tx.atomicTransaction({ value: 0, gasLimit: -1 }, ...atomicizedCalldata).toHex();
     }
 
     /**
@@ -1864,8 +1796,8 @@ export class OpenSeaPort {
             {
                 // Perform the actual read (no params at the end, for the `get` message)
                 // (We perform the send from an account, here using Alice's address)
-                const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-                const contract = new ContractPromise(this.papi, mabi, abi.target);
+                const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
+                const contract = new ContractPromise(this.apiPro, erc20abi, abi.target);
                 // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
 
                 let { gasConsumed, result, output } = await contract.query.balanceOf(accountAddress, { value: 0, gasLimit: -1 }, accountAddress);
@@ -1903,8 +1835,8 @@ export class OpenSeaPort {
             {
                 // Perform the actual read (no params at the end, for the `get` message)
                 // (We perform the send from an account, here using Alice's address)
-                const mabi = new Abi(erc721metadata, this.papi.registry.getChainProperties());
-                const contract = new ContractPromise(this.papi, mabi, abi.target);
+                const erc721abi = new Abi(ERC721, this.apiPro.registry.getChainProperties());
+                const contract = new ContractPromise(this.apiPro, erc721abi, abi.target);
                 // const address = "5FkmJ5zuMvqSGau2AGrwyz2ensv4ge6VHP2d8KenFpUXEEkJ";
                 console.log(abi.target, "inputValues=================", ...inputValues)
                 const id = 1;
@@ -2075,7 +2007,7 @@ export class OpenSeaPort {
     public async validateAndPostOrder(order: Order): Promise<Order> {
         const hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashOrderEx(
             [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
-            [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
             order.feeMethod,
             order.side,
             order.saleKind,
@@ -2153,28 +2085,52 @@ export class OpenSeaPort {
         //   weight=${info.weight.toString()},
         //   partialFee=${info.partialFee.toHuman()}
         // `);
+        let accountPair = keyring.getPair(buy.maker);
+        const sell_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
+            [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+            [sell.makerRelayerFee.toNumber(), sell.takerRelayerFee.toNumber(), sell.makerProtocolFee.toNumber(), sell.takerProtocolFee.toNumber(), sell.basePrice.toNumber() / Number(1000000000), sell.extra.toNumber(), sell.listingTime.toNumber(), sell.expirationTime.toNumber(), sell.salt.toNumber()],
+            sell.feeMethod,
+            sell.side,
+            sell.saleKind,
+            sell.howToCall,
+            sell.calldata,
+            sell.replacementPattern,
+            sell.staticExtradata);
+        const buy_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+            [buy.makerRelayerFee.toNumber(), buy.takerRelayerFee.toNumber(), buy.makerProtocolFee.toNumber(), buy.takerProtocolFee.toNumber(), buy.basePrice.toNumber() / Number(1000000000), buy.extra.toNumber(), buy.listingTime.toNumber(), buy.expirationTime.toNumber(), buy.salt.toNumber()],
+            buy.feeMethod,
+            buy.side,
+            buy.saleKind,
+            buy.howToCall,
+            buy.calldata,
+            buy.replacementPattern,
+            buy.staticExtradata);
+
+        // let buy_sig = users.betty.key.sign(buy_hash, { withType: true });
+        // let sell_sig = users.betty.key.sign(sell_hash, { withType: true });
+        const buyPair = keyring.getPair(buy.maker);
+        const buy_sig = buyPair.sign(buy_hash);
+        const sellPair = keyring.getPair(sell.maker);
+        const sell_sig = sellPair.sign(sell_hash);
+        const args: any = [
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target,
+            buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+            [buy.makerRelayerFee.toNumber(), buy.takerRelayerFee.toNumber(), buy.makerProtocolFee.toNumber(), buy.takerProtocolFee.toNumber(), buy.basePrice.toNumber() / Number(1000000000), buy.extra.toNumber(), buy.listingTime.toNumber(), buy.expirationTime.toNumber(), buy.salt.toNumber(), sell.makerRelayerFee.toNumber(), sell.takerRelayerFee.toNumber(), sell.makerProtocolFee.toNumber(), sell.takerProtocolFee.toNumber(), sell.basePrice.toNumber() / Number(1000000000), sell.extra.toNumber(), sell.listingTime.toNumber(), sell.expirationTime.toNumber(), sell.salt.toNumber()],
+            [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
+            buy.calldata,
+            sell.calldata,
+            buy.replacementPattern,
+            sell.replacementPattern,
+            buy.staticExtradata,
+            sell.staticExtradata,
+            u8aToHex(buy_sig), u8aToHex(sell_sig),
+            '0x0000000000000000000000000000000000000000000000000000000000000000'
+        ]
         try {
-            const info = await this._getClientsForRead(retries).wyvernProtocol.wyvernExchange.atomicMatchEx(
-                [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
-                [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
-                [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
-                buy.calldata,
-                sell.calldata,
-                buy.replacementPattern,
-                sell.replacementPattern,
-                buy.staticExtradata,
-                sell.staticExtradata,
-                [
-                    buy.v || 0,
-                    sell.v || 0
-                ],
-                [
-                    buy.r || NULL_BLOCK_HASH,
-                    buy.s || NULL_BLOCK_HASH,
-                    sell.r || NULL_BLOCK_HASH,
-                    sell.s || NULL_BLOCK_HASH,
-                    metadata
-                ]).paymentInfo(users().bob)
+            const info = await this._getClientsForRead(retries).wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
+                args[1], args[2], args[3], args[4], args[5],
+                args[6], args[7], args[8], args[9], args[10], args[11]).paymentInfo(accountPair)
             const partialFee = Number(`${info.partialFee.toHuman()}`)
             return partialFee
         } catch (error) {
@@ -2234,8 +2190,8 @@ export class OpenSeaPort {
      * @param retries Optional number of retries to do
      */
     public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
-        // console.log(this.papi.query)
-        let proxyAddress: string | null = "5GzQ8YbeH5KBdHFnF9VHrsxKf5ZAR9iSSddHoaAuFjmVia4H";// = await this.papi.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
+        // console.log(this.apiPro.query)
+        let proxyAddress: string | null = "5GzQ8YbeH5KBdHFnF9VHrsxKf5ZAR9iSSddHoaAuFjmVia4H";// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
         if (proxyAddress == '0x') {
             throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
@@ -2306,8 +2262,8 @@ export class OpenSeaPort {
             tokenAddress = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address
         }
         const addressToApprove = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
-        const mabi = new Abi(erc20metadata, this.papi.registry.getChainProperties());
-        const contract = new ContractPromise(this.papi, mabi, tokenAddress);
+        const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
+        const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
         let { result } = await contract.query.allowance(accountAddress, { value: 0, gasLimit: -1 }, accountAddress, addressToApprove);
 
         // The actual result from RPC as `ContractExecResult`
@@ -2952,20 +2908,18 @@ export class OpenSeaPort {
             // await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
         }
 
-        let orderp = this.getOrderP(order);
-
         // Check sell parameters
-        const sellValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-            orderp.feeMethod,
-            orderp.side,
-            orderp.saleKind,
-            orderp.howToCall,
-            orderp.calldata,
-            orderp.replacementPattern,
-            orderp.staticExtradata)
+        const sellValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata)
         if (!sellValid) {
-            console.error(orderp)
+            console.error(order)
             throw new Error(`Failed to validate sell order parameters. Make sure you're on the right network!`)
         }
     }
@@ -2982,8 +2936,8 @@ export class OpenSeaPort {
         const includeInOrderBook = true
 
         this._dispatch(EventType.ApproveOrder, { order, accountAddress })
-
-        const transactionHash = submit(this.apip, this._wyvernProtocol.wyvernExchange.approveOrderEx(
+        let accountPair = keyring.getPair(accountAddress)
+        const transactionHash = this._wyvernProtocol.wyvernExchange.approveOrderEx(
             [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
             [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
             order.feeMethod,
@@ -2994,7 +2948,7 @@ export class OpenSeaPort {
             order.replacementPattern,
             order.staticExtradata,
             includeInOrderBook
-        ), users().bob)
+        ).signAndSend(accountPair)
 
         await this._confirmTransaction(transactionHash.toString(), EventType.ApproveOrder, "Approving order", async () => {
             const isApproved = await this._validateOrder(order)
@@ -3005,32 +2959,31 @@ export class OpenSeaPort {
     }
 
     public async _validateOrder(order: Order): Promise<boolean> {
-        const orderp = this.getOrderP(order);
         const order_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
-            [orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-            orderp.feeMethod,
-            orderp.side,
-            orderp.saleKind,
-            orderp.howToCall,
-            orderp.calldata,
-            orderp.replacementPattern,
-            orderp.staticExtradata);
+            [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata);
 
-        const fromPair = keyring.getPair(orderp.maker);
+        const fromPair = keyring.getPair(order.maker);
         // console.log("=====fromPair=============",fromPair)
         const order_sig = fromPair.sign(order_hash);
 
         const isValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderEx(
-            [orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-            orderp.feeMethod,
-            orderp.side,
-            orderp.saleKind,
-            orderp.howToCall,
-            orderp.calldata,
-            orderp.replacementPattern,
-            orderp.staticExtradata,
+            [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata,
             order_sig)
 
         return isValid
@@ -3053,7 +3006,7 @@ export class OpenSeaPort {
         }
         const contractsWithApproveAll: Set<string> = new Set()
         const fromPair = keyring.getPair(accountAddress);
-        const nonces = await this.papi.rpc.system.accountNextIndex(fromPair.address)
+        const nonces = await this.apiPro.rpc.system.accountNextIndex(fromPair.address)
         return Promise.all(wyAssets.map(async (wyAsset, i) => {
             const schemaName = schemaNames[i]
             // Verify that the taker owns the asset
@@ -3153,28 +3106,17 @@ export class OpenSeaPort {
             // await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
         }
 
-        let orderp = this.getOrderP(order);
-        // console.log(orderp, [orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-        //     [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-        //     orderp.feeMethod,
-        //     orderp.side,
-        //     orderp.saleKind,
-        //     orderp.howToCall,
-        //     orderp.calldata,
-        //     orderp.replacementPattern,
-        //     orderp.staticExtradata)
-        // Check orderp formation
-        const buyValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([orderp.exchange, orderp.maker, orderp.taker, orderp.feeRecipient, orderp.target, orderp.staticTarget, orderp.paymentToken],
-            [orderp.makerRelayerFee, orderp.takerRelayerFee, orderp.makerProtocolFee, orderp.takerProtocolFee, orderp.basePrice, orderp.extra, orderp.listingTime, orderp.expirationTime, orderp.salt],
-            orderp.feeMethod,
-            orderp.side,
-            orderp.saleKind,
-            orderp.howToCall,
-            orderp.calldata,
-            orderp.replacementPattern,
-            orderp.staticExtradata)
+        const buyValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata)
         if (!buyValid) {
-            console.error(orderp)
+            console.error(order)
             throw new Error(`Failed to validate buy order parameters. Make sure you're on the right network!`)
         }
     }
@@ -3467,50 +3409,47 @@ export class OpenSeaPort {
         await this._validateMatch({ buy, sell, accountAddress, shouldValidateBuy, shouldValidateSell })
 
         this._dispatch(EventType.MatchOrders, { buy, sell, accountAddress, matchMetadata: metadata })
-        let buyp = this.getOrderP(buy);
+        const sell_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
+            [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+            [sell.makerRelayerFee.toNumber(), sell.takerRelayerFee.toNumber(), sell.makerProtocolFee.toNumber(), sell.takerProtocolFee.toNumber(), sell.basePrice.toNumber() / Number(1000000000), sell.extra.toNumber(), sell.listingTime.toNumber(), sell.expirationTime.toNumber(), sell.salt.toNumber()],
+            sell.feeMethod,
+            sell.side,
+            sell.saleKind,
+            sell.howToCall,
+            sell.calldata,
+            sell.replacementPattern,
+            sell.staticExtradata);
+        const buy_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+            [buy.makerRelayerFee.toNumber(), buy.takerRelayerFee.toNumber(), buy.makerProtocolFee.toNumber(), buy.takerProtocolFee.toNumber(), buy.basePrice.toNumber() / Number(1000000000), buy.extra.toNumber(), buy.listingTime.toNumber(), buy.expirationTime.toNumber(), buy.salt.toNumber()],
+            buy.feeMethod,
+            buy.side,
+            buy.saleKind,
+            buy.howToCall,
+            buy.calldata,
+            buy.replacementPattern,
+            buy.staticExtradata);
 
-        const sellp = this.getOrderP(sell);
-        const sellp_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
-            [sellp.exchange, sellp.maker, sellp.taker, sellp.feeRecipient, sellp.target, sellp.staticTarget, sellp.paymentToken],
-            [sellp.makerRelayerFee, sellp.takerRelayerFee, sellp.makerProtocolFee, sellp.takerProtocolFee, sellp.basePrice, sellp.extra, sellp.listingTime, sellp.expirationTime, sellp.salt],
-            sellp.feeMethod,
-            sellp.side,
-            sellp.saleKind,
-            sellp.howToCall,
-            sellp.calldata,
-            sellp.replacementPattern,
-            sellp.staticExtradata);
-        const buyp_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
-            [buyp.exchange, buyp.maker, buyp.taker, buyp.feeRecipient, buyp.target, buyp.staticTarget, buyp.paymentToken],
-            [buyp.makerRelayerFee, buyp.takerRelayerFee, buyp.makerProtocolFee, buyp.takerProtocolFee, buyp.basePrice, buyp.extra, buyp.listingTime, buyp.expirationTime, buyp.salt],
-            buyp.feeMethod,
-            buyp.side,
-            buyp.saleKind,
-            buyp.howToCall,
-            buyp.calldata,
-            buyp.replacementPattern,
-            buyp.staticExtradata);
-
-        // let buyp_sig = users.betty.key.sign(buyp_hash, { withType: true });
-        // let sellp_sig = users.betty.key.sign(sellp_hash, { withType: true });
-        const buypPair = keyring.getPair(buyp.maker);
-        const buyp_sig = buypPair.sign(buyp_hash);
-        const sellpPair = keyring.getPair(sellp.maker);
-        const sellp_sig = sellpPair.sign(sellp_hash);
+        // let buy_sig = users.betty.key.sign(buy_hash, { withType: true });
+        // let sell_sig = users.betty.key.sign(sell_hash, { withType: true });
+        const buyPair = keyring.getPair(buy.maker);
+        const buy_sig = buyPair.sign(buy_hash);
+        const sellPair = keyring.getPair(sell.maker);
+        const sell_sig = sellPair.sign(sell_hash);
         let txHash
         const txnData: any = { from: accountAddress, value }
         const args: any = [
-            [buyp.exchange, buyp.maker, buyp.taker, buyp.feeRecipient, buyp.target,
-            buyp.staticTarget, buyp.paymentToken, sellp.exchange, sellp.maker, sellp.taker, sellp.feeRecipient, sellp.target, sellp.staticTarget, sellp.paymentToken],
-            [buyp.makerRelayerFee, buyp.takerRelayerFee, buyp.makerProtocolFee, buyp.takerProtocolFee, buyp.basePrice, buyp.extra, buyp.listingTime, buyp.expirationTime, buyp.salt, sellp.makerRelayerFee, sellp.takerRelayerFee, sellp.makerProtocolFee, sellp.takerProtocolFee, sellp.basePrice, sellp.extra, sellp.listingTime, sellp.expirationTime, sellp.salt],
-            [buyp.feeMethod, buyp.side, buyp.saleKind, buyp.howToCall, sellp.feeMethod, sellp.side, sellp.saleKind, sellp.howToCall],
-            buyp.calldata,
-            sellp.calldata,
-            buyp.replacementPattern,
-            sellp.replacementPattern,
-            buyp.staticExtradata,
-            sellp.staticExtradata,
-            u8aToHex(buyp_sig), u8aToHex(sellp_sig),
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target,
+            buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+            [buy.makerRelayerFee.toNumber(), buy.takerRelayerFee.toNumber(), buy.makerProtocolFee.toNumber(), buy.takerProtocolFee.toNumber(), buy.basePrice.toNumber() / Number(1000000000), buy.extra.toNumber(), buy.listingTime.toNumber(), buy.expirationTime.toNumber(), buy.salt.toNumber(), sell.makerRelayerFee.toNumber(), sell.takerRelayerFee.toNumber(), sell.makerProtocolFee.toNumber(), sell.takerProtocolFee.toNumber(), sell.basePrice.toNumber() / Number(1000000000), sell.extra.toNumber(), sell.listingTime.toNumber(), sell.expirationTime.toNumber(), sell.salt.toNumber()],
+            [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
+            buy.calldata,
+            sell.calldata,
+            buy.replacementPattern,
+            sell.replacementPattern,
+            buy.staticExtradata,
+            sell.staticExtradata,
+            u8aToHex(buy_sig), u8aToHex(sell_sig),
             '0x0000000000000000000000000000000000000000000000000000000000000000'
         ]//WyvernAtomicMatchParameters
         // console.log(args)
@@ -3518,7 +3457,7 @@ export class OpenSeaPort {
         // try {
         //     // Typescript splat doesn't typecheck
         //     const gasEstimate = await this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7],
-        //         args[8], args[9], args[10], args[11]).paymentInfo(buypPair)
+        //         args[8], args[9], args[10], args[11]).paymentInfo(buyPair)
         //     const partialFee = Number(`${gasEstimate.partialFee.toHuman()}`)
 
         //     txnData.gasPrice = await this._computeGasPrice()
@@ -3533,16 +3472,15 @@ export class OpenSeaPort {
         try {
             //this.logger(`Fulfilling order with gas set to ${txnData.gas}`)
             //
-            const nonces = await this._wyvernProtocolReadOnly.system.accountNextIndex(buypPair.address)
+            const nonces = await this.apiPro.system.accountNextIndex(buyPair.address)
             console.log("========nonces=========", nonces.toString())
 
-            // txHash = submit(this.papi, this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
+            // txHash = submit(this.apiPro, this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
             //     args[1], args[2], args[3], args[4], args[5],
-            //     args[6], args[7], args[8], args[9], args[10], args[11]), buypPair,nonces)
+            //     args[6], args[7], args[8], args[9], args[10], args[11]), buyPair,nonces)
             txHash = await this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
                 args[1], args[2], args[3], args[4], args[5],
-                args[6], args[7], args[8], args[9], args[10], args[11]).signAndSend(buypPair);
-            txHash = ""
+                args[6], args[7], args[8], args[9], args[10], args[11]).signAndSend(buyPair);
         } catch (error) {
             console.error(error)
 
@@ -3618,17 +3556,17 @@ export class OpenSeaPort {
      */
     private _getClientsForRead(
         retries = 1
-    ): { apip: ApiPromise, wyvernProtocol: any } {
+    ): { apiPro: ApiPromise, wyvernProtocol: any } {
         if (retries > 0) {
             // Use injected provider by default
             return {
-                'apip': this.apip,
+                'apiPro': this.apiPro,
                 'wyvernProtocol': this._wyvernProtocol
             }
         } else {
             // Use provided provider as fallback
             return {
-                'apip': this.apipReadOnly,
+                'apiPro': this.apiProReadOnly,
                 'wyvernProtocol': this._wyvernProtocolReadOnly
             }
         }

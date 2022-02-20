@@ -13,7 +13,7 @@ import { Network, OrderJSON, OrderSide, Order, SaleKind, UnhashedOrder, Unsigned
 import { orderFromJSON, getOrderHash, estimateCurrentPrice, assignOrdersToSides, makeBigNumber } from '../../pacific-js/utils/utils'
 import * as ordersJSONFixture from '../fixtures/orders.json'
 import { BigNumber } from 'bignumber.js'
-import { ALICE_ADDRESS,EVE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID , WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
+import { ALICE_ADDRESS, EVE_ADDRESS, DIGITAL_ART_CHAIN_ADDRESS, DIGITAL_ART_CHAIN_TOKEN_ID, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, GODS_UNCHAINED_ADDRESS, CK_ADDRESS, CHARLIE_ADDRESS, ALICE_STASH_ADDRESS, GODS_UNCHAINED_TOKEN_ID, CK_TOKEN_ID, MAINNET_API_KEY, DEV_API_KEY, CK_DEV_ADDRESS, CK_DEV_TOKEN_ID, CATS_IN_MECHS_ID, BOB_ADDRESS, DISSOLUTION_TOKEN_ID, SANDBOX_DEV_ID, SANDBOX_DEV_ADDRESS, AGE_OF_RUST_TOKEN_ID, WDOT_ADDRESS, WDOT_ADDRESS2 } from '../constants'
 import { testFeesMakerOrder } from './fees.test'
 import {
     ENJIN_ADDRESS,
@@ -33,15 +33,33 @@ const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 const devProvider = new WsProvider('ws://127.0.0.1:9944/');
 
-const client = new OpenSeaPort(provider, {
-    networkName: Network.Main,
-    apiKey: MAINNET_API_KEY
-}, line => console.info(`MAINNET: ${line}`))
+import { createApiAndTestAccounts, saveNonce, sleepMs, init, getOrderP } from '../../api/test/helpers/apiHelper'
+let client: OpenSeaPort;
+let devClient: OpenSeaPort;
+(async function () {
+    // let apip = await init(provider);
+    // let api = apip.api;
+    // console.log("============================",api)
+    // client = new OpenSeaPort(provider, api, {
+    //     networkName: Network.Main,
+    //     apiKey: MAINNET_API_KEY
+    // }, line => console.info(`MAINNET: ${line}`))
 
-const devClient = new OpenSeaPort(devProvider, {
-    networkName: Network.Dev,
-    apiKey: DEV_API_KEY
-}, line => console.info(`DEV: ${line}`))
+    // devClient = new OpenSeaPort(devProvider, api, {
+    //     networkName: Network.Dev,
+    //     apiKey: DEV_API_KEY
+    // }, line => console.info(`DEV: ${line}`))
+})();
+
+// let client = new OpenSeaPort(provider,api, {
+//     networkName: Network.Main,
+//     apiKey: MAINNET_API_KEY
+// }, line => console.info(`MAINNET: ${line}`))
+
+// let  devClient = new OpenSeaPort(devProvider,api, {
+//     networkName: Network.Dev,
+//     apiKey: DEV_API_KEY
+// }, line => console.info(`DEV: ${line}`))
 
 const assetsForBundleOrder = [
     { tokenId: MYTHEREUM_TOKEN_ID.toString(), tokenAddress: MYTHEREUM_ADDRESS },
@@ -57,14 +75,26 @@ describe('seaport: orders', () => {
 
     beforeAll(async () => {
         jest.setTimeout(30000);
-        await client.apipro();
+    let apip = await init(provider);
+    let api = apip.api;
+    // console.log("============================",api)
+    client = new OpenSeaPort(provider, api, {
+        networkName: Network.Main,
+        apiKey: MAINNET_API_KEY
+    }, line => console.info(`MAINNET: ${line}`))
+
+    devClient = new OpenSeaPort(devProvider, api, {
+        networkName: Network.Dev,
+        apiKey: DEV_API_KEY
+    }, line => console.info(`DEV: ${line}`))
+        // await client.apipro();
         // daiAddress = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0].address
         // manaAddress = (await client.api.getPaymentTokens({ symbol: 'MANA' })).tokens[0].address
     })
     afterAll(async () => {
-        await provider.disconnect();
-        await devProvider.disconnect();
-        await client.closeProvider();
+        // await provider.disconnect();
+        // await devProvider.disconnect();
+        // await client.closeProvider();
         // jest.setTimeout(30000);
         // await client.apipro();
         // daiAddress = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0].address
@@ -279,7 +309,7 @@ describe('seaport: orders', () => {
         const accountAddress = ALICE_ADDRESS
         const takerAddress = ALICE_STASH_ADDRESS
         const amountInToken = 1.2
-        const paymentTokenAddress =WDOT_ADDRESS
+        const paymentTokenAddress = WDOT_ADDRESS
         const expirationTime = Math.round(Date.now() / 1000 + 60) // one minute from now
         const bountyPercent = 1.1
 
@@ -323,7 +353,7 @@ describe('seaport: orders', () => {
         const matcherAddress = CHARLIE_ADDRESS
         const now = Math.round(Date.now() / 1000)
         // Get bid from server
-        const paymentTokenAddress =WDOT_ADDRESS
+        const paymentTokenAddress = WDOT_ADDRESS
         const { orders } = await devClient.api.getOrders({
             side: OrderSide.Buy,
             asset_contract_address: CK_DEV_ADDRESS,
@@ -365,7 +395,7 @@ describe('seaport: orders', () => {
     it('Ensures buy order compatibility with an English sell order', async () => {
         const accountAddress = ALICE_STASH_ADDRESS
         const takerAddress = ALICE_ADDRESS
-        const paymentTokenAddress =WDOT_ADDRESS
+        const paymentTokenAddress = WDOT_ADDRESS
         const amountInToken = 0.01
         const expirationTime = Math.round(Date.now() / 1000 + 60 * 60 * 24) // one day from now
         const extraBountyBasisPoints = 1.1 * 100
@@ -411,7 +441,7 @@ describe('seaport: orders', () => {
     })
     ///TEST NEEDED
     it.skip("Creates ENS name buy order", async () => {
-        const paymentTokenAddress =WDOT_ADDRESS
+        const paymentTokenAddress = WDOT_ADDRESS
         const buyOrder = await devClient._makeBuyOrder({
             asset: {
                 tokenId: ENS_HELLO_TOKEN_ID,
@@ -538,7 +568,7 @@ describe('seaport: orders', () => {
     it('Matches a buy order of an 1155 item for W-ETH', async () => {
         const accountAddress = ALICE_STASH_ADDRESS
         const takerAddress = ALICE_ADDRESS
-        const paymentToken =WDOT_ADDRESS
+        const paymentToken = WDOT_ADDRESS
         const amountInToken = 0.01
 
         const tokenId = DISSOLUTION_TOKEN_ID
@@ -769,7 +799,7 @@ describe('seaport: orders', () => {
     ///TEST NEEDED
     it('Matches a buy order and estimates gas on fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
-        const takerAddress = ALICE_ADDRESS 
+        const takerAddress = ALICE_ADDRESS
 
         const order = await client.api.getOrder({
             side: OrderSide.Buy,
@@ -787,10 +817,32 @@ describe('seaport: orders', () => {
         }
         await testMatchingOrder(order, takerAddress, true)
     })
-    
-    it.only('Matches a buy order and  fulfillment', async () => {
+
+    it.only('  cancel order', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
-        const accountAddress = ALICE_ADDRESS 
+        const accountAddress = ALICE_ADDRESS
+
+        let order = await client.api.getOrder({
+            side: OrderSide.Buy,
+            owner: accountAddress,
+            // Use a token that has already been approved via approve-all
+            asset_contract_address: DIGITAL_ART_CHAIN_ADDRESS
+        })
+        expect(order).not.toBeNull()
+        if (!order) {
+            return
+        }
+        expect(order.asset).not.toBeNull()
+        if (!order.asset) {
+            return
+        }
+        order = await getOrderP(order,[accountAddress])
+        await client.cancelOrder({ order, accountAddress })
+    })
+
+    it('Matches a buy order and  fulfillment', async () => {
+        // Need to use a taker who has created a proxy and approved W-ETH already
+        const accountAddress = ALICE_ADDRESS
 
         let order = await client.api.getOrder({
             side: OrderSide.Buy,
@@ -809,7 +861,7 @@ describe('seaport: orders', () => {
 
             return
         }
-        let calldata=await client.encodeTransferAll({
+        let calldata = await client.encodeTransferAll({
             assets: [{
                 tokenId: null,
                 tokenAddress: "5FedJTj4z2T9EqcqwGMsksMd2dc6fC7cxaeAm6fcE8ZXdqtP",
@@ -825,8 +877,8 @@ describe('seaport: orders', () => {
         })
         console.log(calldata)
         console.log(calldata.slice(calldata.indexOf("557efb0c")))
-        calldata="0x"+calldata.slice(calldata.indexOf("557efb0c"));
-        await client.fulfillOrder({order, accountAddress,calldata})
+        calldata = "0x" + calldata.slice(calldata.indexOf("557efb0c"));
+        await client.fulfillOrder({ order, accountAddress, calldata })
     })
 
     it('Matches a referred order via sell_orders and getAssets', async () => {

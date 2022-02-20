@@ -5,9 +5,9 @@ import {
   // Note: Wyvern SaleKind is wrong!
   ECSignature,
   Order as WyvernOrder
-} from '../wyvern-js/src/types'
+} from '../wyvern-js/types'
 
-import { Token } from '../wyvern-schemas/src/types'
+import { Token } from '../wyvern-schemas/types'
 
 export {
   Network,

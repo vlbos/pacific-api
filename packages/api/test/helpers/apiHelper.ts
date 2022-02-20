@@ -22,6 +22,59 @@ const registry = new TypeRegistry();
 let users: any = null;
 const salary = 100_000_000_000_000;
 
+export async function init(provider: WsProvider): Promise<{ api: ApiPromise; accounts: any }> {
+    const papi = await createApiAndTestAccounts(provider);
+    const api = papi.api;
+    const accounts = papi.accounts;
+    users = papi.users;
+    await provider.connect();
+    // const provider = papi.provider;
+    // submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
+    // submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
+    return { api, accounts };
+
+}
+import {
+  UnhashedOrder
+} from '../../../pacific-js/types'
+export async function getOrderP(order: UnhashedOrder,accounts:any) {
+        // console.log(order)
+        // let a = this.accounts;
+        // order.exchange = a[0];
+        // order.maker = a[1];
+        // order.taker = a[2];
+        // order.feeRecipient = a[3];
+        // order.target = a[4];
+        // order.staticTarget = a[5];
+        // order.paymentToken = a[6];
+        // const accounts = this.accounts.slice(0, 7);
+  
+        // return {
+        //     exchange: accounts[0],
+        //     maker: accounts[1],
+        //     taker: accounts[1],
+        //     makerRelayerFee: order.makerRelayerFee.toNumber(),
+        //     takerRelayerFee: order.makerRelayerFee.toNumber(),
+        //     makerProtocolFee: order.makerRelayerFee.toNumber(),
+        //     takerProtocolFee: order.makerRelayerFee.toNumber(),
+        //     feeRecipient: accounts[0],
+        //     feeMethod: order.feeMethod,
+        //     side: order.side,
+        //     saleKind: order.saleKind,
+        //     target: "5DGNjGQtLZPTyi494xfsk1bAM8jQHS7EbaYqQkvcC3mN4tnf",
+        //     howToCall: order.howToCall,
+        //     calldata: order.calldata,
+        //     replacementPattern: order.replacementPattern,
+        //     staticTarget: accounts[0],
+        //     staticExtradata: order.staticExtradata,
+        //     paymentToken: accounts[0],
+        //     basePrice: order.basePrice.toNumber() / Number(1000000000),
+        //     extra: order.extra.toNumber(),
+        //     listingTime: order.listingTime.toNumber(),
+        //     expirationTime: order.expirationTime.toNumber(),
+        //     salt: 0
+        // }
+    }
 export function sleepMs(ms = 0): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }

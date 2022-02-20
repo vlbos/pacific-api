@@ -1,3 +1,5 @@
+export const ERC721 = require("../abis/erc721/metadata.json");
+
 // import { PartialReadonlyContractAbi } from "../types"
 
 // export const ERC721: PartialReadonlyContractAbi = [
@@ -470,4 +472,3 @@
 //     'type': 'event',
 //   },
 // ]
-export const ERC721 = require("../abis/erc721/metadata.json");

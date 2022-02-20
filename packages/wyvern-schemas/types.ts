@@ -4,7 +4,7 @@ import {
   AnnotatedFunctionABI,
   FunctionInputKind,
 AbiType,
-} from '../../wyvern-js/src/types'
+} from '../wyvern-js/types'
 
 export {
   AnnotatedFunctionInput,

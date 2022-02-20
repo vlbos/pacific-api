@@ -1,4 +1,4 @@
-import { WyvernProtocol } from '../wyvern-js/src/WyvernProtocol'
+import { WyvernProtocol } from '../wyvern-js/WyvernProtocol'
 import { BigNumber } from 'bignumber.js' // Typescript import issue
 
 export const DEFAULT_GAS_INCREASE_FACTOR = 1.01
