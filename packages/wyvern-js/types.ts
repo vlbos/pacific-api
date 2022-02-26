@@ -176,7 +176,7 @@ export interface AnnotatedFunctionABI {
   payable: boolean
 }
 
-export type ReplacementEncoder = (abi: AnnotatedFunctionABI, kind?: FunctionInputKind, encodeToBytes?: boolean) => string
-export type AtomicizedReplacementEncoder = (abis: AnnotatedFunctionABI[], kind?: FunctionInputKind) => string
+export type ReplacementEncoder = (abi: any, kind?: FunctionInputKind, encodeToBytes?: boolean) => string
+export type AtomicizedReplacementEncoder = (abis: any, kind?: FunctionInputKind) => string
 
 // export type Web3Provider = Web3.Provider;

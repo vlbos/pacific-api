@@ -41,8 +41,8 @@ const keyring = createTestKeyring({ type: "sr25519" });
 const alicePair = keyring.getPair(ALICE);
 const bobPair = keyring.getPair(BOB);
 const salary = 100_000_000_000_000;
-const metadata = require("../../pacific-js/abisv2/multisig/metadata.json");
-const metadata2 = require("../../pacific-js/abisv2/erc20/metadata.json");
+const metadata = require("../../wyvern-js/abisv2/multisig/metadata.json");
+const metadata2 = require("../../wyvern-js/abisv2/erc20/metadata.json");
 
 
 
@@ -124,7 +124,7 @@ describe("Rust Smart Contracts", () => {
         * 6. Use the transferFrom function to transfer some ERC20 tokens from FRANKIES to a new account bobPair
         * 7. Use the transferFrom to let davePair try to transfer the full original allowance from alicePair to bobPair. This attempt should fail.
         **/
-        const metadata = require("./abis/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
+        const metadata = require("../../wyvern-js/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
         const selector = metadata.spec.constructors[1].selector;
         const flipAction = metadata.spec.messages[0].selector;
         const getAction = metadata.spec.messages[1].selector;
@@ -443,7 +443,7 @@ describe("Rust Smart Contracts", () => {
     });
     test("ERC20 contract", async () => {
         // The next two lines are a not so pretty workaround until the new metadata format has been fully implemented
-        const metadata = require("./abis/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
+        const metadata = require("../../wyvern-js/erc20/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
         // console.log("============",api.tx.contracts,"===========")
 
         const selector = metadata.spec.constructors[1].selector;

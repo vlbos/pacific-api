@@ -13,7 +13,6 @@ import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from '../../o
 import { v4 as uuidv4 } from 'uuid'
 // import rpcs from './config/rpcs.json';
 import rpcs from '../../orders/lib/rpcs.json'
-// const msigmetadata = require("../pacific-js/abisv2/multisig/metadata.json");
 
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 import { TypeRegistry } from '@polkadot/types/create';

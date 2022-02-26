@@ -16,6 +16,7 @@ import '../interfaces/augment-api';
 import '../interfaces/augment-types';
 import rpcs from '../orders/lib/rpcs.json'
 
+
 import {
     AtomicizedReplacementEncoder,
     ECSignature,
@@ -57,7 +58,8 @@ export class WyvernProtocol {
     public wyvernDAO: WyvernDAOContract
 
     public wyvernToken: WyvernTokenContract
-
+    public erc20Token: ContractPromise
+    public erc721Token: ContractPromise
     public wyvernAtomicizer: ContractPromise
 
     private provider: WsProvider
@@ -83,7 +85,6 @@ export class WyvernProtocol {
     public static getAtomicizerContractAddress(network: Network): string {
         return constants.DEPLOYED[network].WyvernAtomicizer
     }
-
     public static getTokenTransferProxyAddress(network: Network): string {
         return constants.DEPLOYED[network].WyvernTokenTransferProxy
     }
@@ -161,8 +162,8 @@ export class WyvernProtocol {
      * @return  The amount in baseUnits.
      */
     public static toBaseUnitAmount(amount: BigNumber, decimals: number): BigNumber {
-        assert.isBigNumber('amount', amount)
-        assert.isNumber('decimals', decimals)
+        // assert.isBigNumber('amount', amount)
+        // assert.isNumber('decimals', decimals)
         const unit = new BigNumber(10).pow(decimals)
         const baseUnitAmount = amount.times(unit)
         const hasDecimals = baseUnitAmount.decimalPlaces() !== 0
@@ -191,6 +192,22 @@ export class WyvernProtocol {
      * @return  The resulting encoded replacementPattern
      */
     public static encodeReplacementPattern: ReplacementEncoder = (abi, replaceKind = FunctionInputKind.Replaceable, encodeToBytes = true): string => {
+        const allowReplaceByte = '1'
+        const doNotAllowReplaceByte = '0'
+        abi = abi.slice(2)
+        let len = abi.length;
+        let nullindex = abi.indexOf(WyvernProtocol.generateDefaultValue("bytes32").slice(2));
+        if (nullindex == -1) {
+            console.error("nullindex==-1")
+            return "";
+        }
+        let s = (doNotAllowReplaceByte as any).repeat(nullindex);
+        s += (allowReplaceByte as any).repeat(64);
+        s += len > nullindex + 64 ? (doNotAllowReplaceByte as any).repeat(len - nullindex - 64) : "";
+
+        console.log(s.length == abi.length, s, abi);
+        return "0x"+s;
+
         const output: Buffer[] = []
         const data: Buffer[] = []
         const dynamicOffset = abi.inputs.reduce((len, { type }) => {
@@ -230,8 +247,22 @@ export class WyvernProtocol {
      * @return  The resulting encoded replacementPattern
      */
     public static encodeAtomicizedReplacementPattern: AtomicizedReplacementEncoder = (abis, replaceKind = FunctionInputKind.Replaceable): string => {
+
         const allowReplaceByte = '1'
         const doNotAllowReplaceByte = '0'
+        abis = abis.slice(2)
+        let len = abis.length;
+        let nullindex = abis.indexOf(WyvernProtocol.generateDefaultValue("bytes32").slice(2));
+        if (nullindex == -1) {
+            console.error("nullindex==-1",abis,WyvernProtocol.generateDefaultValue("bytes32").slice(2))
+            return "";
+        }
+        let s = (doNotAllowReplaceByte as any).repeat(nullindex);
+        s += (allowReplaceByte as any).repeat(64);
+        s += len > nullindex + 64 ? (doNotAllowReplaceByte as any).repeat(len - nullindex - 64) : "";
+        console.log(s.length == abis.length, s, abis);
+        return "0x"+s;
+
         /* Four bytes for method ID. */
         const maskArr: string[] = [doNotAllowReplaceByte, doNotAllowReplaceByte,
             doNotAllowReplaceByte, doNotAllowReplaceByte]
@@ -359,13 +390,12 @@ export class WyvernProtocol {
         //     this._web3Wrapper.getContractInstance((constants.TOKEN_ABI as any), tokenContractAddress),
         //     {},
         // )
-            console.log(config.wyvernAtomicizerContractAddress, WyvernProtocol.getAtomicizerContractAddress(config.network))
-            const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
-            const mabi = new Abi(msigmetadata,this.api.registry != undefined? this.api.registry.getChainProperties():undefined);
-            this.wyvernAtomicizer = new ContractPromise(
-                this.api, mabi, atomicizerContractAddress,
-            )
-       
+        // console.log(config.wyvernAtomicizerContractAddress, WyvernProtocol.getAtomicizerContractAddress(config.network))
+        const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
+        const mabi = new Abi(msigmetadata, this.api.registry != undefined ? this.api.registry.getChainProperties() : undefined);
+        this.wyvernAtomicizer = new ContractPromise(
+            this.api, mabi, atomicizerContractAddress,
+        )
 
     }
 

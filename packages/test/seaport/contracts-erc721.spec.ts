@@ -58,7 +58,7 @@ let testAccount: KeyringPair;
 let api: ApiPromise;
 let abi: Abi;
 let contract: ContractPromise;
-const metadata = require("../../pacific-js/abis/erc721/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
+const metadata = require("../../wyvern-js/erc721/metadata.json");///Users/lisheng/Downloads/polkadotui/ink-master/examples/flipper/target/ink/metadata.json
 
 jest.useRealTimers();
 beforeAll((): void => {

@@ -13,6 +13,7 @@
     "test": "polkadot-dev-run-test --coverage ",
     "test:api": "polkadot-dev-run-test packages/test/api/api.test.ts",
     "test:order": "polkadot-dev-run-test packages/test/seaport/orders.test.ts  ",
+    "test:bundle": "polkadot-dev-run-test packages/test/seaport/bundles.test.ts  ",
     "test:transfer": "polkadot-dev-run-test packages/test/seaport/ownersAndTransfers.test.ts  ",
     "t:contract": "polkadot-dev-run-test packages/test/seaport/contracts-rust.spec.ts  ",
     "t:erc20": "polkadot-dev-run-test packages/test/seaport/contracts-erc20.spec.ts ",

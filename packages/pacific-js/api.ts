@@ -249,7 +249,7 @@ export class OpenSeaAPI {
     },
         retries = 1
     ): Promise<OpenSeaAsset> {
-
+        // console.log("getAsset====",tokenAddress)
         let json
         try {
             json = await this.get(`${API_PATH}/asset/${tokenAddress}/${tokenId || 0}/`)

@@ -856,39 +856,38 @@ export function getWyvernBundle(
     quantities: BigNumber[]
 ): any {
 
-    //   if (assets.length != quantities.length) {
-    //     throw new Error("Bundle must have a quantity for every asset")
-    //   }
+      if (assets.length != quantities.length) {
+        throw new Error("Bundle must have a quantity for every asset")
+      }
 
-    //   if (assets.length != schemas.length) {
-    //     throw new Error("Bundle must have a schema for every asset")
-    //   }
+      if (assets.length != schemas.length) {
+        throw new Error("Bundle must have a schema for every asset")
+      }
 
-    //   const wyAssets = "assets.map((asset, i) => getWyvernAsset(schemas[i], asset, quantities[i]))"
+      const wyAssets = assets.map((asset, i) => getWyvernAsset(schemas[i], asset, quantities[i]))
 
-    //   const sorters = [
-    //     (assetAndSchema: { asset: WyvernAsset, schema: WyvernSchemaName }) => assetAndSchema.asset.address,
-    //     (assetAndSchema: { asset: WyvernAsset, schema: WyvernSchemaName }) => assetAndSchema.asset.id || 0
-    //   ]
+      const sorters = [
+        (assetAndSchema: { asset: WyvernAsset, schema: WyvernSchemaName }) => assetAndSchema.asset.address,
+        (assetAndSchema: { asset: WyvernAsset, schema: WyvernSchemaName }) => assetAndSchema.asset.id || 0
+      ]
 
-    //   const wyAssetsAndSchemas = wyAssets.map((asset, i) => ({
-    //     asset,
-    //     schema: schemas[i].name as WyvernSchemaName
-    //   }))
+      const wyAssetsAndSchemas = wyAssets.map((asset, i) => ({
+        asset,
+        schema: schemas[i].name as WyvernSchemaName
+      }))
 
-    //   const uniqueAssets = [];//_.uniqBy(wyAssetsAndSchemas, group => `${sorters[0](group)}-${sorters[1](group)}`)
+      const uniqueAssets = _.uniqBy(wyAssetsAndSchemas, group => `${sorters[0](group)}-${sorters[1](group)}`)
 
-    //   if (uniqueAssets.length != wyAssetsAndSchemas.length) {
-    //     throw new Error("Bundle can't contain duplicate assets")
-    //   }
+      if (uniqueAssets.length != wyAssetsAndSchemas.length) {
+        throw new Error("Bundle can't contain duplicate assets")
+      }
 
-    //   const sortedWyAssetsAndSchemas = _.sortBy(wyAssetsAndSchemas, sorters)
+      const sortedWyAssetsAndSchemas = _.sortBy(wyAssetsAndSchemas, sorters)
 
-    //   return {
-    //     assets: sortedWyAssetsAndSchemas.map(group => group.asset),
-    //     schemas: sortedWyAssetsAndSchemas.map(group => group.schema),
-    //   }
-    return ""
+      return {
+        assets: sortedWyAssetsAndSchemas.map(group => group.asset),
+        schemas: sortedWyAssetsAndSchemas.map(group => group.schema),
+      }
 }
 
 /**
@@ -907,7 +906,7 @@ export function getOrderHash(order: UnhashedOrder) {
         howToCall: order.howToCall.toString(),
         feeMethod: order.feeMethod.toString()
     }
-    return "WyvernProtocol.getOrderHashHex(orderWithStringTypes as any)"
+    return WyvernProtocol.getOrderHashHex(orderWithStringTypes as any)
 }
 
 /**

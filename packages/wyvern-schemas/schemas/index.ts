@@ -2,9 +2,9 @@
 // import { Schema } from '../types'
 
 import { mainSchemas } from './main/index'
-// import { devSchemas } from './dev/index';
+import { devSchemas } from './dev/index';
 
 export const schemas = {
-  dev: mainSchemas,
+  dev: devSchemas,
   main: mainSchemas,
 }

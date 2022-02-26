@@ -8,7 +8,7 @@ export const deployed = {
         'WyvernDAO': '0x1b4c767502d01deee83af491c946b469e0620e30',
         'WyvernRegistry': '0xe59640a71231352aa97d3f1b503ad066c799fad9',
         'SaleKindInterface': '0x726f4782c533c8aa98da9291f586dc37b41b0bb8',
-        'WyvernExchange': '0x5206e78b21ce315ce284fb24cf05e0585a93b1d9',
+        'WyvernExchange': '5DGNjGQtLZPTyi494xfsk1bAM8jQHS7EbaYqQkvcC3mN4tnf',
         'DirectEscrowProvider': '0x22f617c80e5f4908b943b938e7dc5ab735e64372',
         'WyvernProxyRegistry': '0xf57b2c51ded3a29e6891aba85459d600256cf317',
         'TestStatic': '0xc33a203d61c688433e53fcb6f3af7c6aa12192a4',
