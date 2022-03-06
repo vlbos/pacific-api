@@ -38,37 +38,37 @@ export const utils = {
     //   const hashBuf = ethABI.soliditySHA3(['string'], [concat])
     //   return ethUtil.bufferToHex(hashBuf)
     // },
-    // getOrderHashHex(order: Order | SignedOrder): string {
-    //     const orderParts = [
-    //         { value: order.exchange, type: SolidityTypes.Address },
-    //         { value: order.maker, type: SolidityTypes.Address },
-    //         { value: order.taker, type: SolidityTypes.Address },
-    //         { value: utils.bigNumberToBN(order.makerRelayerFee), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.takerRelayerFee), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.makerProtocolFee), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.takerProtocolFee), type: SolidityTypes.Uint256 },
-    //         { value: order.feeRecipient, type: SolidityTypes.Address },
-    //         { value: order.feeMethod, type: SolidityTypes.Uint8 },
-    //         { value: order.side, type: SolidityTypes.Uint8 },
-    //         { value: order.saleKind, type: SolidityTypes.Uint8 },
-    //         { value: order.target, type: SolidityTypes.Address },
-    //         { value: order.howToCall, type: SolidityTypes.Uint8 },
-    //         { value: new Buffer(order.calldata.slice(2), 'hex'), type: SolidityTypes.Bytes },
-    //         { value: new Buffer(order.replacementPattern.slice(2), 'hex'), type: SolidityTypes.Bytes },
-    //         { value: order.staticTarget, type: SolidityTypes.Address },
-    //         { value: new Buffer(order.staticExtradata.slice(2), 'hex'), type: SolidityTypes.Bytes },
-    //         { value: order.paymentToken, type: SolidityTypes.Address },
-    //         { value: utils.bigNumberToBN(order.basePrice), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.extra), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.listingTime), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.expirationTime), type: SolidityTypes.Uint256 },
-    //         { value: utils.bigNumberToBN(order.salt), type: SolidityTypes.Uint256 },
-    //     ]
-    //     const types = _.map(orderParts, o => o.type)
-    //     const values = _.map(orderParts, o => o.value)
-    //     const hash = ethABI.soliditySHA3(types, values)
-    //     return ethUtil.bufferToHex(hash)
-    // },
+    getOrderHashHex(order: Order | SignedOrder): string {
+        // const orderParts = [
+        //     { value: order.exchange, type: SolidityTypes.Address },
+        //     { value: order.maker, type: SolidityTypes.Address },
+        //     { value: order.taker, type: SolidityTypes.Address },
+        //     { value: utils.bigNumberToBN(order.makerRelayerFee), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.takerRelayerFee), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.makerProtocolFee), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.takerProtocolFee), type: SolidityTypes.Uint256 },
+        //     { value: order.feeRecipient, type: SolidityTypes.Address },
+        //     { value: order.feeMethod, type: SolidityTypes.Uint8 },
+        //     { value: order.side, type: SolidityTypes.Uint8 },
+        //     { value: order.saleKind, type: SolidityTypes.Uint8 },
+        //     { value: order.target, type: SolidityTypes.Address },
+        //     { value: order.howToCall, type: SolidityTypes.Uint8 },
+        //     { value: new Buffer(order.calldata.slice(2), 'hex'), type: SolidityTypes.Bytes },
+        //     { value: new Buffer(order.replacementPattern.slice(2), 'hex'), type: SolidityTypes.Bytes },
+        //     { value: order.staticTarget, type: SolidityTypes.Address },
+        //     { value: new Buffer(order.staticExtradata.slice(2), 'hex'), type: SolidityTypes.Bytes },
+        //     { value: order.paymentToken, type: SolidityTypes.Address },
+        //     { value: utils.bigNumberToBN(order.basePrice), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.extra), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.listingTime), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.expirationTime), type: SolidityTypes.Uint256 },
+        //     { value: utils.bigNumberToBN(order.salt), type: SolidityTypes.Uint256 },
+        // ]
+        // const types = _.map(orderParts, o => o.type)
+        // const values = _.map(orderParts, o => o.value)
+        // const hash = ethABI.soliditySHA3(types, values)
+        return "ethUtil.bufferToHex(hash)"
+    },
     getCurrentUnixTimestampSec(): BigNumber {
         return new BigNumber(new BigNumber(Date.now() / 1000).toFixed())
     },

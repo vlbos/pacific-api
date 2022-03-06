@@ -180,7 +180,7 @@ export class WyvernProtocol {
      */
     // @decorators.syncWyvernProtocolErrorHandler
     public static getOrderHashHex(order: Order | SignedOrder): string {
-        assert.doesConformToSchema('order', order, schemas.orderSchema)
+        // assert.doesConformToSchema('order', order, schemas.orderSchema)
         const orderHashHex = utils.getOrderHashHex(order)
         return orderHashHex
     }
@@ -192,22 +192,22 @@ export class WyvernProtocol {
      * @return  The resulting encoded replacementPattern
      */
     public static encodeReplacementPattern: ReplacementEncoder = (abi, replaceKind = FunctionInputKind.Replaceable, encodeToBytes = true): string => {
-        const allowReplaceByte = '1'
-        const doNotAllowReplaceByte = '0'
+   
         abi = abi.slice(2)
         let len = abi.length;
         let nullindex = abi.indexOf(WyvernProtocol.generateDefaultValue("bytes32").slice(2));
         if (nullindex == -1) {
-            console.error("nullindex==-1")
+            console.error("nullindex==-1",abi)
             return "";
         }
-        let s = (doNotAllowReplaceByte as any).repeat(nullindex);
-        s += (allowReplaceByte as any).repeat(64);
-        s += len > nullindex + 64 ? (doNotAllowReplaceByte as any).repeat(len - nullindex - 64) : "";
+        let s = ('0' as any).repeat(nullindex);
+        s += ('f' as any).repeat(64);
+        s += len > nullindex + 64 ? ('0' as any).repeat(len - nullindex - 64) : "";
 
         console.log(s.length == abi.length, s, abi);
-        return "0x"+s;
-
+        return "0x" + s;
+     const allowReplaceByte = '1'
+        const doNotAllowReplaceByte = '0'
         const output: Buffer[] = []
         const data: Buffer[] = []
         const dynamicOffset = abi.inputs.reduce((len, { type }) => {
@@ -247,22 +247,20 @@ export class WyvernProtocol {
      * @return  The resulting encoded replacementPattern
      */
     public static encodeAtomicizedReplacementPattern: AtomicizedReplacementEncoder = (abis, replaceKind = FunctionInputKind.Replaceable): string => {
-
-        const allowReplaceByte = '1'
-        const doNotAllowReplaceByte = '0'
         abis = abis.slice(2)
         let len = abis.length;
         let nullindex = abis.indexOf(WyvernProtocol.generateDefaultValue("bytes32").slice(2));
         if (nullindex == -1) {
-            console.error("nullindex==-1",abis,WyvernProtocol.generateDefaultValue("bytes32").slice(2))
+            console.error("nullindex==-1", abis, WyvernProtocol.generateDefaultValue("bytes32").slice(2))
             return "";
         }
-        let s = (doNotAllowReplaceByte as any).repeat(nullindex);
-        s += (allowReplaceByte as any).repeat(64);
-        s += len > nullindex + 64 ? (doNotAllowReplaceByte as any).repeat(len - nullindex - 64) : "";
+        let s = ('0' as any).repeat(nullindex);
+        s += ('f' as any).repeat(64);
+        s += len > nullindex + 64 ? ('0' as any).repeat(len - nullindex - 64) : "";
         console.log(s.length == abis.length, s, abis);
-        return "0x"+s;
-
+        return "0x" + s;
+     const allowReplaceByte = '1'
+        const doNotAllowReplaceByte = '0'
         /* Four bytes for method ID. */
         const maskArr: string[] = [doNotAllowReplaceByte, doNotAllowReplaceByte,
             doNotAllowReplaceByte, doNotAllowReplaceByte]
@@ -369,9 +367,16 @@ export class WyvernProtocol {
         //     this._web3Wrapper.getContractInstance((constants.EXCHANGE_ABI as any), exchangeContractAddress),
         //     {},
         // )
-        if (api.tx != undefined) {
-            this.wyvernExchange = api.tx.wyvernExchange;
+        if (config.rpc != undefined) {
+            if (api.rpc != undefined) {
+                this.wyvernExchange = api.rpc.wyvernExchange;
+            }
+        } else {
+            if (api.tx != undefined) {
+                this.wyvernExchange = api.tx.wyvernExchange;
+            }
         }
+
 
         // const proxyRegistryContractAddress = config.wyvernProxyRegistryContractAddress || WyvernProtocol.getProxyRegistryContractAddress(config.network)
         // this.wyvernProxyRegistry = new WyvernProxyRegistryContract(

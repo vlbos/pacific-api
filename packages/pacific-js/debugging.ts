@@ -34,26 +34,24 @@ const SaleKindInterface = {
  * @param sell Sell order for debugging
  */
 export async function requireOrdersCanMatch(
-    client: ApiPromise,
+    client: WyvernProtocol,
     {buy, sell, accountAddress}:
         { buy: Order, sell: Order, accountAddress: string }
 ) {
-    const result = true;
-//await client.rpc.wyvernExchange.ordersCanMatchEx(
-    //     [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
-    //     [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
-    //     [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
-    //     buy.calldata,
-    //     sell.calldata,
-    //     buy.replacementPattern,
-    //     sell.replacementPattern,
-    //     buy.staticExtradata,
-    //     sell.staticExtradata,
-    //     {from: accountAddress},
-    // )
-
-    if (result) {
-        return
+    const result = await client.wyvernExchange.ordersCanMatchEx(
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [buy.makerRelayerFee.toNumber(), buy.takerRelayerFee.toNumber(), buy.makerProtocolFee.toNumber(), buy.takerProtocolFee.toNumber(), buy.basePrice.toNumber() / Number(1000000000), buy.extra.toNumber(), buy.listingTime.toNumber(), buy.expirationTime.toNumber(), buy.salt.toNumber(), sell.makerRelayerFee.toNumber(), sell.takerRelayerFee.toNumber(), sell.makerProtocolFee.toNumber(), sell.takerProtocolFee.toNumber(), sell.basePrice.toNumber() / Number(1000000000), sell.extra.toNumber(), sell.listingTime.toNumber(), sell.expirationTime.toNumber(), sell.salt.toNumber()],
+        [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
+        buy.calldata,
+        sell.calldata,
+        buy.replacementPattern,
+        sell.replacementPattern,
+        buy.staticExtradata,
+        sell.staticExtradata
+    )
+    
+    if (Number(result)>0) {
+        return result;
     }
 
     if (!(+buy.side == +SaleKindInterface.Side.Buy && +sell.side == +SaleKindInterface.Side.Sell)) {
@@ -69,6 +67,7 @@ export async function requireOrdersCanMatch(
     }
 
     if (!(sell.taker == NULL_ADDRESS || sell.taker == buy.maker)) {
+        console.log("====!(sell.taker == NULL_ADDRESS || sell.taker == buy.maker)====",NULL_ADDRESS,sell.taker, buy.maker)
         throw new Error('Sell taker must be null or matching buy maker')
     }
 
@@ -81,6 +80,8 @@ export async function requireOrdersCanMatch(
     }
 
     if (!(buy.target == sell.target)) {
+        console.log("====!(buy.target == sell.target)====",sell.target, buy.target)
+
         throw new Error('Must match target')
     }
 
@@ -106,13 +107,15 @@ export async function requireOrdersCanMatch(
  * @param sell Sell Order for debugging
  */
 export async function requireOrderCalldataCanMatch(
-    client: any,
+    client: WyvernProtocol,
     {buy, sell}:
         { buy: Order, sell: Order }
 ) {
-    const result = true// client.wyvernExchange.orderCalldataCanMatch.callAsync(buy.calldata, buy.replacementPattern, sell.calldata, sell.replacementPattern)
-    if (result) {
+    console.log( buy.calldata.length, buy.replacementPattern.length, sell.calldata.length, sell.replacementPattern.length,"=====buy.calldata, buy.replacementPattern, sell.calldata, sell.replacementPattern======",buy.calldata, buy.replacementPattern, sell.calldata, sell.replacementPattern)
+    const result = await client.wyvernExchange.orderCalldataCanMatchEx(buy.calldata, buy.replacementPattern, sell.calldata, sell.replacementPattern)
+    if (Number(result)>0) {
         return
     }
     throw new Error('Unable to match offer data with auction data.')
 }
+    

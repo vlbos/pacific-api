@@ -842,16 +842,26 @@ describe('seaport: orders', () => {
         await client.cancelOrder({ order, accountAddress })
     })
 
-    it('Matches a buy order and  fulfillment', async () => {
+    it.only('Matches a buy order and  fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
         const accountAddress = ALICE_ADDRESS
-
         let order = await client.api.getOrder({
             side: OrderSide.Buy,
             owner: accountAddress,
             // Use a token that has already been approved via approve-all
             asset_contract_address: DIGITAL_ART_CHAIN_ADDRESS
         })
+        const recipientAddress = order.side === OrderSide.Sell ? ALICE_STASH_ADDRESS : accountAddress
+        order.side = OrderSide.Buy
+        const matchingOrder = client._makeMatchingOrder({
+            order,
+            accountAddress,
+            recipientAddress
+        })
+        order.calldata = matchingOrder.calldata;
+        order.replacementPattern = matchingOrder.replacementPattern;
+        // console.log("======order=====", order)
+        order.side = OrderSide.Sell 
         expect(order).not.toBeNull()
         if (!order) {
             console.log("===========")
@@ -863,24 +873,30 @@ describe('seaport: orders', () => {
 
             return
         }
-        let calldata = await client.encodeTransferAll({
-            assets: [{
-                tokenId: null,
-                tokenAddress: "5FedJTj4z2T9EqcqwGMsksMd2dc6fC7cxaeAm6fcE8ZXdqtP",
-                schemaName: WyvernSchemaName.ERC20
-            }, {
-                tokenId: null,
-                tokenAddress: "5D4LDS32J567Dh46TEihGDM8V9tKoX497e6FPJKn9HMwYquN",
-                schemaName: WyvernSchemaName.ERC20
-            }],
-            fromAddress: ALICE_ADDRESS,
-            toAddress: "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
-            schemaName: WyvernSchemaName.ERC20
-        })
-        console.log(calldata)
-        console.log(calldata.slice(calldata.indexOf("557efb0c")))
-        calldata = "0x" + calldata.slice(calldata.indexOf("557efb0c"));
-        await client.fulfillOrder({ order, accountAddress, calldata })
+        // let calldata = await client.encodeTransferAll({
+        //     assets: [{
+        //         tokenId: null,
+        //         tokenAddress: "5FedJTj4z2T9EqcqwGMsksMd2dc6fC7cxaeAm6fcE8ZXdqtP",
+        //         schemaName: WyvernSchemaName.ERC20
+        //     }, {
+        //         tokenId: null,
+        //         tokenAddress: "5D4LDS32J567Dh46TEihGDM8V9tKoX497e6FPJKn9HMwYquN",
+        //         schemaName: WyvernSchemaName.ERC20
+        //     }],
+        //     fromAddress: ALICE_ADDRESS,
+        //     toAddress: "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+        //     schemaName: WyvernSchemaName.ERC20
+        // })
+        // console.log(calldata)
+        // console.log(calldata.slice(calldata.indexOf("557efb0c")))
+        // calldata = "0x" + calldata.slice(calldata.indexOf("557efb0c"));
+        await client.initParameters(
+            BOB_ADDRESS,
+            BOB_ADDRESS
+        );
+        order.exchange = BOB_ADDRESS;
+
+        await client.fulfillOrder({ order, accountAddress })
     })
 
     it('Matches a referred order via sell_orders and getAssets', async () => {

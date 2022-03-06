@@ -10,6 +10,7 @@ export interface WyvernProtocolConfig {
     wyvernDAOContractAddress?: string
     wyvernTokenContractAddress?: string
     wyvernAtomicizerContractAddress?: string
+    rpc?: string
 }
 
 export type AsyncMethod = (...args: any[]) => Promise<any>

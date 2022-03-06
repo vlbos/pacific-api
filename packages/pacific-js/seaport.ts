@@ -182,6 +182,7 @@ export class OpenSeaPort {
         this._wyvernProtocolReadOnly = new WyvernProtocol(this.readonlyProvider, api, {
             network: this._networkName,
             gasPrice: apiConfig.gasPrice,
+            rpc: "readOnly"
         })
         // // WrappedNFTLiquidationProxy Config
         // this._wrappedNFTFactoryAddress = this._networkName == Network.Main ? WRAPPED_NFT_FACTORY_ADDRESS_MAINNET : WRAPPED_NFT_FACTORY_ADDRESS_DEV
@@ -203,6 +204,19 @@ export class OpenSeaPort {
     }
     public async closeProvider() {
         await this.provider.disconnect();
+    }
+    public async initParameters(self: any, accountAddress: any) {
+        // console.log("=======0000========",keyring.getPair('0x0000000000000000000000000000000000000000000000000000000000000000'))
+        const accountPair = keyring.getPair(accountAddress);
+        const nonces = await this.apiPro.rpc.system.accountNextIndex(accountPair.address)
+        let nonce = nonces.toString();
+        await this.apiPro.tx.wyvernExchangeCore.changeOwner(self).signAndSend(accountPair, { nonce });
+        nonce = (Number(nonces.toString()) + Number(1)).toString();
+        await this.apiPro.tx.wyvernExchangeCore.setContractSelf(self).signAndSend(accountPair, { nonce });
+        nonce = (Number(nonces.toString()) + Number(2)).toString();
+        await this.apiPro.tx.wyvernExchangeCore.changeMinimumMakerProtocolFee(1).signAndSend(accountPair, { nonce });
+        nonce = (Number(nonces.toString()) + Number(3)).toString();
+        await this.apiPro.tx.wyvernExchangeCore.changeMinimumTakerProtocolFee(1).signAndSend(accountPair, { nonce });
     }
     public async apipro() {
         // const papi = await init(this.provider);
@@ -1001,11 +1015,10 @@ export class OpenSeaPort {
      */
     ///NEEDED
     public async fulfillOrder(
-        { order, accountAddress, calldata, recipientAddress, referrerAddress }:
+        { order, accountAddress, recipientAddress, referrerAddress }:
             {
                 order: Order;
                 accountAddress: string;
-                calldata: string;
                 recipientAddress?: string;
                 referrerAddress?: string;
             }
@@ -1016,9 +1029,8 @@ export class OpenSeaPort {
             accountAddress,
             recipientAddress: recipientAddress || accountAddress
         })
-        console.log("===fulfillOrder===d==1===")
+        // console.log("===fulfillOrder===d==1==matchingOrder=", matchingOrder)
         let { buy, sell } = assignOrdersToSides(order, matchingOrder)
-        buy.calldata = calldata;
         const metadata = this._getMetadata(order, referrerAddress)
         const transactionHash = await this._atomicMatch({ buy, sell, accountAddress, metadata })
         console.log("===fulfillOrder===d===2==")
@@ -1413,6 +1425,15 @@ export class OpenSeaPort {
      * @param order The order to calculate the price for
      */
     public async getCurrentPrice(order: Order) {
+        console.log([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata)
         const currentPrice = await this._wyvernProtocolReadOnly.wyvernExchange.calculateCurrentPriceEx(
             [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
             [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
@@ -2716,7 +2737,7 @@ export class OpenSeaPort {
     ): UnsignedOrder {
         accountAddress = validateAndFormatWalletAddress(this.apiPro, accountAddress)
         recipientAddress = validateAndFormatWalletAddress(this.apiPro, recipientAddress)
-
+        console.log(order.side, "========order.side==========")
         const computeOrderParams = () => {
             if ('asset' in order.metadata) {
                 const schema = this._getSchema(order.metadata.schema)
@@ -2780,7 +2801,7 @@ export class OpenSeaPort {
             calldata,
             replacementPattern,
             staticTarget: NULL_ADDRESS,
-            staticExtradata: '0x0',
+            staticExtradata: '',
             paymentToken: order.paymentToken,
             basePrice: order.basePrice,
             extra: makeBigNumber(0),
@@ -2822,7 +2843,7 @@ export class OpenSeaPort {
         try {
             if (shouldValidateBuy) {
                 const buyValid = await this._validateOrder(buy)
-                //this.logger(`Buy order is valid: ${buyValid}`)
+                this.logger(`Buy order is valid: ${buyValid}`)
 
                 if (!buyValid) {
                     throw new Error('Invalid buy order. It may have recently been removed . Please refresh the page and try again!')
@@ -2831,7 +2852,7 @@ export class OpenSeaPort {
 
             if (shouldValidateSell) {
                 const sellValid = await this._validateOrder(sell)
-                //this.logger(`Sell order is valid: ${sellValid}`)
+                this.logger(`Sell order is valid: ${sellValid}`)
 
                 if (!sellValid) {
                     throw new Error('Invalid sell order. It may have recently been removed. Please refresh the page and try again!')
@@ -2906,7 +2927,7 @@ export class OpenSeaPort {
 
         // Check sell parameters
         const sellValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
-            [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
             order.feeMethod,
             order.side,
             order.saleKind,
@@ -2955,6 +2976,8 @@ export class OpenSeaPort {
     }
 
     public async _validateOrder(order: Order): Promise<boolean> {
+        console.log("=====order.maker=============", order.maker)
+
         const order_hash = await this._wyvernProtocolReadOnly.wyvernExchange.hashToSignEx(
             [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
             [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
@@ -2967,7 +2990,6 @@ export class OpenSeaPort {
             order.staticExtradata);
 
         const fromPair = keyring.getPair(order.maker);
-        // console.log("=====fromPair=============",fromPair)
         const order_sig = fromPair.sign(order_hash);
 
         const isValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderEx(
@@ -3078,8 +3100,10 @@ export class OpenSeaPort {
             { order: UnhashedOrder; counterOrder?: Order; accountAddress: string }
     ) {
         const tokenAddress = order.paymentToken
-
+        console.log(tokenAddress, "======================", NULL_ADDRESS)
         if (tokenAddress != NULL_ADDRESS) {
+            console.log(tokenAddress, "==============!!!========", NULL_ADDRESS)
+
             const balance = await this.getTokenBalance({ accountAddress, tokenAddress })
 
             /* NOTE: no buy-side auctions for now, so sell.saleKind === 0 */
@@ -3099,9 +3123,17 @@ export class OpenSeaPort {
 
             // Check token approval
             // This can be done at a higher level to show UI
-            // await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
+            await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
         }
-        console.log( this._wyvernProtocolReadOnly.wyvernExchange)
+        console.log([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+            [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
+            order.feeMethod,
+            order.side,
+            order.saleKind,
+            order.howToCall,
+            order.calldata,
+            order.replacementPattern,
+            order.staticExtradata)
         const buyValid = await this._wyvernProtocolReadOnly.wyvernExchange.validateOrderParametersEx([order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
             [order.makerRelayerFee.toNumber(), order.takerRelayerFee.toNumber(), order.makerProtocolFee.toNumber(), order.takerProtocolFee.toNumber(), order.basePrice.toNumber() / Number(1000000000), order.extra.toNumber(), order.listingTime.toNumber(), order.expirationTime.toNumber(), order.salt.toNumber()],
             order.feeMethod,
@@ -3435,8 +3467,7 @@ export class OpenSeaPort {
         let txHash
         const txnData: any = { from: accountAddress, value }
         const args: any = [
-            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target,
-            buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
             [buy.makerRelayerFee.toNumber(), buy.takerRelayerFee.toNumber(), buy.makerProtocolFee.toNumber(), buy.takerProtocolFee.toNumber(), buy.basePrice.toNumber() / Number(1000000000), buy.extra.toNumber(), buy.listingTime.toNumber(), buy.expirationTime.toNumber(), buy.salt.toNumber(), sell.makerRelayerFee.toNumber(), sell.takerRelayerFee.toNumber(), sell.makerProtocolFee.toNumber(), sell.takerProtocolFee.toNumber(), sell.basePrice.toNumber() / Number(1000000000), sell.extra.toNumber(), sell.listingTime.toNumber(), sell.expirationTime.toNumber(), sell.salt.toNumber()],
             [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
             buy.calldata,
@@ -3468,15 +3499,25 @@ export class OpenSeaPort {
         try {
             //this.logger(`Fulfilling order with gas set to ${txnData.gas}`)
             //
-            const nonces = await this.apiPro.system.accountNextIndex(buyPair.address)
-            console.log("========nonces=========", nonces.toString())
+            let accPair = buyPair;
+            let nonces = await this.apiPro.rpc.system.accountNextIndex(accPair.address)
+            let nonce = nonces.toString();
+            if (shouldValidateSell) {
+                accPair = sellPair;
+                nonce = (Number(nonces.toString()) + Number(4)).toString();
+            }
 
+            console.log(args[0],
+                args[1], args[2], args[3], args[4], args[5],
+                args[6], args[7], args[8], args[9], args[10], args[11], "========nonces=========", nonces.toString())
+            //    this.logger(`${console.trace()}`)
             // txHash = submit(this.apiPro, this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
             //     args[1], args[2], args[3], args[4], args[5],
             //     args[6], args[7], args[8], args[9], args[10], args[11]), buyPair,nonces)
             txHash = await this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
                 args[1], args[2], args[3], args[4], args[5],
-                args[6], args[7], args[8], args[9], args[10], args[11]).signAndSend(buyPair);
+                args[6], args[7], args[8], args[9], args[10], args[11]).signAndSend(accPair, { nonce });
+
         } catch (error) {
             console.error(error)
 
@@ -3553,19 +3594,19 @@ export class OpenSeaPort {
     private _getClientsForRead(
         retries = 1
     ): { apiPro: ApiPromise, wyvernProtocol: any } {
-        if (retries > 0) {
-            // Use injected provider by default
-            return {
-                'apiPro': this.apiPro,
-                'wyvernProtocol': this._wyvernProtocol
-            }
-        } else {
-            // Use provided provider as fallback
-            return {
-                'apiPro': this.apiProReadOnly,
-                'wyvernProtocol': this._wyvernProtocolReadOnly
-            }
+        // if (retries > 0) {
+        //     // Use injected provider by default
+        //     return {
+        //         'apiPro': this.apiPro,
+        //         'wyvernProtocol': this._wyvernProtocol
+        //     }
+        // } else {
+        // Use provided provider as fallback
+        return {
+            'apiPro': this.apiProReadOnly,
+            'wyvernProtocol': this._wyvernProtocolReadOnly
         }
+        // }
     }
 
     private async _confirmTransaction(transactionHash: string, event: EventType, description: string, testForSuccess?: () => Promise<boolean>): Promise<void> {

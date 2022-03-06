@@ -4,7 +4,7 @@ import { BigNumber } from 'bignumber.js' // Typescript import issue
 export const DEFAULT_GAS_INCREASE_FACTOR = 1.01
 export const NULL_ADDRESS = WyvernProtocol.NULL_ADDRESS
 export const NULL_BLOCK_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000'
-export const OPENSEA_FEE_RECIPIENT = '0x5b3256965e7c3cf26e11fcaf296dfc8807c01073'
+export const OPENSEA_FEE_RECIPIENT = '5DghaCqZ1zrx6hN8oGFWXLzrB6m2wV1CLLyWLHovdCrsu5W2'
 export const DEP_INFURA_KEY = 'e8695bce67944848aa95459fac052f8e'
 export const LOCALNET_PROVIDER_URL = 'ws://127.0.0.1:9944/'
 export const MAINNET_PROVIDER_URL = 'https://api.opensea.io/jsonrpc/v1/'

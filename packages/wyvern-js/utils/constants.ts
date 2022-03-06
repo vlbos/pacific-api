@@ -6,7 +6,7 @@ import { proxyRegistryABI } from './proxyRegistryABI'
 import { tokenABI } from './tokenABI'
 
 export const constants = {
-    NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    NULL_ADDRESS: '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM',
     INVALID_JUMP_PATTERN: 'invalid JUMP at',
     OUT_OF_GAS_PATTERN: 'out of gas',
     INVALID_TAKER_FORMAT: 'instance.taker is not of a type(s) string',

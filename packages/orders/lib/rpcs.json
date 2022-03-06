@@ -384,7 +384,29 @@
             "type": "Vec<u8>"
           }
         ],
-        "type": "Balance"
+        "type": "bool"
+      },
+    "orderCalldataCanMatchEx": {
+        "description": "Return whether or not two orders can be matched with each other by basic parameters.",
+        "params": [
+          {
+            "name": "calldata_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "calldata_sell",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern_sell",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "bool"
       },
       "calculateMatchPriceEx": {
         "description": "Calculate the price two orders would match at, if in fact they would match (fail:otherwise).",

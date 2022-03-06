@@ -56,7 +56,7 @@ describe('seaport: bundles', () => {
         let api = apip.api;
         // console.log("============================",api)
         client = new OpenSeaPort(provider, api, {
-            networkName: Network.Main,
+            networkName: Network.Dev,
             apiKey: MAINNET_API_KEY
         }, line => console.info(`MAINNET: ${line}`))
 
@@ -96,7 +96,7 @@ describe('seaport: bundles', () => {
     })
 
     ///TEST NEEDED
-    test.only('Matches homogenous bundle buy order', async () => {
+    test('Matches homogenous bundle buy order', async () => {
         const accountAddress = ALICE_ADDRESS
         const takerAddress = ALICE_ADDRESS
         const amountInToken = 10
@@ -180,11 +180,11 @@ describe('seaport: bundles', () => {
             waitForHighestBid: false,
             buyerAddress: NULL_ADDRESS
         })
-
+        console.log(order)
         const asset = await client.api.getAsset(assets[0])
 
         expect(order.paymentToken).toEqual(NULL_ADDRESS)
-        expect(order.basePrice.toNumber()).toEqual(Math.pow(10, 18) * amountInEth)
+        expect(order.basePrice.toNumber()).toEqual(Math.pow(10, 9) * amountInEth)
         expect(order.extra.toNumber()).toEqual(0)
         expect(order.expirationTime.toNumber()).toEqual(0)
         testBundleMetadata(order, WyvernSchemaName.ERC721)
