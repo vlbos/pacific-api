@@ -1107,12 +1107,12 @@ export class OpenSeaPort {
                 tokenAddress: string;
                 accountAddress: string;
                 proxyAddress?: string;
-                tokenAbi?: amy;
+                tokenAbi?: any;
                 skipApproveAllIfTokenAddressIn?: Set<string>;
                 schemaName?: WyvernSchemaName;
             }
     ): Promise<string | null> {
-
+        console.log("===============approveSemiOrNonFungibleToken==================")
         const schema = this._getSchema(schemaName)
         // const tokenContract = this.apiPro.eth.contract(tokenAbi as any[])
         // const contract = await tokenContract.at(tokenAddress)  
@@ -1135,19 +1135,19 @@ export class OpenSeaPort {
             //     to: contract.address,
             //     data: contract.isApprovedForAll.getData(accountAddress, proxyAddress)
             // })
-            const isApprovedForAllRaw = await contract.query.isApprovalForAll(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress);
-
-            return parseInt(isApprovedForAllRaw.toString())
+            const { output } = await contract.query.isApprovedForAll(accountAddress, { value: 0, gasLimit: -1 }, accountAddress, proxyAddress);
+            console.log(output != null ? output.toString() : "", "===========output===========", output, output != null ? output.toString() == "false" : 0)
+            return output != null ? output.toString() == "true" : output
         }
         const isApprovedForAll = await approvalAllCheck()
 
-        if (isApprovedForAll == 1) {
+        if (isApprovedForAll) {
             // Supports ApproveAll
             this.logger('Already approved proxy for all tokens')
             return null
         }
 
-        if (isApprovedForAll == 0) {
+        if ( !isApprovedForAll) {
             // Supports ApproveAll
             //  not approved for all yet
 
@@ -1175,7 +1175,7 @@ export class OpenSeaPort {
                 // })
                 let txHash = "";
                 {
-                    let gasConsumed = await contract.query.setApprovalForAll(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, true);
+                    let { gasConsumed } = await contract.query.setApprovalForAll(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, true);
                     let result = await contract.tx.setApprovalForAll({ value: 0, gasLimit: gasConsumed.toString() }, proxyAddress, true).signAndSend(accountPair);
                     txHash = result.toString();
                 }
@@ -1196,8 +1196,9 @@ export class OpenSeaPort {
         const approvalOneCheck = async () => {
             // Note: approvedAddr will be '' if not supported
             // let approvedAddr = await promisifyCall<string>(c => contract.getApproved.call(tokenId, c))
-            let approvedAddrraw = await contract.query.getApproved(accountAddress, { value: 0, gasLimit: -1 }, tokenId);
-            let approvedAddr = approvedAddrraw.toString()
+            let { result, output } = await contract.query.getApproved(accountAddress, { value: 0, gasLimit: -1 }, tokenId);
+            console.log(output?.toString(), "======result==========", result.toString())
+            let approvedAddr = output != null && output.toString() != '' ? output.toString() : "null"
             if (approvedAddr == proxyAddress) {
                 this.logger('Already approved proxy for this token')
                 return true
@@ -1205,8 +1206,12 @@ export class OpenSeaPort {
             this.logger(`Approve response: ${approvedAddr}`)
 
             // SPECIAL CASING non-compliant contracts
+            console.log(approvedAddr, "======approvedAddr==========", tokenId, accountAddress)
+
             if (!approvedAddr) {
                 let approvedAddru = await getNonCompliantApprovalAddress(contract, tokenId, accountAddress);
+                console.log(approvedAddru, "======approvedAddru==========", tokenId, accountAddress)
+
                 if (approvedAddru != undefined) {
                     approvedAddr = approvedAddru;
                 }
@@ -1243,7 +1248,9 @@ export class OpenSeaPort {
             //     this._dispatch(EventType.TransactionDenied, { error, accountAddress })
             // })
             let { gasConsumed } = await contract.query.approve(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, tokenId);
+            console.log("=======approve=======gasConsumed==========", gasConsumed.toString())
             let result = await contract.tx.approve({ value: 0, gasLimit: gasConsumed.toString() }, proxyAddress, tokenId).signAndSend(accountPair);
+            console.log(accountPair.address, proxyAddress, tokenId, "=======approve=======result==========", result.toString())
             if (!result) {
                 const error = new Error(result);
                 this._dispatch(EventType.TransactionDenied, { error, accountAddress })
@@ -1273,7 +1280,7 @@ export class OpenSeaPort {
             tokenAddress,
             proxyAddress,
             nonce,
-            minimumAmount = new BigNumber(Number.MAX_VALUE) }:
+            minimumAmount = new BigNumber(Number.MAX_VALUE / 1000000000) }:
             {
                 accountAddress: string;
                 tokenAddress: string;
@@ -1296,7 +1303,6 @@ export class OpenSeaPort {
             this.logger('Already approved enough currency for trading')
             return null
         }
-        approvedAmount = new BN(1);//minimumAmount
 
         this.logger(`Not enough token approved for trade: ${approvedAmount} approved to transfer ${tokenAddress}`)
 
@@ -1314,14 +1320,11 @@ export class OpenSeaPort {
         }
         let txHash;
         let gas;
+        const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
+        const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
+        const fromPair = keyring.getPair(accountAddress);
         {
-            // Perform the actual read (no params at the end, for the `get` message)
-            // (We perform the send from an account, here using Alice's address)
-            const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
-            const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
-            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
-
-            let { gasConsumed, result, output } = await contract.query.approve(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, approvedAmount);
+            let { gasConsumed, result, output } = await contract.query.approve(accountAddress, { value: 0, gasLimit: -1 }, proxyAddress, WyvernProtocol.MAX_UINT_256.toString());
             // The actual result from RPC as `ContractExecResult`
             console.log(result.toHuman());
             gas = new BN(gasConsumed.toString());
@@ -1337,19 +1340,17 @@ export class OpenSeaPort {
             }
         }
         {
-            // Perform the actual read (no params at the end, for the `get` message)
-            // (We perform the send from an account, here using Alice's address)
-            const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
-            const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
-            // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
-            const fromPair = keyring.getPair(accountAddress);
-            console.log(accountAddress, '====nonce===', nonce.toString());
-            let result = await contract.tx.approve({ value: 0, gasLimit: gas }, proxyAddress, approvedAmount).signAndSend(fromPair, { nonce });
+            if (nonce == undefined) {
+                const nonces = await this.apiPro.rpc.system.accountNextIndex(fromPair.address)
+                nonce = nonces.toString();//(Number(nonces.toString()) + Number(1)).toString();
+            }
+
+            console.log(accountAddress, proxyAddress, '===approve fromPair.address=nonce===', nonce, fromPair.address);
+            let result = await contract.tx.approve({ value: 0, gasLimit: gas }, proxyAddress, WyvernProtocol.MAX_UINT_256.toString()).signAndSend(fromPair, { nonce });
             // The actual result from RPC as `ContractExecResult`
-            console.log(result.toHuman());
+            // console.log(result);
             txHash = result.toString();
         }
-        await this._confirmTransaction(txHash, EventType.ApproveCurrency, `Approving currency for trading`)
         // const gasPrice = await this._computeGasPrice()
         // const txHash = await sendRawTransaction(this.apiPro, {
         //     from: accountAddress,
@@ -1363,14 +1364,14 @@ export class OpenSeaPort {
         //     this._dispatch(EventType.TransactionDenied, { error, accountAddress })
         // })
 
-        // await this._confirmTransaction(txHash, EventType.ApproveCurrency, "Approving currency for trading", async () => {
-        //     const newlyApprovedAmount = await this._getApprovedTokenCount({
-        //         accountAddress,
-        //         tokenAddress,
-        //         proxyAddress
-        //     })
-        //     return newlyApprovedAmount.isGreaterThanOrEqualTo(minimumAmount)
-        // })
+        await this._confirmTransaction(txHash, EventType.ApproveCurrency, "Approving currency for trading", async () => {
+            const newlyApprovedAmount = await this._getApprovedTokenCount({
+                accountAddress,
+                tokenAddress,
+                proxyAddress
+            })
+            return newlyApprovedAmount.isGreaterThanOrEqualTo(minimumAmount)
+        })
 
         return txHash
     }
@@ -2211,7 +2212,7 @@ export class OpenSeaPort {
      */
     public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
         // console.log(this.apiPro.query)
-        let proxyAddress: string | null = "5GzQ8YbeH5KBdHFnF9VHrsxKf5ZAR9iSSddHoaAuFjmVia4H";// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
+        let proxyAddress: string | null = WyvernProtocol.getAtomicizerContractAddress(this._networkName);// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
         if (proxyAddress == '') {
             throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
@@ -2278,16 +2279,20 @@ export class OpenSeaPort {
                 proxyAddress?: string;
             }
     ) {
+        console.log("========_getApprovedTokenCount=============", tokenAddress)
+
         if (!tokenAddress) {
             tokenAddress = WyvernSchemas.tokens[this._networkName].canonicalWrappedEther.address
         }
         const addressToApprove = proxyAddress || WyvernProtocol.getTokenTransferProxyAddress(this._networkName)
+        console.log(proxyAddress, "====addressToApprove=====", addressToApprove, "========_getApprovedTokenCount=============", tokenAddress)
         const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
         const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
-        let { result } = await contract.query.allowance(accountAddress, { value: 0, gasLimit: -1 }, accountAddress, addressToApprove);
+        let { result, output } = await contract.query.allowance(accountAddress, { value: 0, gasLimit: -1 }, accountAddress, addressToApprove);
+        // console.log("====result=====" ,result, "========result=============", output)
 
         // The actual result from RPC as `ContractExecResult`
-        const approved = Number(result.toHuman());
+        const approved = output == null ? 0 : Number(output.toString());
 
         // const approved = await rawCall(this.apiPro, {
         //     from: accountAddress,
@@ -2338,9 +2343,8 @@ export class OpenSeaPort {
             feeRecipient,
             feeMethod
         } = this._getBuyFeeParameters(totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, sellOrder)
-        const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
-        const contract = new ContractPromise(this.apiPro, erc20abi, asset.tokenAddress);
-        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress, contract)
+
+        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress, this._wyvernProtocol.wyvernAtomicizer)
 
         const { basePrice, extra, paymentToken } = await this._getPriceParameters(OrderSide.Buy, paymentTokenAddress, expirationTime, startAmount)
         const times = this._getTimeParameters(expirationTime)
@@ -2411,9 +2415,7 @@ export class OpenSeaPort {
         const { totalSellerFeeBasisPoints,
             totalBuyerFeeBasisPoints,
             sellerBountyBasisPoints } = await this.computeFees({ asset: openSeaAsset, side: OrderSide.Sell, isPrivate, extraBountyBasisPoints })
-        const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
-        const contract = new ContractPromise(this.apiPro, erc20abi, asset.tokenAddress);
-        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress, contract)
+        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress, this._wyvernProtocol.wyvernAtomicizer)
 
         const orderSaleKind = endAmount != null && endAmount !== startAmount
             ? SaleKind.DutchAuction
@@ -2741,11 +2743,9 @@ export class OpenSeaPort {
         const computeOrderParams = () => {
             if ('asset' in order.metadata) {
                 const schema = this._getSchema(order.metadata.schema)
-                const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
-                const contract = new ContractPromise(this.apiPro, erc20abi, order.metadata.asset.address);
                 return order.side == OrderSide.Buy
-                    ? encodeSell(schema, order.metadata.asset, recipientAddress, contract)
-                    : encodeBuy(schema, order.metadata.asset, recipientAddress, contract)
+                    ? encodeSell(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol.wyvernAtomicizer)
+                    : encodeBuy(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol.wyvernAtomicizer)
             } else if ('bundle' in order.metadata) {
                 // We're matching a bundle order
                 const bundle = order.metadata.bundle
@@ -2903,26 +2903,26 @@ export class OpenSeaPort {
             }
     ) {
 
-        // const wyAssets = 'bundle' in order.metadata
-        //     ? order.metadata.bundle.assets
-        //     : order.metadata.asset
-        //         ? [order.metadata.asset]
-        //         : []
-        // const schemaNames = 'bundle' in order.metadata && 'schemas' in order.metadata.bundle
-        //     ? order.metadata.bundle.schemas
-        //     : 'schema' in order.metadata
-        //         ? [order.metadata.schema]
-        //         : []
+        const wyAssets = 'bundle' in order.metadata
+            ? order.metadata.bundle.assets
+            : order.metadata.asset
+                ? [order.metadata.asset]
+                : []
+        const schemaNames = 'bundle' in order.metadata && 'schemas' in order.metadata.bundle
+            ? order.metadata.bundle.schemas
+            : 'schema' in order.metadata
+                ? [order.metadata.schema]
+                : []
         const tokenAddress = order.paymentToken
 
-        // await this._approveAll({ schemaNames, wyAssets, accountAddress })
+        await this._approveAll({ schemaNames, wyAssets, accountAddress })
 
         // For fulfilling bids,
         // need to approve access to fungible token because of the way fees are paid
         // This can be done at a higher level to show UI
         if (tokenAddress != NULL_ADDRESS) {
-            // const minimumAmount = makeBigNumber(order.basePrice)
-            // await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
+            const minimumAmount = makeBigNumber(order.basePrice)
+            await this.approveFungibleToken({ accountAddress, tokenAddress, minimumAmount })
         }
 
         // Check sell parameters
@@ -3503,13 +3503,15 @@ export class OpenSeaPort {
             let nonces = await this.apiPro.rpc.system.accountNextIndex(accPair.address)
             let nonce = nonces.toString();
             if (shouldValidateSell) {
+                console.log('=================shouldValidateSell==============')
                 accPair = sellPair;
+                let nonces = await this.apiPro.rpc.system.accountNextIndex(accPair.address)
                 nonce = (Number(nonces.toString()) + Number(4)).toString();
             }
 
             console.log(args[0],
                 args[1], args[2], args[3], args[4], args[5],
-                args[6], args[7], args[8], args[9], args[10], args[11], "========nonces=========", nonces.toString())
+                args[6], args[7], args[8], args[9], args[10], args[11], "========nonces=========", nonces.toString(), accPair.address)
             //    this.logger(`${console.trace()}`)
             // txHash = submit(this.apiPro, this._wyvernProtocol.wyvernExchange.atomicMatchEx(args[0],
             //     args[1], args[2], args[3], args[4], args[5],

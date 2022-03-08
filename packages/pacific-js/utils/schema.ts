@@ -66,7 +66,7 @@ export const encodeCall = (abi: ContractPromise, parameters: any[]): string => {
 export const encodeSell: Encoder = (schema, asset, address, token) => {
     console.log("=======encodeSell========")
     const transfer = schema.functions.transfer(asset)
-    const calldata = encodeCall(token, [address, DummyNullAddress, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
+    const calldata = encodeCall(token, ["0b396f18",transfer.target,address, DummyNullAddress, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
     return {
         target: transfer.target,
         calldata,
@@ -134,9 +134,7 @@ export const encodeBuy: Encoder = (schema, asset, address, token) => {
         }
     })
 
-
-
-    const calldata = encodeCall(token, [DummyNullAddress, address, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
+    const calldata = encodeCall(token, ["0b396f18",transfer.target,DummyNullAddress, address, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
     console.log("===buy=====calldata=======", calldata);
     // Compute replacement pattern
     let replacementPattern = encodeReplacementPattern(calldata, FunctionInputKind.Owner)
@@ -299,7 +297,7 @@ function encodeAtomicizedCalldata(atomicizer: ContractPromise, schemas: Array<Sc
         }
         console.log("===557efb0c====selectorIndex=========", selectorIndex)
         let atomicizedCalldata = "0x" + calldata.slice(selectorIndex);
-        atomicizedCalldata = atomicizedCalldata.replace(DummyNullHexPublicKey, WyvernProtocol.generateDefaultValue("bytes32").slice(2));
+        // atomicizedCalldata = atomicizedCalldata.replace(DummyNullHexPublicKey, WyvernProtocol.generateDefaultValue("bytes32").slice(2));
         console.log(DummyNullHexPublicKey, atomicizedCalldata)
         const atomicizedReplacementPattern = WyvernProtocol.encodeAtomicizedReplacementPattern(atomicizedCalldata, kind)
 

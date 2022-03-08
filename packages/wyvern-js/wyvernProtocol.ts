@@ -49,7 +49,7 @@ export class WyvernProtocol {
 
     public static NULL_ADDRESS = constants.NULL_ADDRESS
 
-    public static MAX_UINT_256 = new BigNumber(2).pow(256).minus(1)
+    public static MAX_UINT_256 = new BigNumber(2).pow(30).minus(1)
 
     public wyvernExchange: any
 

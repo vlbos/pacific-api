@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xf375f3d1e7655da9ab808363ca6b64ec32e612d3c1e216b57db9e7b8ef0fb961",
+    "hash": "0xcdb0466505a76189254aa274afbb25df13d7d1273299a1e63d18cb137115d169",
     "language": "ink! 3.0.0-rc7",
     "compiler": "rustc 1.59.0-nightly"
   },
@@ -776,6 +776,70 @@
             "type": 20
           },
           "selector": "0x557efb0c"
+        },
+        {
+          "args": [
+            {
+              "label": "selector",
+              "type": {
+                "displayName": [],
+                "type": 11
+              }
+            },
+            {
+              "label": "callee",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "from",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "to",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 3
+              }
+            },
+            {
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "Balance"
+                ],
+                "type": 13
+              }
+            }
+          ],
+          "docs": [
+            " Evaluate a confirmed execution and return its output as bytes.",
+            "",
+            " Its return value indicates whether the called transaction was successful and contains",
+            " its output when successful.",
+            " This can be called by anyone."
+          ],
+          "label": "transfer_from",
+          "mutates": true,
+          "payable": true,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 20
+          },
+          "selector": "0x0b396f18"
         }
       ]
     },

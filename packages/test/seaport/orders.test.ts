@@ -844,7 +844,7 @@ describe('seaport: orders', () => {
 
     it.only('Matches a buy order and  fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
-        const accountAddress = ALICE_ADDRESS
+        let accountAddress = ALICE_ADDRESS
         let order = await client.api.getOrder({
             side: OrderSide.Buy,
             owner: accountAddress,
@@ -891,11 +891,11 @@ describe('seaport: orders', () => {
         // console.log(calldata.slice(calldata.indexOf("557efb0c")))
         // calldata = "0x" + calldata.slice(calldata.indexOf("557efb0c"));
         await client.initParameters(
-            BOB_ADDRESS,
-            BOB_ADDRESS
+            EVE_ADDRESS,
+            EVE_ADDRESS
         );
-        order.exchange = BOB_ADDRESS;
-
+        order.exchange = "5F6NJoyBDaDpVCQtD7U7T7uU9TXsEWQytFKqRCmjsR813bxX";
+        accountAddress=BOB_ADDRESS;
         await client.fulfillOrder({ order, accountAddress })
     })
 
