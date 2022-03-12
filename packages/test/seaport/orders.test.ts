@@ -844,15 +844,15 @@ describe('seaport: orders', () => {
 
     it.only('Matches a buy order and  fulfillment', async () => {
         // Need to use a taker who has created a proxy and approved W-ETH already
-        let accountAddress = ALICE_ADDRESS
+        let accountAddress = BOB_ADDRESS
         let order = await client.api.getOrder({
             side: OrderSide.Buy,
             owner: accountAddress,
             // Use a token that has already been approved via approve-all
             asset_contract_address: DIGITAL_ART_CHAIN_ADDRESS
         })
-        const recipientAddress = order.side === OrderSide.Sell ? ALICE_STASH_ADDRESS : accountAddress
         order.side = OrderSide.Buy
+        let recipientAddress = order.side === OrderSide.Sell ? ALICE_ADDRESS : accountAddress
         const matchingOrder = client._makeMatchingOrder({
             order,
             accountAddress,
@@ -861,7 +861,8 @@ describe('seaport: orders', () => {
         order.calldata = matchingOrder.calldata;
         order.replacementPattern = matchingOrder.replacementPattern;
         // console.log("======order=====", order)
-        order.side = OrderSide.Sell 
+        order.side = OrderSide.Sell
+        recipientAddress = order.side === OrderSide.Sell ? ALICE_STASH_ADDRESS : accountAddress
         expect(order).not.toBeNull()
         if (!order) {
             console.log("===========")
@@ -890,13 +891,12 @@ describe('seaport: orders', () => {
         // console.log(calldata)
         // console.log(calldata.slice(calldata.indexOf("557efb0c")))
         // calldata = "0x" + calldata.slice(calldata.indexOf("557efb0c"));
-        await client.initParameters(
-            EVE_ADDRESS,
-            EVE_ADDRESS
-        );
-        order.exchange = "5F6NJoyBDaDpVCQtD7U7T7uU9TXsEWQytFKqRCmjsR813bxX";
-        accountAddress=BOB_ADDRESS;
-        await client.fulfillOrder({ order, accountAddress })
+        // await client.initParameters(
+        //     "5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f",
+        //     EVE_ADDRESS
+        // );
+        order.exchange = "5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f";
+        await client.fulfillOrder({ order, accountAddress,recipientAddress })
     })
 
     it('Matches a referred order via sell_orders and getAssets', async () => {

@@ -38,10 +38,10 @@ export interface CallSpec {
 
 export const encodeReplacementPattern: ReplacementEncoder = WyvernProtocol.encodeReplacementPattern
 
-export type Encoder = (schema: Schema<WyvernAsset>, asset: WyvernAsset, address: string, token: ContractPromise) => CallSpec
+export type Encoder = (schema: Schema<WyvernAsset>, asset: WyvernAsset, address: string, wyvernProtocol: WyvernProtocol, networkName: Network) => CallSpec
 
-export const encodeCall = (abi: ContractPromise, parameters: any[]): string => {
-    let tx = abi.tx.transferFrom({ value: 0, gasLimit: -1 }, ...parameters).toHex();
+export const encodeCall = (atomicizer: ContractPromise, parameters: any[]): string => {
+    let tx = atomicizer.tx.transferFrom({ value: 0, gasLimit: -1 }, ...parameters).toHex();
     let selectorIndex = tx.indexOf("0b396f18");///100
     if (selectorIndex == -1) {
         console.error("===0b396f18======selectorIndex==-1=============")
@@ -63,14 +63,16 @@ export const encodeCall = (abi: ContractPromise, parameters: any[]): string => {
     // ]).toString('hex')
 }
 
-export const encodeSell: Encoder = (schema, asset, address, token) => {
+export const encodeSell: Encoder = (schema, asset, address, wyvernProtocol, networkName) => {
     console.log("=======encodeSell========")
     const transfer = schema.functions.transfer(asset)
-    const calldata = encodeCall(token, ["0b396f18",transfer.target,address, DummyNullAddress, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
+    const atomicizer = wyvernProtocol.wyvernAtomicizer
+
+    const {atomicizedCalldata, atomicizedReplacementPattern } = encodeAtomicizedCalldata(atomicizer, [schema], [asset], address, OrderSide.Sell);//encodeCall(atomicizer, ["0b396f18",transfer.target,address, DummyNullAddress, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
     return {
-        target: transfer.target,
-        calldata,
-        replacementPattern: encodeReplacementPattern(calldata),
+        target:WyvernProtocol.getAtomicizerContractAddress(networkName),
+        calldata:atomicizedCalldata,
+        replacementPattern: atomicizedReplacementPattern,
     }
 }
 
@@ -104,8 +106,9 @@ export const encodeAtomicizedBuy: AtomicizedBuyEncoder = (schemas, assets, addre
     }
 }
 
-export const encodeBuy: Encoder = (schema, asset, address, token) => {
+export const encodeBuy: Encoder = (schema, asset, address, wyvernProtocol, networkName) => {
     console.log("=======encodeBuy========")
+    const atomicizer = wyvernProtocol.wyvernAtomicizer
 
     const transfer = schema.functions.transfer(asset)
     const replaceables = transfer.inputs.filter((i: any) => i.kind === FunctionInputKind.Replaceable)
@@ -134,20 +137,20 @@ export const encodeBuy: Encoder = (schema, asset, address, token) => {
         }
     })
 
-    const calldata = encodeCall(token, ["0b396f18",transfer.target,DummyNullAddress, address, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
-    console.log("===buy=====calldata=======", calldata);
+    const  {atomicizedCalldata, atomicizedReplacementPattern } = encodeAtomicizedCalldata(atomicizer, [schema], [asset], address, OrderSide.Buy);//encodeCall(token, ["0b396f18",transfer.target,DummyNullAddress, address, asset.id == undefined ? (<WyvernFTAsset>asset).quantity : asset.id])
+    console.log("===buy=====calldata=======", atomicizedCalldata);
     // Compute replacement pattern
-    let replacementPattern = encodeReplacementPattern(calldata, FunctionInputKind.Owner)
-    console.log(replacementPattern, "===buy=====calldata=======", calldata);
+    // let replacementPattern = encodeReplacementPattern(calldata, FunctionInputKind.Owner)
+    console.log(atomicizedReplacementPattern, "===buy=====calldata=======", atomicizedCalldata);
 
     // if (ownerInputs.length > 0) {
     //     replacementPattern = encodeReplacementPattern(calldata, FunctionInputKind.Owner)
     // }
 
     return {
-        target: transfer.target,
-        calldata,
-        replacementPattern,
+        target: WyvernProtocol.getAtomicizerContractAddress(networkName),
+        calldata:atomicizedCalldata,
+        replacementPattern:atomicizedReplacementPattern,
     }
 
 }

@@ -210,7 +210,7 @@ export class OpenSeaPort {
         const accountPair = keyring.getPair(accountAddress);
         const nonces = await this.apiPro.rpc.system.accountNextIndex(accountPair.address)
         let nonce = nonces.toString();
-        await this.apiPro.tx.wyvernExchangeCore.changeOwner(self).signAndSend(accountPair, { nonce });
+        await this.apiPro.tx.wyvernExchangeCore.changeOwner(accountAddress).signAndSend(accountPair, { nonce });
         nonce = (Number(nonces.toString()) + Number(1)).toString();
         await this.apiPro.tx.wyvernExchangeCore.setContractSelf(self).signAndSend(accountPair, { nonce });
         nonce = (Number(nonces.toString()) + Number(2)).toString();
@@ -2344,7 +2344,7 @@ export class OpenSeaPort {
             feeMethod
         } = this._getBuyFeeParameters(totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, sellOrder)
 
-        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress, this._wyvernProtocol.wyvernAtomicizer)
+        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress, this._wyvernProtocol,this._networkName)
 
         const { basePrice, extra, paymentToken } = await this._getPriceParameters(OrderSide.Buy, paymentTokenAddress, expirationTime, startAmount)
         const times = this._getTimeParameters(expirationTime)
@@ -2415,7 +2415,7 @@ export class OpenSeaPort {
         const { totalSellerFeeBasisPoints,
             totalBuyerFeeBasisPoints,
             sellerBountyBasisPoints } = await this.computeFees({ asset: openSeaAsset, side: OrderSide.Sell, isPrivate, extraBountyBasisPoints })
-        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress, this._wyvernProtocol.wyvernAtomicizer)
+        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress, this._wyvernProtocol,this._networkName)
 
         const orderSaleKind = endAmount != null && endAmount !== startAmount
             ? SaleKind.DutchAuction
@@ -2739,13 +2739,13 @@ export class OpenSeaPort {
     ): UnsignedOrder {
         accountAddress = validateAndFormatWalletAddress(this.apiPro, accountAddress)
         recipientAddress = validateAndFormatWalletAddress(this.apiPro, recipientAddress)
-        console.log(order.side, "========order.side==========")
+        console.log(order.side, "========order.side=====recipientAddress=====",recipientAddress)
         const computeOrderParams = () => {
             if ('asset' in order.metadata) {
                 const schema = this._getSchema(order.metadata.schema)
                 return order.side == OrderSide.Buy
-                    ? encodeSell(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol.wyvernAtomicizer)
-                    : encodeBuy(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol.wyvernAtomicizer)
+                    ? encodeSell(schema, order.metadata.asset, recipientAddress,this._wyvernProtocol,this._networkName)
+                    : encodeBuy(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol,this._networkName)
             } else if ('bundle' in order.metadata) {
                 // We're matching a bundle order
                 const bundle = order.metadata.bundle

@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xcdb0466505a76189254aa274afbb25df13d7d1273299a1e63d18cb137115d169",
+    "hash": "0x1557096874d1083496cd28a9926acf20e24e46d9aef5957434e756d3aa28f267",
     "language": "ink! 3.0.0-rc7",
     "compiler": "rustc 1.59.0-nightly"
   },
@@ -814,7 +814,7 @@
               }
             },
             {
-              "label": "value",
+              "label": "value_or_id",
               "type": {
                 "displayName": [
                   "Balance"
@@ -830,7 +830,7 @@
             " its output when successful.",
             " This can be called by anyone."
           ],
-          "label": "transfer_from",
+          "label": "transfer_from_by_contract",
           "mutates": true,
           "payable": true,
           "returnType": {
@@ -839,7 +839,7 @@
             ],
             "type": 20
           },
-          "selector": "0x0b396f18"
+          "selector": "0x32b60d60"
         }
       ]
     },
