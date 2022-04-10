@@ -1,10 +1,11 @@
-import { ApiPromise } from '@polkadot/api'
 
 import { Order } from './types'
 import { WyvernProtocol } from '../wyvern-js/WyvernProtocol'
 import { NULL_ADDRESS } from './constants'
 
 export const MAX_ERROR_LENGTH = 120
+
+
 
 /**
  * This file reproduces Solidity methods to make debugging easier

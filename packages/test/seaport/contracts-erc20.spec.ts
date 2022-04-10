@@ -78,35 +78,35 @@ beforeEach(
         let nonce = await api.rpc.system.accountNextIndex(alicePair.address);
         // submit(api, api.tx.balances.transfer(bobPair.address, salary), alicePair);
         const txn = api.tx.balances
-            .transfer(bobPair.address, CREATION_FEE.muln(3));
+            .transfer(charliePair.address, CREATION_FEE.muln(3));
         const getType = (arg: any) => `${arg.type}` === 'Bytes' && arg.Type.name === 'Text' ? 'Text' : arg.type
         const args = txn.args.map((arg: any, idx: any) => `${api.registry.createType(getType(txn.meta.args[idx]), arg)}`)
-        console.log("===================")
+        console.log("===================")//, { nonce: nonce.toHuman() + 1 }
         const done = await txn
-            .signAndSend(alicePair, { nonce: nonce.toHuman() + 1 }, (result: SubmittableResult): void => {
+            .signAndSend(alicePair, (result: SubmittableResult): void => {
                 if (
                     result.status.isInBlock
                 ) {
-                    console.log("New bob account has been transfer.");
+                    // console.log("New bob account has been transfer.");
                     done();
                 }
                 if (
                     result.status.isInBlock &&
                     result.findRecord("system", "ExtrinsicSuccess")
                 ) {
-                    console.log("New test account has been created.");
+                    // console.log("New test account has been created.");
                     done();
                 }
             });
         api.tx.balances
-            .transfer(testAccount.address, CREATION_FEE.muln(3))
-            .signAndSend(alicePair, { nonce: nonce.toHuman() + 1 }, (result: SubmittableResult): void => {
+            .transfer(davePair.address, CREATION_FEE.muln(3))
+            .signAndSend(bobPair,  (result: SubmittableResult): void => {
                 if (
                     result.status.isInBlock &&
                     result.findRecord("system", "ExtrinsicSuccess")
                 ) {
-                    console.log("New test account has been created.");
-                    //done();
+                    // console.log("New test account has been created.");
+                    done();
                 }
             });
     }

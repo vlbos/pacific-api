@@ -8,6 +8,7 @@
   },
   "scripts": {
     "typegen": "yarn generate:defs && yarn generate:meta",
+    "ss": "ts-node   -O '{\"module\": \"commonjs\"}'  packages/utils/accHelper.ts ",
     "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package pacific-api/interfaces --input ./packages/interfaces",
     "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package pacific-api/interfaces --endpoint ./pacific.json --output ./packages/interfaces --strict",
     "test": "polkadot-dev-run-test --coverage ",
@@ -16,6 +17,7 @@
     "test:bundle": "polkadot-dev-run-test packages/test/seaport/bundles.test.ts  ",
     "test:transfer": "polkadot-dev-run-test packages/test/seaport/ownersAndTransfers.test.ts  ",
     "t:contract": "polkadot-dev-run-test packages/test/seaport/contracts-rust.spec.ts  ",
+    "t:t": "polkadot-dev-run-test packages/test/seaport/testacc_transfer.spec.ts ",
     "t:erc20": "polkadot-dev-run-test packages/test/seaport/contracts-erc20.spec.ts ",
     "t:msig": "polkadot-dev-run-test packages/test/seaport/contracts-multisig.spec.ts ",
     "t:erc721": "polkadot-dev-run-test packages/test/seaport/contracts-erc721.spec.ts  ",

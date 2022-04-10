@@ -5,6 +5,7 @@
     "**/build/**/*",
   ],
   "compilerOptions": {
+ "resolveJsonModule": true,
     "baseUrl": ".",
     "paths":
     {
