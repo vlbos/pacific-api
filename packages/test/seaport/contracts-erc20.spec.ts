@@ -111,7 +111,7 @@ beforeEach(
             });
     }
 );
-
+ 
 describe("Rust Smart Contracts", () => {
     test("AS-Substrate ERC-20 contract", async () => {
         /**
