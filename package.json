@@ -19,6 +19,7 @@
     "t:contract": "polkadot-dev-run-test packages/test/seaport/contracts-rust.spec.ts  ",
     "t:p": "polkadot-dev-run-test packages/test/seaport/proxy.spec.ts ",
     "t:20": "polkadot-dev-run-test packages/test/seaport/proxy-erc20.spec.ts ",
+    "t:o": "polkadot-dev-run-test packages/test/seaport/proxy-ownable.spec.ts ",
     "t:to": "polkadot-dev-run-test packages/test/seaport/proxy-token.spec.ts ",
     "t:t": "polkadot-dev-run-test packages/test/seaport/transfer.spec.ts ",
     "t:erc20": "polkadot-dev-run-test packages/test/seaport/contracts-erc20.spec.ts ",

@@ -120,7 +120,7 @@ beforeEach(
         //             done();
         //         }
         //     });
-       
+
     }
 );
 
@@ -131,7 +131,7 @@ describe("proxy Smart Contracts registry", () => {
     test.only("contractsContains", async () => {
         {
 
-            let { gasConsumed, result, output } = await contract.query.contractsContains(alicePair.address, { value: 0, gasLimit: -1 }, alicePair.address);
+            let { gasConsumed, result, output } = await contract.query.contractsContains(alicePair.address, { value: 0, gasLimit: -1 }, charliePair.address);
 
             console.log(result.toString());
 
@@ -140,7 +140,7 @@ describe("proxy Smart Contracts registry", () => {
             // gasLimit = gasConsumed;
             // check if the call was successful
             if (result.isOk) {
-                console.log(alicePair.address, 'contractsContains Success', output?.toString());
+                console.log(bobPair.address, 'contractsContains Success', output?.toString());
             } else {
                 console.error('contractsContains Error', result.asErr);
             }
@@ -175,7 +175,7 @@ describe("proxy Smart Contracts registry", () => {
 
     });
 
-    test.only("grantInitialAuthentication", async () => {
+    test("grantInitialAuthentication", async () => {
         let gasLimit
 
         {
@@ -208,12 +208,11 @@ describe("proxy Smart Contracts registry", () => {
         }
     });
 
-    test("startGrantAuthentication", async () => {
-
+    test.only("startGrantAuthentication", async () => {
         let gasLimit
 
         {
-            let { gasConsumed, result, output } = await contract.query.startGrantAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address);
+            let { gasConsumed, result, output } = await contract.query.startGrantAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, charliePair.address);
 
             console.log(result.toString());
             // console.trace("==trace==")
@@ -231,7 +230,7 @@ describe("proxy Smart Contracts registry", () => {
 
             let output = await contract.tx.startGrantAuthentication({
                 value: 0, gasLimit
-            }, alicePair.address).signAndSend(bobPair);
+            }, charliePair.address).signAndSend(bobPair);
 
             console.log("tx", output?.toString());
 
@@ -239,7 +238,38 @@ describe("proxy Smart Contracts registry", () => {
 
         }
     });
+    test.only("endGrantAuthentication", async () => {
 
+        let gasLimit
+
+        {
+
+            let { gasConsumed, result, output } = await contract.query.endGrantAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, charliePair.address);
+
+            console.log(result.toString());
+
+            // gas consumed
+            console.log(gasConsumed.toString());
+            gasLimit = gasConsumed.toString();
+            // check if the call was successful
+            if (result.isOk) {
+                console.log(alicePair.address, 'endGrantAuthentication Success', output?.toString());
+            } else {
+                console.error('endGrantAuthentication Error', result.asErr);
+            }
+        }
+        {
+
+            let output = await contract.tx.endGrantAuthentication({
+                value: 0, gasLimit
+            }, charliePair.address).signAndSend(bobPair);
+
+            console.log("tx", output?.toString());
+
+
+
+        }
+    });
     test("transfer_ownership", async () => {
         let gasLimit = new BN(300000) * new BN(1000000);
 
@@ -272,38 +302,7 @@ describe("proxy Smart Contracts registry", () => {
     });
 
 
-    test("endGrantAuthentication", async () => {
 
-        let gasLimit
-
-        {
-
-            let { gasConsumed, result, output } = await contract.query.endGrantAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address);
-
-            console.log(result.toString());
-
-            // gas consumed
-            console.log(gasConsumed.toString());
-            gasLimit = gasConsumed.toString();
-            // check if the call was successful
-            if (result.isOk) {
-                console.log(alicePair.address, 'endGrantAuthentication Success', output?.toString());
-            } else {
-                console.error('endGrantAuthentication Error', result.asErr);
-            }
-        }
-        {
-
-            let output = await contract.tx.endGrantAuthentication({
-                value: 0, gasLimit
-            }, alicePair.address).signAndSend(bobPair);
-
-            console.log("tx", output?.toString());
-
-
-
-        }
-    });
 });
 
 
@@ -315,7 +314,7 @@ describe("proxy Smart Contracts registry", () => {
 //     });
 
 
-//     test.only("transfer_from", async () => {
+//     test("transfer_from", async () => {
 //         let gasLimit=new BN(500_000_000_000)
 //         let tokenAddress = addresses["erc20"];
 //             const amount = new BN(10_000_000); // only useful on isPayable messages

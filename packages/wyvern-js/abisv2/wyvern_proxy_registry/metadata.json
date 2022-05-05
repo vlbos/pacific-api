@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xee0b5efebce345abea53f31710c69ffd8a0f284f4d5fa81574f9148e6296ce74",
+    "hash": "0x59afc95bb950ffd434ed66fbd74e7651126e48bdc7c219ad3af9a28bf47d5fcf",
     "language": "ink! 3.0.0",
     "compiler": "rustc 1.62.0-nightly"
   },
@@ -15,17 +15,7 @@
     "spec": {
       "constructors": [
         {
-          "args": [
-            {
-              "label": "authenticated_proxy_hash",
-              "type": {
-                "displayName": [
-                  "Hash"
-                ],
-                "type": 4
-              }
-            }
-          ],
+          "args": [],
           "docs": [
             "Instantiate a `delegator` contract with the given sub-contract codes."
           ],
@@ -103,7 +93,7 @@
           ],
           "docs": [],
           "label": "contracts_contains",
-          "mutates": true,
+          "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
@@ -126,8 +116,32 @@
             }
           ],
           "docs": [],
+          "label": "pending_contains",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "u64"
+            ],
+            "type": 7
+          },
+          "selector": "0xec185329"
+        },
+        {
+          "args": [
+            {
+              "label": "auth_address",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [],
           "label": "get_proxy",
-          "mutates": true,
+          "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
@@ -313,22 +327,13 @@
                 "ty": 4
               }
             },
-            "name": "delegate_proxy_implementation"
-          },
-          {
-            "layout": {
-              "cell": {
-                "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
-                "ty": 5
-              }
-            },
             "name": "proxies"
           },
           {
             "layout": {
               "cell": {
-                "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
-                "ty": 7
+                "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
+                "ty": 6
               }
             },
             "name": "pending"
@@ -336,8 +341,8 @@
           {
             "layout": {
               "cell": {
-                "key": "0x0500000000000000000000000000000000000000000000000000000000000000",
-                "ty": 9
+                "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
+                "ty": 8
               }
             },
             "name": "contracts"
@@ -400,28 +405,8 @@
             "composite": {
               "fields": [
                 {
-                  "type": 2,
-                  "typeName": "[u8; 32]"
-                }
-              ]
-            }
-          },
-          "path": [
-            "ink_env",
-            "types",
-            "Hash"
-          ]
-        }
-      },
-      {
-        "id": 5,
-        "type": {
-          "def": {
-            "composite": {
-              "fields": [
-                {
                   "name": "offset_key",
-                  "type": 6,
+                  "type": 5,
                   "typeName": "Key"
                 }
               ]
@@ -446,7 +431,7 @@
         }
       },
       {
-        "id": 6,
+        "id": 5,
         "type": {
           "def": {
             "composite": {
@@ -465,14 +450,14 @@
         }
       },
       {
-        "id": 7,
+        "id": 6,
         "type": {
           "def": {
             "composite": {
               "fields": [
                 {
                   "name": "offset_key",
-                  "type": 6,
+                  "type": 5,
                   "typeName": "Key"
                 }
               ]
@@ -485,7 +470,7 @@
             },
             {
               "name": "V",
-              "type": 8
+              "type": 7
             }
           ],
           "path": [
@@ -497,7 +482,7 @@
         }
       },
       {
-        "id": 8,
+        "id": 7,
         "type": {
           "def": {
             "primitive": "u64"
@@ -505,14 +490,14 @@
         }
       },
       {
-        "id": 9,
+        "id": 8,
         "type": {
           "def": {
             "composite": {
               "fields": [
                 {
                   "name": "offset_key",
-                  "type": 6,
+                  "type": 5,
                   "typeName": "Key"
                 }
               ]

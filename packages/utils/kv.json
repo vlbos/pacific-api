@@ -1,19 +1,20 @@
 {
   "hash": {
-    "auth": "0xfa618779a9bfe48e97690d46b76a39e706d7801f2dd2680ee1007982b93a9f1e",
-    "registry": "0xee0b5efebce345abea53f31710c69ffd8a0f284f4d5fa81574f9148e6296ce74",
-    "delegate": "0xaaa8eb01e0ca906fc2f0924c0f8852e3f84f16c52157651c5d6a24926b721e1b",
-    "token": "0xbe50caa2b5dd5acac387faf1095815dd0dbf66b3660b34737ca67cab48a989f8",
+    "auth": "0xd5f768bbb70d4afc86b404fd767f01a64e4d0ab7f2bd6cd400895adbe79491c2",
+    "registry": "0x59afc95bb950ffd434ed66fbd74e7651126e48bdc7c219ad3af9a28bf47d5fcf",
+    "delegate": "0xade3812dbbfef16589b85e8ee825d7b3ecf516ad258b8383958034c0edb03f31",
+    "token": "0x16cb97ca5b62f07067fb93781d245e0b175ed89a194d4aab7e9115074c25dd4b",
     "erc20": "0x17ae36f304c330aeaf37a2e06fae568c66da83da91a9915e2b42a6a9c9e59702",
     "erc721": "0x47ac03ab552f440054870f0e1bfa0fac75f7f58b9e1dd1aecadde47f1cb37ea8",
-    "atom": "0x6059f85c0ad2a88ac09641138efb29a8653ba2d18c8301a0a8922f3fccc1dcc9"
+    "atom": "0x9f5e37707264c892198a7f5da6c0ca3037d3b2fbd0b92d3a8250d3d1be50f559"
   },
   "address": {
-    "auth": "5CDHL3hNaWMLJYFR2o1HMm1GS3vjcKASqTkyVryHvhNr9Un8",
-    "registry": "5Hq75BNUQiqbjZRWehHtFMhvWU1P57DBqJM81kTExTRgxyAG",
-    "token": "5Dfgyr4fDeTFUzPne9ZALHNypkiXQNCb1Sr4Wdff4vrDWhNQ",
+    "auth": "5HkYbtASQovX9dkjGz1gC4a3zrMjdiZMwsgtaD9C2rHXxHcW",
+    "registry": "5HSkqVXpdybFXFWP24hownW6k16MmVjkCjTvrGtyoYHd7BDT",
+    "token": "5EH3cuzqV69voJLLyUAubQ4s94pBQKfdZS5y9XFT4Fy9i5rL",
     "erc20": "5HFEsDbS5asqGzAmbBohrxpbJAFvvnfwwpRDPJZAsFJaUetb",
     "erc721": "5FhGSaX64EzW1xcNeS8pKEBh2SA5VMj5v8JBYoMc6X3KydDX",
-    "atom": "5EezkDQX3Y1gwtjfMBrAdeaiarHxxHjHL3kyWphWJKTMpJw8"
+    "atom": "5E292ty4xDVscs17TN78Kz53VouCZWguhZXmksRV7VFEG4EH",
+    "delegate": "5GcyUybsabEhTzPEPT4Cxa5wNKQchMiKmVTpvPHP5AYLk72E"
   }
 }

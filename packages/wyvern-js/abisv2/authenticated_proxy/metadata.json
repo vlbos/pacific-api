@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xfa618779a9bfe48e97690d46b76a39e706d7801f2dd2680ee1007982b93a9f1e",
+    "hash": "0xd5f768bbb70d4afc86b404fd767f01a64e4d0ab7f2bd6cd400895adbe79491c2",
     "language": "ink! 3.0.0",
     "compiler": "rustc 1.62.0-nightly"
   },
@@ -52,7 +52,7 @@
             }
           ],
           "docs": [],
-          "label": "ReceivedEther"
+          "label": "ReceivedNativeToken"
         },
         {
           "args": [
@@ -219,7 +219,7 @@
             "@return Result of the call (success or failure)"
           ],
           "label": "proxy",
-          "mutates": false,
+          "mutates": true,
           "payable": false,
           "returnType": {
             "displayName": [
@@ -268,7 +268,7 @@
             "@param calldata Calldata to send"
           ],
           "label": "proxy_assert",
-          "mutates": false,
+          "mutates": true,
           "payable": false,
           "returnType": null,
           "selector": "0xba6b4e9c"
@@ -334,7 +334,7 @@
             "@param extra_data Additional data to log"
           ],
           "label": "receive_approval",
-          "mutates": false,
+          "mutates": true,
           "payable": false,
           "returnType": null,
           "selector": "0x81c867f1"
@@ -352,11 +352,11 @@
             " The method needs to be annotated with `payable`; only then it is",
             " allowed to receive value as part of the call."
           ],
-          "label": "was_it_ten",
+          "label": "receive_native_token",
           "mutates": false,
           "payable": true,
           "returnType": null,
-          "selector": "0x191042b0"
+          "selector": "0x8287e207"
         }
       ]
     },

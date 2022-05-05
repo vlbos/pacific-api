@@ -64,7 +64,7 @@ let api: ApiPromise;
 let contract: ContractPromise;
 let addresses;
 jest.useRealTimers();
-
+let erc20;
 
 beforeAll(async () => {
     jest.setTimeout(300000000);
@@ -74,12 +74,16 @@ beforeAll(async () => {
     //  contract = new ContractPromise(api, abi, address);
     addresses = getAddress();
     // console.log(abis)
-    for (let key of Object.keys(addresses)) {
-        // console.log(abis[key.toString()],key.toString())
-        let abi = new Abi(abis[key.toString()], api.registry.getChainProperties());
-        contracts[key.toString()] = new ContractPromise(api, abi, addresses[key]);
-    }
-    contract = contracts["registry"];
+    // for (let key of Object.keys(addresses)) {
+    // console.log(abis[key.toString()],key.toString())
+    // let abi = new Abi(abis[key.toString()], api.registry.getChainProperties());
+    // contracts[key.toString()] = new ContractPromise(api, abi, addresses[key]);
+    // }
+    let abi = new Abi(abis["auth"], api.registry.getChainProperties());
+    console.log("===delegate address======", addresses["delegate"]);
+    contract = new ContractPromise(api, abi, addresses["delegate"]);
+    abi = new Abi(abis["erc20"], api.registry.getChainProperties());
+    erc20 = new ContractPromise(api, abi, addresses["erc20"]);
 });
 
 
@@ -120,67 +124,22 @@ beforeEach(
         //             done();
         //         }
         //     });
-       
+
     }
 );
 
 describe("proxy Smart Contracts registry", () => {
     beforeAll((): void => {
-        contract = contracts["registry"];
-    });
-    test.only("contractsContains", async () => {
-        {
-
-            let { gasConsumed, result, output } = await contract.query.contractsContains(alicePair.address, { value: 0, gasLimit: -1 }, alicePair.address);
-
-            console.log(result.toString());
-
-            // gas consumed
-            console.log(gasConsumed.toString());
-            // gasLimit = gasConsumed;
-            // check if the call was successful
-            if (result.isOk) {
-                console.log(alicePair.address, 'contractsContains Success', output?.toString());
-            } else {
-                console.error('contractsContains Error', result.asErr);
-            }
-        }
-
+        // contract = contracts["registry"];
     });
 
 
-    test("getProxy", async () => {
-        {
-            let { gasConsumed, result, output } = await contract.query.getProxy(alicePair.address, { value: new BN(0), gasLimit: new BN(-1) }, alicePair.address);//, (result: SubmittableResult) => { });
-
-            console.log(`outcome: ${result.isOk ? 'Ok' : 'Error'}`);
-            console.log(`gasConsumed ${gasConsumed.toString()}`);
-            console.log(output?.toString(), "===========q=q==========", result.toString());
-
-        }
-
-
-    });
-
-    test("owner", async () => {
-        {
-            let { gasConsumed, result, output } = await contract.query.owner(alicePair.address, { value: new BN(0), gasLimit: new BN(-1) });
-
-            console.log(`outcome: ${result.isOk ? 'Ok' : 'Error'}`);
-            console.log(`gasConsumed ${gasConsumed.toString()}`);
-            console.log(output?.toString(), "====owner=======q=q==========", result.toString());
-
-        }
-
-
-    });
-
-    test.only("grantInitialAuthentication", async () => {
+    test("initialize", async () => {
         let gasLimit
+        const registryAddress = addresses["registry"]
 
         {
-
-            let { gasConsumed, result, output } = await contract.query.grantInitialAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address);
+            let { gasConsumed, result, output } = await contract.query.initialize(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address, registryAddress);
 
             console.log(result.toString());
 
@@ -189,121 +148,69 @@ describe("proxy Smart Contracts registry", () => {
             gasLimit = new BN(gasConsumed.toString()) * (new BN(100));
             // check if the call was successful
             if (result.isOk) {
-                console.log(alicePair.address, 'grantInitialAuthentication Success', output?.toString());
+                console.log(alicePair.address, 'initialize Success', output?.toString());
             } else {
-                console.error('grantInitialAuthentication Error', result.asErr);
+                console.error('initialize Error', result.asErr);
             }
         }
         console.log("======gasLimit=========", gasLimit)
         {
 
-            let output = await contract.tx.grantInitialAuthentication({
+            let output = await contract.tx.initialize({
                 value: 0, gasLimit
-            }, alicePair.address).signAndSend(bobPair);
+            }, alicePair.address, registryAddress).signAndSend(bobPair);
 
             console.log("tx", output?.toString());
-
-
 
         }
     });
 
-    test("startGrantAuthentication", async () => {
+    test.only("proxy", async () => {
 
         let gasLimit
+        let from = bobPair.address;
+        let to = alicePair.address;
+        let value = new BN(1_000_000);
+        let calldata = erc20.tx.transferFrom({ value: new BN(0), gasLimit: new BN(-1) }, from, to, value).toHex();
+        let selectorIndex = calldata.indexOf("0b396f18");
+        if (selectorIndex == -1) {
+            console.error("======0b396f18===selectorIndex==-1=============")
+            return "";
+        }
+        let erc20Calldata = "0x" + calldata.slice(selectorIndex);
+        console.log(calldata, "=====", selectorIndex, "===0b396f18====erc20Calldata=========", erc20Calldata)
 
         {
-            let { gasConsumed, result, output } = await contract.query.startGrantAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address);
+
+            let { gasConsumed, result, output } = await contract.query.proxy(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address, 0, erc20Calldata);
 
             console.log(result.toString());
             // console.trace("==trace==")
             // gas consumed
             console.log(gasConsumed.toString());
-            gasLimit = new BN(gasConsumed.toString()) * (new BN(100));
+            gasLimit =new BN(gasConsumed.toString()) * (new BN(100));// new BN(99722) * (new BN(1_000_000));//
             // check if the call was successful
             if (result.isOk) {
-                console.log(alicePair.address, 'startGrantAuthentication Success', output?.toString());
+                console.log(alicePair.address, 'proxy Success', output?.toString());
             } else {
-                console.error('startGrantAuthentication Error', result.asErr);
+                console.error('proxy Error', result.asErr);
             }
         }
         {
 
-            let output = await contract.tx.startGrantAuthentication({
+            let output = await contract.tx.proxy({
                 value: 0, gasLimit
-            }, alicePair.address).signAndSend(bobPair);
+            }, alicePair.address, 0, erc20Calldata).signAndSend(bobPair);
 
             console.log("tx", output?.toString());
+            sleepMs(5000000)
 
 
 
         }
     });
 
-    test("transfer_ownership", async () => {
-        let gasLimit = new BN(300000) * new BN(1000000);
 
-        {
-            // console.log(contract.query);
-            let { gasConsumed, result, output } = await contract.query.transferOwnership(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address);
-
-            console.log(result.toString());
-
-            // gas consumed
-            console.log(gasLimit, gasConsumed.toString());
-            gasLimit = new BN(gasConsumed.toString()) * (new BN(100));
-            // check if the call was successful
-            if (result.isOk) {
-                console.log(alicePair.address, 'transferOwnership Success', output?.toString());
-            } else {
-                console.error('transferOwnership Error', result.asErr);
-            }
-        }
-        {
-
-            let output = await contract.tx.transferOwnership({
-                value: 0, gasLimit
-            }, alicePair.address).signAndSend(bobPair);
-
-            console.log("tx", output?.toString());
-
-
-        }
-    });
-
-
-    test("endGrantAuthentication", async () => {
-
-        let gasLimit
-
-        {
-
-            let { gasConsumed, result, output } = await contract.query.endGrantAuthentication(bobPair.address, { value: 0, gasLimit: -1 }, alicePair.address);
-
-            console.log(result.toString());
-
-            // gas consumed
-            console.log(gasConsumed.toString());
-            gasLimit = gasConsumed.toString();
-            // check if the call was successful
-            if (result.isOk) {
-                console.log(alicePair.address, 'endGrantAuthentication Success', output?.toString());
-            } else {
-                console.error('endGrantAuthentication Error', result.asErr);
-            }
-        }
-        {
-
-            let output = await contract.tx.endGrantAuthentication({
-                value: 0, gasLimit
-            }, alicePair.address).signAndSend(bobPair);
-
-            console.log("tx", output?.toString());
-
-
-
-        }
-    });
 });
 
 
