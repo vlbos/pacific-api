@@ -11,6 +11,7 @@ import { CodePromise, ContractPromise, Abi } from '@polkadot/api-contract';
 const erc20metadata = require("./abisv2/erc20/metadata.json");
 const erc721metadata = require("./abisv2/erc721/metadata.json");
 const msigmetadata = require("./abisv2/multisig/metadata.json");
+const wyvern_proxy_registry_metadata = require("./abisv2/wyvern_proxy_registry/metadata.json");
 import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
 import '../interfaces/augment-types';
@@ -53,7 +54,7 @@ export class WyvernProtocol {
 
     public wyvernExchange: any
 
-    public wyvernProxyRegistry: WyvernProxyRegistryContract
+    public wyvernProxyRegistry: ContractPromise
 
     public wyvernDAO: WyvernDAOContract
 
@@ -88,7 +89,9 @@ export class WyvernProtocol {
     public static getTokenTransferProxyAddress(network: Network): string {
         return constants.DEPLOYED[network].WyvernTokenTransferProxy
     }
-
+    public static getOwnableDelegateProxyAddress(network: Network): string {
+        return constants.DEPLOYED[network].OwnableDelegateProxy
+    }
     /**
      * Verifies that the elliptic curve signature `signature` was generated
      * by signing `data` with the private key corresponding to the `signerAddress` address.
@@ -378,11 +381,15 @@ export class WyvernProtocol {
         }
 
 
-        // const proxyRegistryContractAddress = config.wyvernProxyRegistryContractAddress || WyvernProtocol.getProxyRegistryContractAddress(config.network)
+        const proxyRegistryContractAddress = config.wyvernProxyRegistryContractAddress || WyvernProtocol.getProxyRegistryContractAddress(config.network)
         // this.wyvernProxyRegistry = new WyvernProxyRegistryContract(
         //     this._web3Wrapper.getContractInstance((constants.PROXY_REGISTRY_ABI as any), proxyRegistryContractAddress),
         //     {},
         // )
+        const regabi = new Abi(wyvern_proxy_registry_metadata, this.api.registry != undefined ? this.api.registry.getChainProperties() : undefined);
+        this.wyvernProxyRegistry = new ContractPromise(
+            this.api, regabi, proxyRegistryContractAddress,
+        )
 
         // const daoContractAddress = config.wyvernDAOContractAddress || WyvernProtocol.getDAOContractAddress(config.network)
         // this.wyvernDAO = new WyvernDAOContract(

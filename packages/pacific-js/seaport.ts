@@ -1147,7 +1147,7 @@ export class OpenSeaPort {
             return null
         }
 
-        if ( !isApprovedForAll) {
+        if (!isApprovedForAll) {
             // Supports ApproveAll
             //  not approved for all yet
 
@@ -2212,7 +2212,7 @@ export class OpenSeaPort {
      */
     public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
         // console.log(this.apiPro.query)
-        let proxyAddress: string | null = WyvernProtocol.getAtomicizerContractAddress(this._networkName);// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
+        let proxyAddress: string | null = this._wyvernProtocol.wyvernProxyRegistry.query.getProxy(accountAddress);// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
         if (proxyAddress == '') {
             throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
@@ -2247,8 +2247,29 @@ export class OpenSeaPort {
         //     ...txnData,
         //     gasPrice,
         //     gas: this._correctGasAmount(gasEstimate)
-        // })
+        // })mn 
+        let gas;
+        let txHash = "";
+        const registryAddress = WyvernProtocol.getOwnableDelegateProxyAddress(this._networkName);
+        // const erc20abi = new Abi(msigmetadata, this.apiPro.registry.getChainProperties());
+        // const contract = new ContractPromise(this.apiPro, erc20abi, target);
+        {
+            let { gasConsumed, result, output } = await this._wyvernProtocol.wyvernProxyRegistry.query.registerProxy(fromAddress, { value: 0, gasLimit: -1 }, registryAddress);
+            console.log(result.toHuman());
+            gas = new BN(gasConsumed.toString());
+            console.log(gasConsumed.toHuman());
 
+            if (result.isOk) {
+                console.log(fromAddress, 'transfer Success', output.toHuman());
+            } else {
+                console.error('balanceOf Error', result.asErr);
+            }
+        }
+        {
+            let result = await this._wyvernProtocol.wyvernProxyRegistry.tx.registerProxy({ value: 0, gasLimit: gas },registryAddress).signAndSend(fromPair);
+            console.log(result.toHuman());
+            txHash = result.toString();
+        }
         // await this._confirmTransaction(transactionHash, EventType.InitializeAccount, "Initializing proxy for account", async () => {
         //     const polledProxy = await this._getProxy(accountAddress)
         //     return !!polledProxy
@@ -2344,7 +2365,7 @@ export class OpenSeaPort {
             feeMethod
         } = this._getBuyFeeParameters(totalBuyerFeeBasisPoints, totalSellerFeeBasisPoints, sellOrder)
 
-        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress, this._wyvernProtocol,this._networkName)
+        const { target, calldata, replacementPattern } = encodeBuy(schema, wyAsset, accountAddress, this._wyvernProtocol, this._networkName)
 
         const { basePrice, extra, paymentToken } = await this._getPriceParameters(OrderSide.Buy, paymentTokenAddress, expirationTime, startAmount)
         const times = this._getTimeParameters(expirationTime)
@@ -2415,7 +2436,7 @@ export class OpenSeaPort {
         const { totalSellerFeeBasisPoints,
             totalBuyerFeeBasisPoints,
             sellerBountyBasisPoints } = await this.computeFees({ asset: openSeaAsset, side: OrderSide.Sell, isPrivate, extraBountyBasisPoints })
-        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress, this._wyvernProtocol,this._networkName)
+        const { target, calldata, replacementPattern } = encodeSell(schema, wyAsset, accountAddress, this._wyvernProtocol, this._networkName)
 
         const orderSaleKind = endAmount != null && endAmount !== startAmount
             ? SaleKind.DutchAuction
@@ -2739,13 +2760,13 @@ export class OpenSeaPort {
     ): UnsignedOrder {
         accountAddress = validateAndFormatWalletAddress(this.apiPro, accountAddress)
         recipientAddress = validateAndFormatWalletAddress(this.apiPro, recipientAddress)
-        console.log(order.side, "========order.side=====recipientAddress=====",recipientAddress)
+        console.log(order.side, "========order.side=====recipientAddress=====", recipientAddress)
         const computeOrderParams = () => {
             if ('asset' in order.metadata) {
                 const schema = this._getSchema(order.metadata.schema)
                 return order.side == OrderSide.Buy
-                    ? encodeSell(schema, order.metadata.asset, recipientAddress,this._wyvernProtocol,this._networkName)
-                    : encodeBuy(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol,this._networkName)
+                    ? encodeSell(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol, this._networkName)
+                    : encodeBuy(schema, order.metadata.asset, recipientAddress, this._wyvernProtocol, this._networkName)
             } else if ('bundle' in order.metadata) {
                 // We're matching a bundle order
                 const bundle = order.metadata.bundle

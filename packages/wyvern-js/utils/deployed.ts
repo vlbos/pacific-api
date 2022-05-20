@@ -14,6 +14,7 @@ export const deployed = {
         'TestStatic': '0xc33a203d61c688433e53fcb6f3af7c6aa12192a4',
         'WyvernDAOProxy': '0x65cb6ea254f716ac9ffdf542994214dabf1c8aa2',
         'WyvernAtomicizer': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
+        'OwnableDelegateProxy': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
         'WyvernTokenTransferProxy': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
     },
     'development': {
@@ -31,6 +32,7 @@ export const deployed = {
         'TestStatic': '0x29dd72597101f211fbfe4ea79b431987a0a005f1',
         'WyvernDAOProxy': '0xccc08fc4e4e897369182edc14acc7c0a6b7abf90',
         'WyvernAtomicizer': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
+        'OwnableDelegateProxy': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
         'WyvernTokenTransferProxy': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
     },
     'main': {
@@ -46,6 +48,7 @@ export const deployed = {
         'WyvernExchange': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
         'WyvernDAOProxy': '0xa839d4b5a36265795eba6894651a8af3d0ae2e68',
         'WyvernAtomicizer': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
+        'OwnableDelegateProxy': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
         'WyvernTokenTransferProxy': '5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f',
     },
 }

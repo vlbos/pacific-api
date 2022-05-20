@@ -62,28 +62,26 @@ async function instantiate(acc: String, args: String, code_hash: String, path: S
         let basepath = "/Users/lisheng/mygit/vlbos/ink/examples/";
         let proxybasepath = "/Users/lisheng/mygit/vlbos/wyvern-ink-contracts-substrate/";
         let pathes = {
-            auth: proxybasepath + "authenticated_proxy", registry: proxybasepath + "wyvern_proxy_registry", token: proxybasepath + "wyvern_token_transfer_proxy", erc20: basepath + "erc20", erc721: basepath + "erc721", atom: proxybasepath + "wyvern_atomicizer", delegate: proxybasepath + "ownable_delegate_proxy"
+            "auth": proxybasepath + "authenticated_proxy", "registry": proxybasepath + "wyvern_proxy_registry", "token": proxybasepath + "wyvern_token_transfer_proxy", "erc20": basepath + "erc20", "erc721": basepath + "erc721", "atom": proxybasepath + "wyvern_atomicizer", "delegate": proxybasepath + "ownable_delegate_proxy"
         };
-        let args = ["", "0xd1e8fb8f0ad7da538711ed26e6c5e37ee8874dce37fdd3d607800d56f706969a", "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", "1000000000000000000000000000", "", "'5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL 0x0000000000000000000000000000000000000000000000000000000000000000'"];
-        let keys = Object.keys(pathes);
-        let p = Object.values(pathes);
-        // console.log(users,args,keys,p)
+        let args = { "auth": "", "registry": "", "token": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", "erc20": "1000000000000000000000000000", "erc721": "", "atom": "", "delegate": "'5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL 0xd5f768bbb70d4afc86b404fd767f01a64e4d0ab7f2bd6cd400895adbe79491c2'" }
+        let keys = Object.keys(pathes).slice(0,7);// Object.keys(pathes);"registry","erc20",
+
         let codehashes = [];
         let contractaddresses = [];
-        for (let i = 0; i < 6; i++) {
-            const code_hash = await upload(users[i], p[i], keys[i]);// "0xd1e8fb8f0ad7da538711ed26e6c5e37ee8874dce37fdd3d607800d56f706969a";//
+        let i = 0;
+        for (let key of keys) {
+            const code_hash = await upload(users[i], pathes[key as keyof typeof pathes], key);
+            // "0xd1e8fb8f0ad7da538711ed26e6c5e37ee8874dce37fdd3d607800d56f706969a";//
             console.log(i, "======code_hash======", code_hash);
 
             codehashes.push(code_hash);
+            const contract_address = await instantiate(users[i], args[key as keyof typeof args], code_hash, pathes[key as keyof typeof pathes], key);
             if (i == 0) {
-                args[i + 1] = code_hash;
-                // args[5]="5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL "+code_hash;
-            }
-            const contract_address = await instantiate(users[i], args[i], code_hash, p[i], keys[i]);
-            if (i == 1) {
-                args[2]=contract_address;
+                args["delegate"] = "'5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL "+code_hash+"'";
             }
             contractaddresses.push(contract_address);
+            i++;
 
             console.log(i, "======contract_address======", contract_address)
         }
