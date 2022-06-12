@@ -1,0 +1,35 @@
+{
+    "include": [
+        "./src/**/*"
+    ],
+   "exclude": [
+        "node_modules/**/*"
+    ],
+"composite": true ,
+    "compilerOptions": {
+        "outDir": "lib",
+        "noImplicitThis": false,
+        "module": "commonjs",
+        "target": "es2017",
+        "lib": ["es2017", "dom"],
+        "types":["node","jest","lodash"],
+"typeRoots": [
+   "./node_modules/@types"
+ ],
+        "sourceMap": true,
+        "declaration": true,
+    "skipLibCheck": true,
+"allowSyntheticDefaultImports": true,
+"esModuleInterop": true,
+        "experimentalDecorators": true,
+        "noImplicitReturns": true,
+        "pretty": true,
+        "strict": true,
+        "baseUrl": "./src",
+  "preserveConstEnums": true,
+"rootDir": "./src",
+         "paths": {
+      "@polkadot/types/lookup'": ["pacific-api/src/interfaces/types-lookup.ts"]
+    },
+    }
+}
