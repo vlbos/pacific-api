@@ -700,7 +700,7 @@ describe('seaport: orders', () => {
         expect(gas).toBeGreaterThan(0)
     })
 
-    it('Fungible tokens filter', async () => {
+    test('Fungible tokens filter', async () => {
         const manaTokens = (await client.api.getPaymentTokens({ symbol: "MANA" })).tokens
         expect(manaTokens.length).toEqual(1)
         const mana = manaTokens[0]

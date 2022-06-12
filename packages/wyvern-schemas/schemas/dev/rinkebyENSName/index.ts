@@ -1,4 +1,4 @@
-import * as Web3 from 'web3'
+
 
 import { ENSName, ENSNameBaseSchema } from '../../../common/ens'
 import {
@@ -6,6 +6,7 @@ import {
   FunctionOutputKind,
   Schema,
   StateMutability,
+AbiType
 } from '../../../types'
 
 export const devENSNameSchema: Schema<ENSName> = {
@@ -28,7 +29,7 @@ export const devENSNameSchema: Schema<ENSName> = {
   },
   functions: {
     transfer: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'setOwner',
       payable: false,
       constant: false,
@@ -41,7 +42,7 @@ export const devENSNameSchema: Schema<ENSName> = {
       outputs: [],
     }),
     ownerOf: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'owner',
       payable: false,
       constant: true,

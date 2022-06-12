@@ -6,7 +6,7 @@ import '../interfaces/augment-api';
 import '../interfaces/augment-types';
 import { WsProvider } from '@polkadot/api'
 
-
+export {OrderSide } from './types'
 export { orderToJSON, orderFromJSON, WyvernProtocol } from './utils/utils'
 
 // all type stuff, the only one we are using here

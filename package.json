@@ -2,12 +2,16 @@
   "repository": "https://github.com/polkadot-js/api",
   "author": "",
   "license": "",
-  "type": "commonjs",
-  "resolutions": {
-    "typescript": "^4.2.3"
+  "name": "pacific-js",
+  "type": "module",
+  "main": "index.js",
+    "resolutions": {
+    "typescript": "^4.7.3"
   },
   "scripts": {
+    "lint": "tslint --project . 'src/**/*.ts' --fix",
     "typegen": "yarn generate:defs && yarn generate:meta",
+    "build": " polkadot-dev-build-ts",
     "ss": "ts-node   -O '{\"module\": \"commonjs\"}'  packages/utils/accHelper.ts ",
     "generate:defs": "ts-node --skip-project node_modules/.bin/polkadot-types-from-defs --package pacific-api/interfaces --input ./packages/interfaces",
     "generate:meta": "ts-node --skip-project node_modules/.bin/polkadot-types-from-chain --package pacific-api/interfaces --endpoint ./pacific.json --output ./packages/interfaces --strict",
@@ -42,9 +46,9 @@
   "version": "0.0.1",
   "dependencies": {
     "@polkadot/api": "^7.15.2-2",
+    "@polkadot/api-augment": "^7.15.2-2",
     "@polkadot/api-contract": "^7.15.2-2",
     "@polkadot/types": "^7.15.2-2",
-    "@polkadot/api-augment": "^7.15.2-2",
     "bignumber.js": "^9.0.1",
     "blakejs": "^1.1.1",
     "bn.js": "^5.2.0",

@@ -1,4 +1,3 @@
-import * as Web3 from 'web3'
 
 import {
   EventInputKind,
@@ -6,6 +5,7 @@ import {
   FunctionOutputKind,
   Schema,
   StateMutability,
+AbiType
 } from '../../../types'
 
 export type TestDevNFTType = string
@@ -34,7 +34,7 @@ export const testDevNFTSchema: Schema<TestDevNFTType> = {
   },
   functions: {
     transfer: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'transfer',
       payable: false,
       constant: false,
@@ -47,7 +47,7 @@ export const testDevNFTSchema: Schema<TestDevNFTType> = {
       outputs: [],
     }),
     ownerOf: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'ownerOf',
       payable: false,
       constant: true,

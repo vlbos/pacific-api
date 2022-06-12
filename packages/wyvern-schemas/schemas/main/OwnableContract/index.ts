@@ -1,10 +1,10 @@
-import * as Web3 from 'web3'
 
 import {
   FunctionInputKind,
   FunctionOutputKind,
   Schema,
   StateMutability,
+AbiType
 } from '../../../types'
 
 export interface OwnableContractType {
@@ -42,7 +42,7 @@ export const OwnableContractSchema: Schema<OwnableContractType> = {
   },
   functions: {
     transfer: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'transferOwnership',
       payable: false,
       constant: false,
@@ -54,7 +54,7 @@ export const OwnableContractSchema: Schema<OwnableContractType> = {
       outputs: [],
     }),
     ownerOf: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'owner',
       payable: false,
       constant: true,

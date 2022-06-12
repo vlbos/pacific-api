@@ -47,7 +47,7 @@ export interface ContractRoleType {
 //   },
 // //   functions: {
 // //     transfer: asset => ({
-// //       type: Web3.AbiType.Function,
+// //       type: AbiType.Function,
 // //       name: asset.roleSetter,
 // //       payable: false,
 // //       constant: false,
@@ -59,7 +59,7 @@ export interface ContractRoleType {
 // //       outputs: [],
 // //     }),
 // //     ownerOf: asset => ({
-// //       type: Web3.AbiType.Function,
+// //       type: AbiType.Function,
 // //       name: asset.roleGetter,
 // //       payable: false,
 // //       constant: true,

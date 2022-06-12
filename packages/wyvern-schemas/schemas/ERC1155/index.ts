@@ -47,7 +47,7 @@ export const ERC1155Schema: Schema<SemiFungibleTradeType> = {
   },
 //   functions: {
 //     transfer: asset => ({
-//       type: Web3.AbiType.Function,
+//       type: AbiType.Function,
 //       name: 'safeTransferFrom',
 //       payable: false,
 //       constant: false,
@@ -63,7 +63,7 @@ export const ERC1155Schema: Schema<SemiFungibleTradeType> = {
 //       outputs: [],
 //     }),
 //     countOf: asset => ({
-//       type: Web3.AbiType.Function,
+//       type: AbiType.Function,
 //       name: 'balanceOf',
 //       payable: false,
 //       constant: true,

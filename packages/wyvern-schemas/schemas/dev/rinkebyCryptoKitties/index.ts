@@ -1,4 +1,4 @@
-import * as Web3 from 'web3'
+
 
 import {
   EventInputKind,
@@ -6,6 +6,7 @@ import {
   FunctionOutputKind,
   Schema,
   StateMutability,
+AbiType
 } from '../../../types'
 
 export type DevCryptoKittiesType = string
@@ -34,7 +35,7 @@ export const devCryptoKittiesSchema: Schema<DevCryptoKittiesType> = {
   },
   functions: {
     transfer: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'transfer',
       payable: false,
       constant: false,
@@ -47,7 +48,7 @@ export const devCryptoKittiesSchema: Schema<DevCryptoKittiesType> = {
       outputs: [],
     }),
     ownerOf: asset => ({
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'ownerOf',
       payable: false,
       constant: true,
@@ -61,7 +62,7 @@ export const devCryptoKittiesSchema: Schema<DevCryptoKittiesType> = {
       ],
     }),
     assetsOfOwnerByIndex: [{
-      type: Web3.AbiType.Function,
+      type: AbiType.Function,
       name: 'tokensOfOwnerByIndex',
       payable: false,
       constant: true,

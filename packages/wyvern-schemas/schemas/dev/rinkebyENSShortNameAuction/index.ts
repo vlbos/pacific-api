@@ -1,4 +1,3 @@
-import { AbiType } from 'web3'
 
 import {
   ENSName,
@@ -11,6 +10,7 @@ import {
   FunctionInputKind,
   Schema,
   StateMutability,
+AbiType
 } from '../../../types'
 
 export const DEV_ENS_SHORT_NAME_AUCTION_ADDRESS =
