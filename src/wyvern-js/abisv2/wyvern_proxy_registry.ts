@@ -1,4 +1,4 @@
-{
+export const WYVERN_PROXY_REGISTRY={
   "source": {
     "hash": "0x59afc95bb950ffd434ed66fbd74e7651126e48bdc7c219ad3af9a28bf47d5fcf",
     "language": "ink! 3.0.0",

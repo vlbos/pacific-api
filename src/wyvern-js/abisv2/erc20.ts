@@ -1,11 +1,11 @@
-{
+export const ERC20={
   "source": {
-    "hash": "0xb93774bec2973814d3056557e12309b225cd32d358c50f106de8020b162a7cba",
+    "hash": "0x502fca73a7eeae739cf25ae703e65690d47aa71722885a15d57444b50932fc0c",
     "language": "ink! 3.0.0-rc7",
     "compiler": "rustc 1.59.0-nightly"
   },
   "contract": {
-    "name": "erc721",
+    "name": "erc20",
     "version": "3.0.0-rc7",
     "authors": [
       "Parity Technologies <admin@parity.io>"
@@ -15,9 +15,19 @@
     "spec": {
       "constructors": [
         {
-          "args": [],
+          "args": [
+            {
+              "label": "initial_supply",
+              "type": {
+                "displayName": [
+                  "Balance"
+                ],
+                "type": 0
+              }
+            }
+          ],
           "docs": [
-            "Creates a new ERC-721 token contract."
+            "Creates a new ERC-20 contract with the specified initial supply."
           ],
           "label": "new",
           "selector": "0x9bae9d5e"
@@ -35,7 +45,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 10
+                "type": 11
               }
             },
             {
@@ -46,18 +56,18 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 10
+                "type": 11
               }
             },
             {
               "docs": [],
-              "indexed": true,
-              "label": "id",
+              "indexed": false,
+              "label": "value",
               "type": {
                 "displayName": [
-                  "TokenId"
+                  "Balance"
                 ],
-                "type": 1
+                "type": 0
               }
             }
           ],
@@ -71,47 +81,6 @@
             {
               "docs": [],
               "indexed": true,
-              "label": "from",
-              "type": {
-                "displayName": [
-                  "AccountId"
-                ],
-                "type": 2
-              }
-            },
-            {
-              "docs": [],
-              "indexed": true,
-              "label": "to",
-              "type": {
-                "displayName": [
-                  "AccountId"
-                ],
-                "type": 2
-              }
-            },
-            {
-              "docs": [],
-              "indexed": true,
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Event emitted when a token approve occurs."
-          ],
-          "label": "Approval"
-        },
-        {
-          "args": [
-            {
-              "docs": [],
-              "indexed": true,
               "label": "owner",
               "type": {
                 "displayName": [
@@ -123,7 +92,7 @@
             {
               "docs": [],
               "indexed": true,
-              "label": "operator",
+              "label": "spender",
               "type": {
                 "displayName": [
                   "AccountId"
@@ -134,23 +103,39 @@
             {
               "docs": [],
               "indexed": false,
-              "label": "approved",
+              "label": "value",
               "type": {
                 "displayName": [
-                  "bool"
+                  "Balance"
                 ],
-                "type": 11
+                "type": 0
               }
             }
           ],
           "docs": [
-            " Event emitted when an operator is enabled or disabled for an owner.",
-            " The operator can manage all NFTs of the owner."
+            " Event emitted when an approval occurs that `spender` is allowed to withdraw",
+            " up to the amount of `value` tokens from `owner`."
           ],
-          "label": "ApprovalForAll"
+          "label": "Approval"
         }
       ],
       "messages": [
+        {
+          "args": [],
+          "docs": [
+            " Returns the total token supply."
+          ],
+          "label": "total_supply",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Balance"
+            ],
+            "type": 0
+          },
+          "selector": "0xdb6375a8"
+        },
         {
           "args": [
             {
@@ -164,72 +149,20 @@
             }
           ],
           "docs": [
-            " Returns the balance of the owner.",
+            " Returns the account balance for the specified `owner`.",
             "",
-            " This represents the amount of unique tokens the owner has."
+            " Returns `0` if the account is non-existent."
           ],
           "label": "balance_of",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
-              "u32"
+              "Balance"
             ],
-            "type": 1
+            "type": 0
           },
           "selector": "0x0f755a56"
-        },
-        {
-          "args": [
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Returns the owner of the token."
-          ],
-          "label": "owner_of",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "Option"
-            ],
-            "type": 10
-          },
-          "selector": "0x99720c1e"
-        },
-        {
-          "args": [
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Returns the approved account ID for this token if any."
-          ],
-          "label": "get_approved",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "Option"
-            ],
-            "type": 10
-          },
-          "selector": "0x27592dea"
         },
         {
           "args": [
@@ -243,7 +176,7 @@
               }
             },
             {
-              "label": "operator",
+              "label": "spender",
               "type": {
                 "displayName": [
                   "AccountId"
@@ -253,18 +186,20 @@
             }
           ],
           "docs": [
-            " Returns `true` if the operator is approved by the owner."
+            " Returns the amount which `spender` is still allowed to withdraw from `owner`.",
+            "",
+            " Returns `0` if no allowance has been set."
           ],
-          "label": "is_approved_for_all",
+          "label": "allowance",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
-              "bool"
+              "Balance"
             ],
-            "type": 11
+            "type": 0
           },
-          "selector": "0x0f5922e9"
+          "selector": "0x6a00165e"
         },
         {
           "args": [
@@ -278,87 +213,24 @@
               }
             },
             {
-              "label": "approved",
+              "label": "value",
               "type": {
                 "displayName": [
-                  "bool"
+                  "Balance"
                 ],
-                "type": 11
+                "type": 0
               }
             }
           ],
           "docs": [
-            " Approves or disapproves the operator for all tokens of the caller."
-          ],
-          "label": "set_approval_for_all",
-          "mutates": true,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "Result"
-            ],
-            "type": 12
-          },
-          "selector": "0xcfd0c27b"
-        },
-        {
-          "args": [
-            {
-              "label": "to",
-              "type": {
-                "displayName": [
-                  "AccountId"
-                ],
-                "type": 2
-              }
-            },
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Approves the account to transfer the specified token on behalf of the caller."
-          ],
-          "label": "approve",
-          "mutates": true,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "Result"
-            ],
-            "type": 12
-          },
-          "selector": "0x681266a0"
-        },
-        {
-          "args": [
-            {
-              "label": "destination",
-              "type": {
-                "displayName": [
-                  "AccountId"
-                ],
-                "type": 2
-              }
-            },
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Transfers the token from the caller to the given destination."
+            " Transfers `value` amount of tokens from the caller's account to account `to`.",
+            "",
+            " On success a `Transfer` event is emitted.",
+            "",
+            " # Errors",
+            "",
+            " Returns `InsufficientBalance` error if there are not enough tokens on",
+            " the caller's account balance."
           ],
           "label": "transfer",
           "mutates": true,
@@ -367,9 +239,49 @@
             "displayName": [
               "Result"
             ],
-            "type": 12
+            "type": 8
           },
           "selector": "0x84a15da1"
+        },
+        {
+          "args": [
+            {
+              "label": "spender",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "Balance"
+                ],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [
+            " Allows `spender` to withdraw from the caller's account multiple times, up to",
+            " the `value` amount.",
+            "",
+            " If this function is called again it overwrites the current allowance with `value`.",
+            "",
+            " An `Approval` event is emitted."
+          ],
+          "label": "approve",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 8
+          },
+          "selector": "0x681266a0"
         },
         {
           "args": [
@@ -392,17 +304,30 @@
               }
             },
             {
-              "label": "id",
+              "label": "value",
               "type": {
                 "displayName": [
-                  "TokenId"
+                  "Balance"
                 ],
-                "type": 1
+                "type": 0
               }
             }
           ],
           "docs": [
-            " Transfer approved or owned token."
+            " Transfers `value` tokens on the behalf of `from` to the account `to`.",
+            "",
+            " This can be used to allow a contract to transfer tokens on ones behalf and/or",
+            " to charge fees in sub-currencies, for example.",
+            "",
+            " On success a `Transfer` event is emitted.",
+            "",
+            " # Errors",
+            "",
+            " Returns `InsufficientAllowance` error if there are not enough tokens allowed",
+            " for the caller to withdraw from `from`.",
+            "",
+            " Returns `InsufficientBalance` error if there are not enough tokens on",
+            " the account balance of `from`."
           ],
           "label": "transfer_from",
           "mutates": true,
@@ -411,61 +336,9 @@
             "displayName": [
               "Result"
             ],
-            "type": 12
+            "type": 8
           },
           "selector": "0x0b396f18"
-        },
-        {
-          "args": [
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Creates a new token."
-          ],
-          "label": "mint",
-          "mutates": true,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "Result"
-            ],
-            "type": 12
-          },
-          "selector": "0xcfdd9aa2"
-        },
-        {
-          "args": [
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "TokenId"
-                ],
-                "type": 1
-              }
-            }
-          ],
-          "docs": [
-            " Deletes an existing token. Only the owner can burn the token."
-          ],
-          "label": "burn",
-          "mutates": true,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "Result"
-            ],
-            "type": 12
-          },
-          "selector": "0xb1efc17b"
         }
       ]
     },
@@ -479,16 +352,16 @@
                 "ty": 0
               }
             },
-            "name": "token_owner"
+            "name": "total_supply"
           },
           {
             "layout": {
               "cell": {
                 "key": "0x0100000000000000000000000000000000000000000000000000000000000000",
-                "ty": 0
+                "ty": 1
               }
             },
-            "name": "token_approvals"
+            "name": "balances"
           },
           {
             "layout": {
@@ -497,16 +370,7 @@
                 "ty": 6
               }
             },
-            "name": "owned_tokens_count"
-          },
-          {
-            "layout": {
-              "cell": {
-                "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
-                "ty": 7
-              }
-            },
-            "name": "operator_approvals"
+            "name": "allowances"
           }
         ]
       }
@@ -514,6 +378,14 @@
     "types": [
       {
         "id": 0,
+        "type": {
+          "def": {
+            "primitive": "u128"
+          }
+        }
+      },
+      {
+        "id": 1,
         "type": {
           "def": {
             "composite": {
@@ -529,11 +401,11 @@
           "params": [
             {
               "name": "K",
-              "type": 1
+              "type": 2
             },
             {
               "name": "V",
-              "type": 2
+              "type": 0
             }
           ],
           "path": [
@@ -542,14 +414,6 @@
             "mapping",
             "Mapping"
           ]
-        }
-      },
-      {
-        "id": 1,
-        "type": {
-          "def": {
-            "primitive": "u32"
-          }
         }
       },
       {
@@ -627,11 +491,11 @@
           "params": [
             {
               "name": "K",
-              "type": 2
+              "type": 7
             },
             {
               "name": "V",
-              "type": 1
+              "type": 0
             }
           ],
           "path": [
@@ -646,43 +510,53 @@
         "id": 7,
         "type": {
           "def": {
-            "composite": {
-              "fields": [
-                {
-                  "name": "offset_key",
-                  "type": 5,
-                  "typeName": "Key"
-                }
-              ]
-            }
-          },
-          "params": [
-            {
-              "name": "K",
-              "type": 8
-            },
-            {
-              "name": "V",
-              "type": 9
-            }
-          ],
-          "path": [
-            "ink_storage",
-            "lazy",
-            "mapping",
-            "Mapping"
-          ]
+            "tuple": [
+              2,
+              2
+            ]
+          }
         }
       },
       {
         "id": 8,
         "type": {
           "def": {
-            "tuple": [
-              2,
-              2
-            ]
-          }
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 9
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 10
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 9
+            },
+            {
+              "name": "E",
+              "type": 10
+            }
+          ],
+          "path": [
+            "Result"
+          ]
         }
       },
       {
@@ -695,6 +569,30 @@
       },
       {
         "id": 10,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "InsufficientBalance"
+                },
+                {
+                  "index": 1,
+                  "name": "InsufficientAllowance"
+                }
+              ]
+            }
+          },
+          "path": [
+            "erc20",
+            "erc20",
+            "Error"
+          ]
+        }
+      },
+      {
+        "id": 11,
         "type": {
           "def": {
             "variant": {
@@ -723,100 +621,6 @@
           ],
           "path": [
             "Option"
-          ]
-        }
-      },
-      {
-        "id": 11,
-        "type": {
-          "def": {
-            "primitive": "bool"
-          }
-        }
-      },
-      {
-        "id": 12,
-        "type": {
-          "def": {
-            "variant": {
-              "variants": [
-                {
-                  "fields": [
-                    {
-                      "type": 9
-                    }
-                  ],
-                  "index": 0,
-                  "name": "Ok"
-                },
-                {
-                  "fields": [
-                    {
-                      "type": 13
-                    }
-                  ],
-                  "index": 1,
-                  "name": "Err"
-                }
-              ]
-            }
-          },
-          "params": [
-            {
-              "name": "T",
-              "type": 9
-            },
-            {
-              "name": "E",
-              "type": 13
-            }
-          ],
-          "path": [
-            "Result"
-          ]
-        }
-      },
-      {
-        "id": 13,
-        "type": {
-          "def": {
-            "variant": {
-              "variants": [
-                {
-                  "index": 0,
-                  "name": "NotOwner"
-                },
-                {
-                  "index": 1,
-                  "name": "NotApproved"
-                },
-                {
-                  "index": 2,
-                  "name": "TokenExists"
-                },
-                {
-                  "index": 3,
-                  "name": "TokenNotFound"
-                },
-                {
-                  "index": 4,
-                  "name": "CannotInsert"
-                },
-                {
-                  "index": 5,
-                  "name": "CannotFetchValue"
-                },
-                {
-                  "index": 6,
-                  "name": "NotAllowed"
-                }
-              ]
-            }
-          },
-          "path": [
-            "erc721",
-            "erc721",
-            "Error"
           ]
         }
       }

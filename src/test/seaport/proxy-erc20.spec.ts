@@ -34,14 +34,7 @@ const keyring = createTestKeyring({ type: "sr25519" });
 const alicePair = keyring.getPair(ALICE);
 const bobPair = keyring.getPair(BOB);
 const salary = 100_000_000_000_000;
-const erc20abi = require("../../wyvern-js/abisv2/erc20/metadata.json");
-const erc721abi = require("../../wyvern-js/abisv2/erc721/metadata.json");
-const authenticated_proxyabi = require("../../wyvern-js/abisv2/authenticated_proxy/metadata.json");
-const ownable_delegate_proxyabi = require("../../wyvern-js/abisv2/ownable_delegate_proxy/metadata.json");
-const wyvern_atomicizerabi = require("../../wyvern-js/abisv2/wyvern_atomicizer/metadata.json");
-const wyvern_proxy_registryabi = require("../../wyvern-js/abisv2/wyvern_proxy_registry/metadata.json");
-const wyvern_token_transfer_proxyabi = require("../../wyvern-js/abisv2/wyvern_token_transfer_proxy/metadata.json");
-
+import { abis } from '../../wyvern-js/abisv2/index';
 
 const charliePair = keyring.getPair(CHARLIE);
 const davePair = keyring.getPair(DAVE);
@@ -52,9 +45,8 @@ const address = "5Hq75BNUQiqbjZRWehHtFMhvWU1P57DBqJM81kTExTRgxyAG";
 import {
     sleepMs
 } from "./utils";
-// // const abi = erc20abi;
+// // const abi = ERC20;
 const value = 0; // only useful on isPayable messagess
-let abis: { [key: string]: any } = { "auth": authenticated_proxyabi, "delegate": ownable_delegate_proxyabi, "atom": wyvern_atomicizerabi, "registry": wyvern_proxy_registryabi, "token": wyvern_token_transfer_proxyabi, "erc20": erc20abi, "erc721": erc721abi };
 let contracts: any = {};
 // NOTE the apps UI specified these in mega units
 let gasLimit:any = new BN(300000).mul( new BN(1000000));

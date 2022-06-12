@@ -1,4 +1,4 @@
-export const ERC721 = require("../../wyvern-js/abisv2/erc721/metadata.json");
+export {ERC721} from "../../wyvern-js/abisv2/erc721";
 
 // import { PartialReadonlyContractAbi } from "../types"
 

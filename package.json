@@ -10,9 +10,8 @@
   "license": "Apache-2.0",
   "maintainers": [],
   "name": "pacific-api",
-  "type": "module",
   "version": "8.0.3-5",
-  "main": "index.js",
+  "main": "lib/index.js",
   "dependencies": {
     "@polkadot/api": "8.5.1",
     "@polkadot/api-contract": "8.5.1",

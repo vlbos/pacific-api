@@ -8,10 +8,9 @@ import BigNumber from 'bignumber.js'
 import * as _ from 'lodash'
 import { ApiPromise, WsProvider } from '@polkadot/api'
 import { ContractPromise, Abi } from '@polkadot/api-contract';
-// const erc20metadata = require("./abisv2/erc20/metadata.json");
-// const erc721metadata = require("./abisv2/erc721/metadata.json");
-const msigmetadata = require("./abisv2/multisig/metadata.json");
-const wyvern_proxy_registry_metadata = require("./abisv2/wyvern_proxy_registry/metadata.json");
+import { MULTISIG } from './abisv2/multisig';
+import { WYVERN_PROXY_REGISTRY } from './abisv2/wyvern_proxy_registry';
+
 // import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
 import '../interfaces/augment-types';
@@ -388,7 +387,7 @@ export class WyvernProtocol {
         //     this._web3Wrapper.getContractInstance((constants.PROXY_REGISTRY_ABI as any), proxyRegistryContractAddress),
         //     {},
         // )
-        const regabi = new Abi(wyvern_proxy_registry_metadata, this.api.registry != undefined ? this.api.registry.getChainProperties() : undefined);
+        const regabi = new Abi(WYVERN_PROXY_REGISTRY, this.api.registry != undefined ? this.api.registry.getChainProperties() : undefined);
         this.wyvernProxyRegistry = new ContractPromise(
             this.api, regabi, proxyRegistryContractAddress,
         )
@@ -406,7 +405,7 @@ export class WyvernProtocol {
         // )
         // console.log(config.wyvernAtomicizerContractAddress, WyvernProtocol.getAtomicizerContractAddress(config.network))
         const atomicizerContractAddress = config.wyvernAtomicizerContractAddress || WyvernProtocol.getAtomicizerContractAddress(config.network)
-        const mabi = new Abi(msigmetadata, this.api.registry != undefined ? this.api.registry.getChainProperties() : undefined);
+        const mabi = new Abi(MULTISIG, this.api.registry != undefined ? this.api.registry.getChainProperties() : undefined);
         this.wyvernAtomicizer = new ContractPromise(
             this.api, mabi, atomicizerContractAddress,
         )

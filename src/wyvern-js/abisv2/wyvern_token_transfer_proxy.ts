@@ -1,4 +1,4 @@
-{
+export const WYVERN_TOKEN_TRANSFER_PROXY={
   "source": {
     "hash": "0x16cb97ca5b62f07067fb93781d245e0b175ed89a194d4aab7e9115074c25dd4b",
     "language": "ink! 3.0.0",

@@ -1,4 +1,4 @@
-{
+export const AUTHENTICATED_PROXY={
   "source": {
     "hash": "0xd5f768bbb70d4afc86b404fd767f01a64e4d0ab7f2bd6cd400895adbe79491c2",
     "language": "ink! 3.0.0",

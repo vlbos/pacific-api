@@ -1,4 +1,4 @@
-{
+export const WYVERN_ATOMICIZER={
   "source": {
     "hash": "0x9f5e37707264c892198a7f5da6c0ca3037d3b2fbd0b92d3a8250d3d1be50f559",
     "language": "ink! 3.0.0",

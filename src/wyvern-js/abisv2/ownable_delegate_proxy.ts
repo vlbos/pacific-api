@@ -1,4 +1,4 @@
-{
+export const OWNABLE_DELEGATE_PROXY={
   "source": {
     "hash": "0xade3812dbbfef16589b85e8ee825d7b3ecf516ad258b8383958034c0edb03f31",
     "language": "ink! 3.0.0",

@@ -1,4 +1,4 @@
-{
+export const MULTISIG={
   "source": {
     "hash": "0x1557096874d1083496cd28a9926acf20e24e46d9aef5957434e756d3aa28f267",
     "language": "ink! 3.0.0-rc7",
