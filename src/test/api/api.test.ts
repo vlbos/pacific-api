@@ -28,18 +28,14 @@ const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 // const provider = new Web3.providers.HttpProvider(MAINNET_PROVIDER_URL)
 const provider = new WsProvider("ws://127.0.0.1:9944");//LOCALNET_PROVIDER_URL);
 
-const client = new OpenSeaPort(provider, {
-    networkName: Network.Main,
-    apiKey: MAINNET_API_KEY
-}, line => console.info(`MAINNET: ${line}`))
-
+let client:any;
 import { ApiPromise } from '@polkadot/api';
 let users: any;
 let api: any;
 let accounts: any;
 
 const salary = 100_000_000_000_000;
-
+// import {init} from "../seaport/utils"
 describe('api tests', (): void => {
 
     const second = 1000;
@@ -47,9 +43,13 @@ describe('api tests', (): void => {
     const minute = 60 * second;
     const hour = 60 * minute;
     const day = 24 * hour;
-    let api: any;
     beforeAll(async () => {
         jest.setTimeout(90 * 1000)
+// const a = await init(provider);
+ client = new OpenSeaPort(provider, {
+    networkName: Network.Main,
+    apiKey: MAINNET_API_KEY
+}, line => console.info(`MAINNET: ${line}`))
         // const papi = await init();
         // api = papi.api;
     });

@@ -1,4 +1,4 @@
-import * as WyvernSchemas from 'wyvern-schemas'
+// import * as WyvernSchemas from '../../wyvern-schemas'
 
 import { OpenSeaPort } from '../../pacific-js/index'
 import { Network } from '../../pacific-js/types'
@@ -24,18 +24,22 @@ import rpcs from '../../pacific-js/config/rpcs.json';
 // const devProvider = new Web3.providers.HttpProvider(DEV_PROVIDER_URL)
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 const devProvider = new WsProvider('ws://127.0.0.1:9944/');
-const client = new OpenSeaPort(provider, {
+let client :any;
+let devClient:any;
+
+import {init} from "./utils"
+describe('seaport: static calls', () => {
+    beforeAll(async() =>{
+        const a = await init(provider);
+         client = new OpenSeaPort(provider, {
   networkName: Network.Main,
   apiKey: MAINNET_API_KEY
 }, line => console.info(`MAINNET: ${line}`))
 
-const devClient = new OpenSeaPort(devProvider, {
+ devClient = new OpenSeaPort(devProvider,  {
   networkName: Network.Dev,
   apiKey: DEV_API_KEY
-}, line => console.info(`DEV: ${line}`))
-
-describe('seaport: static calls', () => {
-
+}, line => console.info(`DEV: ${line}`))})
   test("Mainnet staticCall tx.origin can be applied to arbitrary order", async () => {
     const accountAddress = ALICE_ADDRESS
     const takerAddress = ALICE_STASH_ADDRESS

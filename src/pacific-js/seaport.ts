@@ -1,7 +1,7 @@
 
 import { ApiPromise, WsProvider } from '@polkadot/api'
 // import { stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
-import {  u8aToHex } from '@polkadot/util';
+import { u8aToHex } from '@polkadot/util';
 // import { decodeAddress } from "@polkadot/util-crypto";
 
 //   const publicKey = decodeAddress(address);
@@ -14,11 +14,11 @@ import {  u8aToHex } from '@polkadot/util';
 // import * as definitions from '../interfaces/definitions';
 import '../interfaces/augment-api';
 import '../interfaces/augment-types';
-import {  ContractPromise, Abi } from '@polkadot/api-contract';
+import { ContractPromise, Abi } from '@polkadot/api-contract';
 import { createTestKeyring } from "@polkadot/keyring/testing";
 const keyring = createTestKeyring({ type: "sr25519" });
 import BN from "bn.js";
-import * as definitions from '../interfaces/definitions';
+// import * as definitions from '../interfaces/definitions';
 import type { ApiOptions } from '@polkadot/api/types';
 import { TypeRegistry } from '@polkadot/types/create';
 const registry = new TypeRegistry();
@@ -45,7 +45,7 @@ import {
 } from './contracts'
 import {
     ECSignature, FeeMethod, HowToCall, Network,
-    OpenSeaAPIConfig, OrderSide, SaleKind, UnhashedOrder, 
+    OpenSeaAPIConfig, OrderSide, SaleKind, UnhashedOrder,
     Order, UnsignedOrder, EventType,
     EventData, OpenSeaAsset, WyvernSchemaName,
     WyvernAsset, ComputedFees, Asset, WyvernNFTAsset, WyvernFTAsset, TokenStandardVersion
@@ -149,16 +149,18 @@ export class OpenSeaPort {
      * @param logger logger, optional, a function that will be called with debugging
      *  information
      */
-    constructor(provider: WsProvider, apiConfig: OpenSeaAPIConfig = {}, logger?: (arg: string) => void) {
+    constructor(provider: WsProvider,  apiConfig: OpenSeaAPIConfig = {}, logger?: (arg: string) => void) {
 
         // API config
         apiConfig.networkName = apiConfig.networkName || Network.Main
         apiConfig.gasPrice = apiConfig.gasPrice || makeBigNumber(300000)
         this.api = new OpenSeaAPI(apiConfig)
-        this.gasPrice=apiConfig.gasPrice;
+        this.gasPrice = apiConfig.gasPrice;
         this._networkName = apiConfig.networkName
         this.provider = provider;
         this.readonlyProvider = provider;
+        // this.apiPro = api;
+        // this.apiProReadOnly = api;
         //   const provider = new WsProvider('wss://kusama-rpc.polkadot.io');
         // const provider = new WsProvider('wss://westend-rpc.polkadot.io/');
         //   const provider = new WsProvider('ws://127.0.0.1:9944/');
@@ -208,51 +210,47 @@ export class OpenSeaPort {
     }
 
 
-public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
-    const papi = await this.createApiAndTestAccounts(provider);
-    const api = papi.api;
+    public async init() {
+        await this.createApiAndTestAccounts();
+        
 
-    await provider.connect();
-       this.apiPro = api;
-        this.apiProReadOnly = api;
-      this._wyvernProtocol = new WyvernProtocol(provider, api, {
+        this._wyvernProtocol = new WyvernProtocol(this.provider, this.apiPro, {
             network: this._networkName,
             gasPrice: this.gasPrice,
         })
 
         // WyvernJS config for readonly (optimization for infura calls)
-        this._wyvernProtocolReadOnly = new WyvernProtocol(this.readonlyProvider, api, {
+        this._wyvernProtocolReadOnly = new WyvernProtocol(this.readonlyProvider, this.apiPro, {
             network: this._networkName,
             gasPrice: this.gasPrice,
             rpc: "readOnly"
         })
-    return { api };
 
-}
-
- public async  createApiAndTestAccounts(provider: WsProvider): Promise<{ api: ApiPromise }> {
-    if (provider == undefined) {
-        provider = new WsProvider('ws://127.0.0.1:9944/');
     }
 
-    const rpcData = await provider.send('state_getMetadata', []);
-    const genesisHash = registry.createType('Hash', await provider.send('chain_getBlockHash', [])).toHex();
-    const specVersion = 0;
-    const rawmetadata: any = {};
-    const key = `${genesisHash}-${specVersion}`;
-    rawmetadata[key] = rpcData;
-  const types = Object.values(definitions).reduce((res, { types }):
-        object => ({ ...res, ...types }), {});
-    const api = await ApiPromise.create({
-        provider, rawmetadata, registry, types: {
-...types ,
-            Keys: 'SessionKeys4'
-        }
-    } as unknown as ApiOptions);
+    public async createApiAndTestAccounts() {
+        
+        // const rpcData = await this.provider.send('state_getMetadata', []);
+        // const genesisHash = registry.createType('Hash', await this.provider.send('chain_getBlockHash', [])).toHex();
+        // const specVersion = 0;
+        // const rawmetadata: any = {};
+        // const key = `${genesisHash}-${specVersion}`;
+        // rawmetadata[key] = rpcData;
+        //   const types = Object.values(definitions).reduce((res, { types }):
+        //         object => ({ ...res, ...types }), {});
+        //     const api = await ApiPromise.create({
+        //        provider: this.provider, rawmetadata, registry, types: {
+        // ...types ,
+        //             Keys: 'SessionKeys4'
+        //         }
+        //     } as unknown as ApiOptions);
+        const api = await ApiPromise.create({
+            provider: this.provider
+        } as unknown as ApiOptions);
+        this.apiPro = api;
+        this.apiProReadOnly = api;
 
-    return { api };
-
-}
+    }
 
     public async closeProvider() {
         await this.provider.disconnect();
@@ -1571,8 +1569,8 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
             ? WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), asset.decimals || 0)
             : makeBigNumber(1)
         const wyAsset = getWyvernAsset(schema, asset, quantityBN)
-        if (schema.functions==undefined){
-        return false;
+        if (schema.functions == undefined) {
+            return false;
         }
         const abi = schema.functions.transfer(wyAsset)
 
@@ -1660,8 +1658,8 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
             TokenStandardVersion.ERC721v1, TokenStandardVersion.ERC721v2
         ].includes(asset.version)
 
-        if (schema.functions ==undefined){
-        return "";
+        if (schema.functions == undefined) {
+            return "";
         }
         const abi = asset.schemaName === WyvernSchemaName.ERC20
             ? annotateERC20TransferABI(wyAsset as WyvernFTAsset)
@@ -1862,7 +1860,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
         const schema = this._getSchema(asset.schemaName)
         const wyAsset = getWyvernAsset(schema, asset)
         console.log(wyAsset.address, asset.schemaName, schema.functions)
-        if (schema.functions!=undefined && schema.functions.countOf) {
+        if (schema.functions != undefined && schema.functions.countOf) {
             // ERC20 or ERC1155 (non-Enjin)
 
             const abi = schema.functions.countOf(wyAsset)
@@ -1880,7 +1878,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
                 // const address = "5GeW32zNDAPvUzRPKhpNjHR2e6ZvcsHdvFzJy6XcffQEbJbu";
 
                 let { gasConsumed, result, output } = await contract.query.balanceOf(accountAddress, { value: 0, gasLimit: -1 }, accountAddress);
-                count = output==null ?0:Number(output.toString())//?.toString();
+                count = output == null ? 0 : Number(output.toString())//?.toString();
                 // The actual result from RPC as `ContractExecResult`
                 console.log(result.toHuman());
 
@@ -1899,7 +1897,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
                 return new BigNumber(count)
             }
 
-        } else if (schema.functions!=undefined && schema.functions.ownerOf) {
+        } else if (schema.functions != undefined && schema.functions.ownerOf) {
             // ERC721 asset
 
             const abi = schema.functions.ownerOf(wyAsset)
@@ -2270,7 +2268,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
      */
     public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
         // console.log(this.apiPro.query)
-        let proxyAddress: any = this._wyvernProtocol.wyvernProxyRegistry.query.getProxy(accountAddress,{});// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
+        let proxyAddress: any = this._wyvernProtocol.wyvernProxyRegistry.query.getProxy(accountAddress, {});// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
         if (proxyAddress == '') {
             throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")
@@ -2308,8 +2306,8 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
         // })mn 
         let gas;
         // let txHash = "";
-        const fromAddress=accountAddress;
- const fromPair = keyring.getPair(fromAddress);
+        const fromAddress = accountAddress;
+        const fromPair = keyring.getPair(fromAddress);
         const registryAddress = WyvernProtocol.getOwnableDelegateProxyAddress(this._networkName);
         // const erc20abi = new Abi(msigmetadata, this.apiPro.registry.getChainProperties());
         // const contract = new ContractPromise(this.apiPro, erc20abi, target);
@@ -2326,7 +2324,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
             }
         }
         {
-            let result = await this._wyvernProtocol.wyvernProxyRegistry.tx.registerProxy({ value: 0, gasLimit: gas },registryAddress).signAndSend(fromPair);
+            let result = await this._wyvernProtocol.wyvernProxyRegistry.tx.registerProxy({ value: 0, gasLimit: gas }, registryAddress).signAndSend(fromPair);
             console.log(result.toHuman());
             // txHash = result.toString();
         }
@@ -2370,7 +2368,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
         const erc20abi = new Abi(ERC20, this.apiPro.registry.getChainProperties());
         const contract = new ContractPromise(this.apiPro, erc20abi, tokenAddress);
         let { result, output } = await contract.query.allowance(accountAddress, { value: 0, gasLimit: -1 }, accountAddress, addressToApprove);
-        console.log("====result=====" ,result, "========result=============", output)
+        console.log("====result=====", result, "========result=============", output)
 
         // The actual result from RPC as `ContractExecResult`
         const approved = output == null ? 0 : Number(output.toString());
@@ -2652,7 +2650,7 @@ public async init(provider: WsProvider): Promise<{ api: ApiPromise }> {
         const quantityBNs = quantities.map((quantity, i) => WyvernProtocol.toBaseUnitAmount(makeBigNumber(quantity), assets[i].decimals || 0))
         const bundle = getWyvernBundle(assets, assets.map(a => this._getSchema(a.schemaName)), quantityBNs)
 
-        const orderedSchemas = bundle.schemas.map((name:any) => this._getSchema(name))
+        const orderedSchemas = bundle.schemas.map((name: any) => this._getSchema(name))
 
         const taker = sellOrder
             ? sellOrder.maker

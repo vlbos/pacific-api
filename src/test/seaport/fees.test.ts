@@ -32,6 +32,7 @@ import * as ordersJSONFixture from '../fixtures/orders.json'
 
 import types from '../../pacific-js/config/types.json';
 import rpcs from '../../pacific-js/config/rpcs.json';
+import { init } from './utils'
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 // const devProvider = new WsProvider('ws://127.0.0.1:9944/');
 
@@ -39,9 +40,9 @@ let client: any
 
 let asset: OpenSeaAsset
 const expirationTime = Math.round(Date.now() / 1000 + 60 * 60 * 24) // one day from now
-
 describe('seaport: fees', () => {
     beforeAll(async () => {
+        const a = await init(provider)
         client = new OpenSeaPort(provider, {
             networkName: Network.Dev,
             apiKey: MAINNET_API_KEY

@@ -1,4 +1,4 @@
-import { ApiPromise, SubmittableResult } from "@polkadot/api";
+import { ApiPromise,WsProvider, SubmittableResult } from "@polkadot/api";
 import { KeyringPair } from "@polkadot/keyring/types";
 import { Option } from "@polkadot/types";
 import { Address, ContractInfo, Hash, StorageData } from "@polkadot/types/interfaces";
@@ -8,7 +8,7 @@ import fs from "fs";
 import path from "path";
 const blake = require('blakejs');
 import { CodePromise, ContractPromise } from '@polkadot/api-contract';
-import { SubmittableExtrinsic } from '@polkadot/api/types';
+import { ApiOptions,SubmittableExtrinsic } from '@polkadot/api/types';
 import { EventRecord, ExtrinsicStatus } from '@polkadot/types/interfaces';
 
 import { GAS_LIMIT, GAS_REQUIRED } from "./consts";
@@ -17,6 +17,31 @@ export function sleepMs(ms = 0): Promise<void> {
 }
 
 import { waitFor } from './waitFor';
+
+export async function init(provider: WsProvider): Promise<{ api: ApiPromise }> {
+    const papi = await createApiAndTestAccounts(provider);
+    const api = papi.api;
+
+    
+
+    return { api };
+
+}
+
+export async function createApiAndTestAccounts(provider: WsProvider): Promise<{ api: ApiPromise }> {
+    if (provider == undefined) {
+        provider = new WsProvider('ws://127.0.0.1:9944/');
+    }
+  
+    const api = await ApiPromise.create({
+        provider
+    } as unknown as ApiOptions);
+
+        const nonces = await api.rpc.system.accountNextIndex( "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")
+    console.log(nonces);
+    return { api };
+
+}
 
 export async function execute(extrinsic: SubmittableExtrinsic<'promise'>, signer: KeyringPair, api: ApiPromise, logger = { info: console.log }): Promise<void> {
     let currentTxDone = false;

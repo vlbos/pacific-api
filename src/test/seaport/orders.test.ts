@@ -69,7 +69,7 @@ const assetsForBulkTransfer = assetsForBundleOrder
 
 let manaAddress: string
 let daiAddress: string
-
+import {init} from "./utils"
 describe('seaport: orders', () => {
 
     beforeAll(async () => {
@@ -77,6 +77,7 @@ describe('seaport: orders', () => {
         // let apip = await init(provider);
         // let api = apip.api;
         // console.log("============================",api)
+        const a =await init(provider)
         client = new OpenSeaPort(provider, {
             networkName: Network.Main,
             apiKey: MAINNET_API_KEY

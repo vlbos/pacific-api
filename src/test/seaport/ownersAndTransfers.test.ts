@@ -18,23 +18,25 @@ import BigNumber from 'bignumber.js';
 // const devProvider = new Web3.providers.HttpProvider(DEV_PROVIDER_URL)
 const provider = new WsProvider('ws://127.0.0.1:9944/');
 const devProvider = new WsProvider('ws://127.0.0.1:9944/');
+import {init} from "./utils"
 
-const client = new OpenSeaPort(provider, {
-    networkName: Network.Main,
-    apiKey: MAINNET_API_KEY
-}, line => console.info(`MAINNET: ${line}`))
-
-const devClient = new OpenSeaPort(devProvider, {
-    networkName: Network.Main,
-    apiKey: DEV_API_KEY
-}, line => console.info(`DEV: ${line}`))
-
+let client:any;
+let devClient:any;
 let manaAddress: string
 
 describe('seaport: owners and transfers', () => {
     beforeAll(async () => {
         jest.setTimeout(30000);
-        await client.apipro();
+const a =await init(provider)
+        client = new OpenSeaPort(provider, {
+    networkName: Network.Main,
+    apiKey: MAINNET_API_KEY
+}, line => console.info(`MAINNET: ${line}`))
+
+ devClient = new OpenSeaPort(devProvider, {
+    networkName: Network.Main,
+    apiKey: DEV_API_KEY
+}, line => console.info(`DEV: ${line}`))
         manaAddress = (await client.api.getPaymentTokens({ symbol: 'MANA' })).tokens[0].address
     })
     afterAll(async () => {

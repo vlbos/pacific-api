@@ -46,11 +46,13 @@ const homogenousSemiFungibleAssetsForBundleOrder = [
 ]
 
 let manaAddress: string
-
+import {init} from "./utils"
 describe('seaport: bundles', () => {
 
     beforeAll(async () => {
         // console.log("============================",api)
+        // const a=await init(provider)
+
         client = new OpenSeaPort(provider, {
             networkName: Network.Dev,
             apiKey: MAINNET_API_KEY
