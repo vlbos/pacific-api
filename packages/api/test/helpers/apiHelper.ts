@@ -100,7 +100,7 @@ export async function createApiAndTestAccounts(provider:WsProvider): Promise<{ a
         }
     // const provider = new WsProvider('ws://127.0.0.1:9944/');
 
-    // await provider.connect();
+    await provider.connect();
 
     await sleepMs(100); // Hack to give the provider time to connect
     if (null == users) {
@@ -124,12 +124,15 @@ export async function createApiAndTestAccounts(provider:WsProvider): Promise<{ a
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const api = await ApiPromise.create({
-        provider, rawmetadata, registry, rpc: rpcs, types: {
-            ...types,
-            // chain-specific overrides
-            Keys: 'SessionKeys4'
-        }
+        provider
     } as ApiOptions);
+    // const api = await ApiPromise.create({
+    //     provider, rawmetadata, registry, rpc: rpcs, types: {
+    //         ...types,
+    //         // chain-specific overrides
+    //         Keys: 'SessionKeys4'
+    //     }
+    // } as ApiOptions);
     // api.injectMetadata(metadata, true);
 
     // const metadata1 = await api.rpc.state.getMetadata();

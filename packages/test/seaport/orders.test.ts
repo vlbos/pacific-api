@@ -37,14 +37,13 @@ import { createApiAndTestAccounts, saveNonce, sleepMs, init, getOrderP } from '.
 let client: any;
 let devClient: any;
 (async function () {
-    // let apip = await init(provider);
-    // let api = apip.api;
+    let apip = await init(provider);
+    let api = apip.api;
     // console.log("============================",api)
-    // client = new OpenSeaPort(provider, api, {
-    //     networkName: Network.Main,
-    //     apiKey: MAINNET_API_KEY
-    // }, line => console.info(`MAINNET: ${line}`))
-
+    client = new OpenSeaPort(provider, api, {
+        networkName: Network.Dev,
+        apiKey: MAINNET_API_KEY
+    }, line => console.info(`MAINNET: ${line}`))
     // devClient = new OpenSeaPort(devProvider, api, {
     //     networkName: Network.Dev,
     //     apiKey: DEV_API_KEY
@@ -79,14 +78,14 @@ describe('seaport: orders', () => {
         let api = apip.api;
         // console.log("============================",api)
         client = new OpenSeaPort(provider, api, {
-            networkName: Network.Main,
+            networkName: Network.Dev,
             apiKey: MAINNET_API_KEY
         }, line => console.info(`MAINNET: ${line}`))
 
-        devClient = new OpenSeaPort(devProvider, api, {
-            networkName: Network.Dev,
-            apiKey: DEV_API_KEY
-        }, line => console.info(`DEV: ${line}`))
+        // devClient = new OpenSeaPort(devProvider, api, {
+        //     networkName: Network.Dev,
+        //     apiKey: DEV_API_KEY
+        // }, line => console.info(`DEV: ${line}`))
         // await client.apipro();
         // daiAddress = (await client.api.getPaymentTokens({ symbol: 'DAI' })).tokens[0].address
         // manaAddress = (await client.api.getPaymentTokens({ symbol: 'MANA' })).tokens[0].address
@@ -891,10 +890,10 @@ describe('seaport: orders', () => {
         // console.log(calldata)
         // console.log(calldata.slice(calldata.indexOf("557efb0c")))
         // calldata = "0x" + calldata.slice(calldata.indexOf("557efb0c"));
-        // await client.initParameters(
-        //     "5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f",
-        //     EVE_ADDRESS
-        // );
+        await client.initParameters(
+            "5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f",
+            ALICE_ADDRESS
+        );
         order.exchange = "5HjfpJY1udFo143xVCoGwd2zVB5N4brbySru2yzVfTGy6x9f";
         await client.fulfillOrder({ order, accountAddress,recipientAddress })
     })

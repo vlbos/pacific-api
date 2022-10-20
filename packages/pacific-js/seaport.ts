@@ -2212,7 +2212,7 @@ export class OpenSeaPort {
      */
     public async _getProxy(accountAddress: string, retries = 0): Promise<string | null> {
         // console.log(this.apiPro.query)
-        let proxyAddress: string | null = this._wyvernProtocol.wyvernProxyRegistry.query.getProxy(accountAddress);// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
+        let proxyAddress: string | null = this._wyvernProtocol.wyvernProxyRegistry.query.getProxy(accountAddress, { value: 0, gasLimit: -1 },accountAddress);// = await this.apiPro.query.proxy.proxies(accountAddress)  ///TODO  pallet-proxy
 
         if (proxyAddress == '') {
             throw new Error("Couldn't retrieve your account from the blockchain - make sure you're on the correct Ethereum network!")

@@ -100,7 +100,7 @@ beforeEach(
             });
         api.tx.balances
             .transfer(davePair.address, CREATION_FEE.muln(3))
-            .signAndSend(bobPair,  (result: SubmittableResult): void => {
+            .signAndSend(bobPair, (result: SubmittableResult): void => {
                 if (
                     result.status.isInBlock &&
                     result.findRecord("system", "ExtrinsicSuccess")
@@ -111,7 +111,7 @@ beforeEach(
             });
     }
 );
- 
+
 describe("Rust Smart Contracts", () => {
     test("AS-Substrate ERC-20 contract", async () => {
         /**

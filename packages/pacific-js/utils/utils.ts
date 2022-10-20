@@ -379,7 +379,6 @@ export const tokenFromJSON = (token: any): OpenSeaFungibleToken => {
 }
 
 export const orderFromJSON = (order: any): Order => {
-    // console.log("order.fee_recipient========", order.fee_recipient)
     const createdDate = new Date(`${order.created_date}Z`)
 
     const fromJSON: Order = {
