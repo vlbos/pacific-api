@@ -379,6 +379,7 @@ export const tokenFromJSON = (token: any): OpenSeaFungibleToken => {
 }
 
 export const orderFromJSON = (order: any): Order => {
+    
     const createdDate = new Date(`${order.created_date}Z`)
 
     const fromJSON: Order = {
@@ -391,17 +392,17 @@ export const orderFromJSON = (order: any): Order => {
         makerAccount: order.maker,
         takerAccount: order.taker,
         // Use string address to conform to Wyvern Order schema
-        maker: order.maker.address,
-        taker: order.taker.address,
+        maker: order.maker.address!=undefined?order.maker.address:order.maker,
+        taker: order.taker.address!=undefined?order.taker.address:order.taker,
         makerRelayerFee: new BigNumber(order.maker_relayer_fee),
         takerRelayerFee: new BigNumber(order.taker_relayer_fee),
         makerProtocolFee: new BigNumber(order.maker_protocol_fee),
         takerProtocolFee: new BigNumber(order.taker_protocol_fee),
         makerReferrerFee: new BigNumber(order.maker_referrer_fee || 0),
-        waitingForBestCounterOrder: order.fee_recipient.address == NULL_ADDRESS,
+        waitingForBestCounterOrder: order.fee_recipient!=undefined&& order.fee_recipient.address!=undefined?order.fee_recipient.address:NULL_ADDRESS == NULL_ADDRESS,
         feeMethod: order.fee_method,
         feeRecipientAccount: order.fee_recipient,
-        feeRecipient: order.fee_recipient.address,
+        feeRecipient: order.fee_recipient!=undefined && order.fee_recipient.address!=undefined?order.fee_recipient.address:NULL_ADDRESS,
         side: order.side,
         saleKind: order.sale_kind,
         target: order.target,

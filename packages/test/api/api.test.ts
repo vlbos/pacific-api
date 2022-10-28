@@ -1,10 +1,10 @@
 
 
-import { OpenSeaPort } from '../../pacific-js/index'
+import { OpenSeaAPI } from '../../pacific-js/index'
 // import { WyvernProtocol } from '../../lib/wyvern-js'
 import { Network, Order, OrderSide, OrderJSON } from '../../pacific-js/types'
 import { orderToJSON, orderFromJSON } from '../../pacific-js'
-import { mainApi, devApi, apiToTest, ALICE_ADDRESS, ALICE_STASH_ADDRESS, CK_DEV_TOKEN_ID, CK_DEV_ADDRESS, CK_DEV_SELLER_FEE, DEV_API_KEY, CK_ADDRESS,WDOT_ADDRESS, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, MAINNET_API_KEY } from '../constants'
+import { mainApi, devApi, apiToTest, ALICE_ADDRESS, ALICE_STASH_ADDRESS, CK_DEV_TOKEN_ID, CK_DEV_ADDRESS, CK_DEV_SELLER_FEE, DEV_API_KEY, CK_ADDRESS, WDOT_ADDRESS, MYTHEREUM_TOKEN_ID, MYTHEREUM_ADDRESS, MAINNET_API_KEY } from '../constants'
 import { getOrderHash, makeBigNumber } from '../../pacific-js/utils/utils'
 import { ORDERBOOK_VERSION, NULL_ADDRESS, LOCALNET_PROVIDER_URL, ORDER_MATCHING_LATENCY_SECONDS } from '../../pacific-js/constants'
 
@@ -27,12 +27,18 @@ const ordersJSON = ordersJSONFixture as any
 const englishSellOrderJSON = ordersJSON[0] as OrderJSON
 
 // const provider = new Web3.providers.HttpProvider(MAINNET_PROVIDER_URL)
-const provider = {};//new WsProvider();//LOCALNET_PROVIDER_URL);
+// const provider = {};//new WsProvider();//LOCALNET_PROVIDER_URL);
 
-const client = new OpenSeaPort(provider, {
-    networkName: Network.Main,
-    apiKey: MAINNET_API_KEY
-}, line => console.info(`MAINNET: ${line}`))
+// const client = new OpenSeaPort(provider, {
+//     networkName: Network.Main,
+//     apiKey: MAINNET_API_KEY
+// }, line => console.info(`MAINNET: ${line}`))
+let originalLog: any;
+let originalWarn: any;
+let originalError: any;
+let consolelog: any;
+let client: any;
+
 
 import { ApiPromise } from '@polkadot/api';
 import { submit } from '../../orders/lib/submit-signed-tx'
@@ -68,11 +74,26 @@ describe('api tests', (): void => {
     let api: any;
     beforeAll(async () => {
         jest.setTimeout(90 * 1000)
+        originalLog = global.console.log;
+        originalWarn = global.console.warn;
+        originalError = global.console.error;
+
+        global.console.log = jest.fn();
+        global.console.warn = jest.fn();
+        global.console.error = jest.fn();
+        consolelog = jest.fn();
+        client = new OpenSeaAPI({
+            networkName: Network.Main,
+            apiKey: MAINNET_API_KEY
+        }, line => console.error(`MAINNET: ${line}`))
         // const papi = await init();
         // api = papi.api;
     });
 
     afterAll(() => {
+        global.console.log = originalLog;
+        global.console.warn = originalWarn;
+        global.console.error = originalError;
         //   return clearCityDatabase();
         // saveNonce(users)
     });
@@ -134,7 +155,7 @@ describe('api tests', (): void => {
         const accountAddress = ALICE_ADDRESS
         const quantity = 1
         const amountInToken = 1.2
-        const paymentTokenAddress =WDOT_ADDRESS
+        const paymentTokenAddress = WDOT_ADDRESS
         const extraBountyBasisPoints = 0
         const expirationTime = Math.round(Date.now() / 1000 + 60) // one minute from now
         const englishAuctionReservePrice = 2
@@ -249,29 +270,48 @@ describe('api tests', (): void => {
         })
     })
     ///NEEDED TEST 
-    it.only("API  fetch  orders", async () => {
+    it("API  fetch  orders", async () => {
         let s = await apiToTest.getOrder(englishSellOrderJSON)
         console.log(s)
     })
 
     it("API  post  orders", async () => {
-        let s = await apiToTest.postOrder(englishSellOrderJSON)
-        console.log(s)
+        try {
+            let order = orderFromJSON(ordersJSON[0]);
+            let orderjson = orderToJSON(order)
+            let s = await apiToTest.postOrder(orderjson)
+            console.log(s)
+        } catch (error) {
+            console.error("=================", error)
+        }
+        expect(console.error).toHaveBeenCalledWith('log');
     })
 
     it("API  post  postAssetWhitelist", async () => {
-        let s = await apiToTest.postAssetWhitelist("tokenAddress: string",
-        "tokenId: string | number",
-        "email: string")
+        let s = await apiToTest.postAssetWhitelist(
+            "tokenAddress",
+            "tokenId",
+            "a@b.com"
+        )
         console.log(s)
+        expect(console.log).toHaveBeenCalledWith('log');
     })
 
-    it("API doesn't fetch impossible orders", async () => {
+    it("API fetch  orders", async () => {
         try {
-            expect(await apiToTest.getOrder({ maker: ALICE_ADDRESS, taker: ALICE_ADDRESS })).toThrow()
+            const s = await apiToTest.getOrder({ maker: "5Gsjmz4mPcK7YrfeHqM8KG4fp5X57fmttPtQM517AFtui5pE", taker: ALICE_ADDRESS })
+            console.log(s)
+
         } catch (e) {
-            expect(e.message).toContain("Not found")
+            console.log("==========error============"+e)
         }
+        expect(console.log).toHaveBeenCalledWith('log');
+
+    })
+    it.only('API orders', async () => {
+        const { orders } = await apiToTest.getOrders({ limit: 100 })
+        console.log(orders)
+        expect(console.log).toHaveBeenCalledWith('log');
     })
 
     it('API excludes cancelledOrFinalized and markedInvalid orders', async () => {

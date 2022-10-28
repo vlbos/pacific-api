@@ -45,7 +45,6 @@ import {
     SITE_HOST_DEV
 } from './constants'
 
-// import { createApi } from '../api/test/helpers/apiHelper'
 
 
 export class OpenSeaAPI {
@@ -108,6 +107,8 @@ export class OpenSeaAPI {
         let json
         try {
             json = await this.post(`${ORDERBOOK_PATH}/orders/post/`, order) as OrderJSON
+            // json = await this.post(`/api/auth/logins`, order) as OrderJSON
+
         } catch (error) {
             _throwOrContinue(error, retries)
             await delay(3000)
@@ -152,8 +153,6 @@ export class OpenSeaAPI {
             ...query
         }
         )
-        // console.log("1111")
-
         let orderJSON
         if (ORDERBOOK_VERSION == 0) {
             const json = result as OrderJSON[]
@@ -161,12 +160,18 @@ export class OpenSeaAPI {
         } else {
             const json = result as OrderbookResponse
             orderJSON = json.orders[0]
-        //  console.log("ddddd",result)
-
         }
         if (!orderJSON) {
             throw new Error(`Not found: no matching order found`)
         }
+        try {
+            let res = orderFromJSON(orderJSON)
+            // this.logger(JSON.stringify(res))
+            return res
+        } catch (error) {
+            this.logger(error + "=====error==========")
+        }
+
         return orderFromJSON(orderJSON)
     }
 
@@ -191,7 +196,7 @@ export class OpenSeaAPI {
                 ...query,
             }
         )
-
+        this.logger(JSON.stringify(result))
         if (ORDERBOOK_VERSION == 0) {
             const json = result as OrderJSON[]
             return {
@@ -201,7 +206,7 @@ export class OpenSeaAPI {
         } else {
             const json = result as OrderbookResponse
             return {
-                orders: json.orders.map(j => orderFromJSON(j)),
+                orders: json.orders.filter(o=>o.maker!=undefined).map(j => orderFromJSON(j)),
                 count: json.count
             }
         }
@@ -395,14 +400,13 @@ export class OpenSeaAPI {
             }
         }
 
-        this.logger(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
-        // console.log(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts).substr(0, 100)}...`)
+        this.logger(`Sending request: ${finalUrl} ${JSON.stringify(finalOpts)}...`)
         return fetch(finalUrl, finalOpts).then(async res => this._handleApiResponse(res))
     }
 
     private async _handleApiResponse(response: Response) {
         if (response.ok) {
-            //this.logger(`Got success: ${response.status}`)
+            this.logger(`Got success: ${response.status}`)
             return response
         }
 
@@ -415,7 +419,7 @@ export class OpenSeaAPI {
             // Result will be undefined or text
         }
 
-        //this.logger(`Got error ${response.status}: ${JSON.stringify(result)}`)
+        this.logger(`Got error ${response.status}: ${JSON.stringify(result)}`)
 
         switch (response.status) {
             case 400:
