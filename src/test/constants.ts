@@ -5,17 +5,16 @@ import {CK_ADDRESS, CK_DEV_ADDRESS} from '../pacific-js/constants'
 export const MAINNET_API_KEY = "testKeyMainnet"
 export const DEV_API_KEY = "testKeyDev"
 
-export const mainApi = new OpenSeaAPI({
-  apiKey: MAINNET_API_KEY,
-  networkName: Network.Main
-}, console.info)
+// export const mainApi = new OpenSeaAPI({
+//   apiKey: MAINNET_API_KEY,
+//   networkName: Network.Main
+// }, console.info)
 
-export const devApi = new OpenSeaAPI({
-  apiKey: DEV_API_KEY,
-  networkName: Network.Dev
-}, console.info)
+// export const devApi = new OpenSeaAPI({
+//   apiKey: DEV_API_KEY,
+//   networkName: Network.Dev
+// }, console.info)
 
-export const apiToTest = devApi
 
 export {
   CK_ADDRESS,

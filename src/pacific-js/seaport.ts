@@ -154,7 +154,8 @@ export class OpenSeaPort {
         // API config
         apiConfig.networkName = apiConfig.networkName || Network.Main
         apiConfig.gasPrice = apiConfig.gasPrice || makeBigNumber(300000)
-        this.api = new OpenSeaAPI(apiConfig)
+        this.api = new OpenSeaAPI(apiConfig,logger);
+        
         this.gasPrice = apiConfig.gasPrice;
         this._networkName = apiConfig.networkName
         this.provider = provider;

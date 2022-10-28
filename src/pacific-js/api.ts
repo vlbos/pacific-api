@@ -96,33 +96,6 @@ export class OpenSeaAPI {
         this.logger = logger || ((arg: string) => arg)
     }
 
-    // public async apipro() {
-    // const provider = new WsProvider('ws://127.0.0.1:9944/');
-    //     const rpc = { ...rpcs };
-    //     // extract all types from definitions - fast and dirty approach, flatted on 'types'
-    //     const types = Object.values(definitions).reduce((res, { types }): object => ({ ...res, ...types }), {});
-    // console.log("===============odkddd==========")
-
-    //     const api = await ApiPromise.create({
-    //         types: {
-    //             ...types,
-    //             // chain-specific overrides
-    //             Keys: 'SessionKeys4'
-    //         }
-    //     });
-    // console.log("===============odkddd==========")
-    // console.log(`OrderId bitLength:`, [
-    //         api.createType('OrderId').toString(),
-    //         api.registry.createType('OrderId').toString(),
-    //         createType(api.registry, 'OrderId').toString()
-    //     ]);
-    // const provider = new WsProvider('ws://127.0.0.1:9944/');
-
-    // api = await ApiPromise.create({ provider })
-
-    // this.apipReadOnly = await ApiPromise.create({ provider: this.provider, types, rpc: rpcs })
-    // this.api.apip = api
-    // }
     /**
      * Send an order to the orderbook.
      * Throws when the order is invalid.
@@ -297,19 +270,18 @@ export class OpenSeaAPI {
         retries = 1
     ): Promise<{ tokens: OpenSeaFungibleToken[] }> {
 
-        let json
+        let json:any[]=[];
         try {
-            json = await this.get(`${API_PATH}/tokens/`, {
+            json =  await this.get(`${API_PATH}/tokens/`, {
                 ...query,
                 limit: this.pageSize,
                 offset: (page - 1) * this.pageSize
             })
         } catch (error) {
-            // _throwOrContinue(error, retries)
             await delay(1000)
             return this.getPaymentTokens(query, page, retries - 1)
         }
-        // console.log(json)
+        console.log(json)
         return {
             tokens: json.map((t: any) => tokenFromJSON(t))
         }
